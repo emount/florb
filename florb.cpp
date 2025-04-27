@@ -1,13 +1,14 @@
 // florb.cpp
 // Full application - projects images onto inside of a 3D sphere
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <filesystem>
-#include <cmath>
 #include <chrono>
+#include <cmath>
+#include <cstring>
+#include <filesystem>
+#include <iostream>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -33,47 +34,38 @@ class Flower {
 public:
     GLuint textureID = 0;
 
-    Flower(const std::string& filepath) {
-        glGenTextures(1, &textureID);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-    
-        unsigned char data[] = {
-            255,   0,   0, 255,   0, 255,   0, 255,
-              0,   0, 255, 255, 255, 255,   0, 255
-        }; // 2x2 checker pattern
-    
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    
-        // Important: generate mipmaps
-        glGenerateMipmap(GL_TEXTURE_2D);
-    
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // Now valid
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+Flower(const std::string& filepath) {
+    stbi_set_flip_vertically_on_load(true);
+
+    int width, height, channels;
+    unsigned char* data = stbi_load(filepath.c_str(), &width, &height, &channels, 0);
+    if (!data) {
+        throw std::runtime_error("Failed to load image: " + filepath);
     }
-  
-//    Flower(const std::string& filepath) {
-//        int width, height, channels;
-//        stbi_set_flip_vertically_on_load(true); // Flip image on load to match OpenGL UVs
-//    
-//        unsigned char* data = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
-//        if (!data) {
-//            throw std::runtime_error("Failed to load image: " + filepath);
-//        }
-//    
-//        glGenTextures(1, &textureID);
-//        glBindTexture(GL_TEXTURE_2D, textureID);
-//    
-//        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-//    
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//    
-//        stbi_image_free(data);
-//    }
+    std::cout << "Loaded image: " << filepath << " (" << width << "x" << height << "), channels: " << channels << std::endl;
+
+    GLenum format;
+    if (channels == 1)
+        format = GL_RED;
+    else if (channels == 3)
+        format = GL_RGB;
+    else if (channels == 4)
+        format = GL_RGBA;
+    else
+        throw std::runtime_error("Unsupported channel count");
+
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbi_image_free(data);
+}
 
     ~Flower() {
         if (textureID) glDeleteTextures(1, &textureID);
@@ -138,29 +130,22 @@ const char* fragmentShaderSource = R"glsl(
 #version 460 core
 out vec4 FragColor;
 
+in vec3 fragPos;
+
 uniform sampler2D currentTexture;
 
 void main()
 {
-    FragColor = texture(currentTexture, vec2(0.5, 0.5));
+    vec3 dir = normalize(fragPos);
+    
+    vec2 uv;
+    uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
+    uv.y = asin(dir.y) / 3.14159265 + 0.5;
+
+    uv = clamp(uv, 0.0, 1.0); // ensure within [0,1]
+
+    FragColor = texture(currentTexture, uv);
 }
-// #version 460 core
-// out vec4 FragColor;
-// in vec3 fragPos;
-// 
-// uniform sampler2D currentTexture;
-// 
-// void main()
-// {
-//     vec3 dir = normalize(fragPos);
-//     vec2 uv;
-//     uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
-//     uv.y = asin(dir.y) / 3.14159265 + 0.5;
-//     uv = clamp(uv, 0.0, 1.0);
-//     uv.y = 1.0 - uv.y; // Flip vertically
-// 
-//     FragColor = texture(currentTexture, uv);
-// }
 )glsl";
 
 // Implementation
@@ -242,8 +227,6 @@ void FlorbApp::initWindow() {
     XFree(vi);
     XFree(fbc);
 }
-
-#include <cstring> // Needed for memset
 
 void FlorbApp::initOpenGL() {
     display = XOpenDisplay(nullptr);
