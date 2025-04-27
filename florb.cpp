@@ -1,6 +1,5 @@
 // florb.cpp
-// Full modern OpenGL 4.6 + C++17 app
-// Projects flower images onto a sphere, blending smoothly every minute
+// Full application - projects images onto inside of a 3D sphere
 
 #include <iostream>
 #include <vector>
@@ -25,7 +24,7 @@
 
 namespace fs = std::filesystem;
 
-// -- Flower class --
+// Flower class
 class Flower {
 public:
     GLuint textureID = 0;
@@ -48,7 +47,7 @@ public:
     }
 };
 
-// -- FlorbApp class --
+// FlorbApp class
 class FlorbApp {
 public:
     FlorbApp();
@@ -56,28 +55,24 @@ public:
     void run();
 
 private:
-    // X11 / GLX
     Display* display = nullptr;
     Window window = 0;
     GLXContext context = nullptr;
     int screen = 0;
     Atom wmDeleteMessage;
 
-    // OpenGL
     GLuint vao = 0;
     GLuint vbo = 0;
     GLuint ebo = 0;
     GLuint shaderProgram = 0;
     size_t indexCount = 0;
 
-    // Flowers
     std::vector<Flower> flowers;
     size_t currentFlower = 0;
     size_t nextFlower = 1;
 
     std::chrono::steady_clock::time_point lastSwitch;
 
-    // Methods
     void initWindow();
     void initGL();
     void createShaders();
@@ -91,7 +86,7 @@ private:
     GLuint compileShader(GLenum type, const char* source);
 };
 
-// -- Shaders --
+// Shaders
 const char* vertexShaderSource = R"glsl(
 #version 460 core
 layout(location = 0) in vec3 aPos;
@@ -119,18 +114,18 @@ uniform float blendFactor;
 void main()
 {
     vec3 dir = normalize(fragPos);
-    float u = 0.5 + atan(dir.z, dir.x) / (2.0 * 3.14159265);
-    float v = 0.5 - asin(dir.y) / 3.14159265;
+    vec2 uv;
+    uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
+    uv.y = asin(dir.y) / 3.14159265 + 0.5;
 
-    vec4 color1 = texture(currentTexture, vec2(u, v));
-    vec4 color2 = texture(nextTexture, vec2(u, v));
+    vec4 color1 = texture(currentTexture, uv);
+    vec4 color2 = texture(nextTexture, uv);
 
     FragColor = mix(color1, color2, blendFactor);
 }
 )glsl";
 
-// -- FlorbApp implementation --
-
+// Implementation
 FlorbApp::FlorbApp() {}
 FlorbApp::~FlorbApp() { cleanup(); }
 
@@ -215,6 +210,8 @@ void FlorbApp::initGL() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT); // render inside faces
 }
 
 void FlorbApp::createShaders() {
