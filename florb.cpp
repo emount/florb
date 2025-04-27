@@ -31,14 +31,23 @@ public:
 
     Flower(const std::string& filepath) {
         int width, height, channels;
+        stbi_set_flip_vertically_on_load(true); // Flip image on load to match OpenGL UVs
+    
         unsigned char* data = stbi_load(filepath.c_str(), &width, &height, &channels, 4);
-        if (!data) throw std::runtime_error("Failed to load image: " + filepath);
-
+        if (!data) {
+            throw std::runtime_error("Failed to load image: " + filepath);
+        }
+    
         glGenTextures(1, &textureID);
         glBindTexture(GL_TEXTURE_2D, textureID);
+    
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
         stbi_image_free(data);
     }
 
@@ -107,21 +116,17 @@ out vec4 FragColor;
 
 in vec3 fragPos;
 
-uniform sampler2D currentTexture;
-uniform sampler2D nextTexture;
-uniform float blendFactor;
-
 void main()
 {
     vec3 dir = normalize(fragPos);
     vec2 uv;
     uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
     uv.y = asin(dir.y) / 3.14159265 + 0.5;
+    uv = clamp(uv, 0.0, 1.0);
 
-    vec4 color1 = texture(currentTexture, uv);
-    vec4 color2 = texture(nextTexture, uv);
-
-    FragColor = mix(color1, color2, blendFactor);
+    uv.y = 1.0 - uv.y;
+    
+    FragColor = vec4(uv, 0.0, 1.0);
 }
 )glsl";
 
@@ -331,29 +336,58 @@ void FlorbApp::renderFrame() {
     glBindTexture(GL_TEXTURE_2D, flowers[currentFlower].textureID);
     glUniform1i(glGetUniformLocation(shaderProgram, "currentTexture"), 0);
 
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, flowers[nextFlower].textureID);
-    glUniform1i(glGetUniformLocation(shaderProgram, "nextTexture"), 1);
-
-    auto now = std::chrono::steady_clock::now();
-    float elapsed = std::chrono::duration<float>(now - lastSwitch).count();
-
-    float blendFactor = 0.0f;
-    if (elapsed > 55.0f && elapsed <= 60.0f) {
-        blendFactor = (elapsed - 55.0f) / 5.0f;
-    } else if (elapsed > 60.0f) {
-        lastSwitch = now;
-        currentFlower = nextFlower;
-        nextFlower = (currentFlower + 1) % flowers.size();
-    }
-
-    glUniform1f(glGetUniformLocation(shaderProgram, "blendFactor"), blendFactor);
-
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 
     glXSwapBuffers(display, window);
 }
+// void FlorbApp::renderFrame() {
+//     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+//     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+// 
+//     glUseProgram(shaderProgram);
+// 
+//     int width = DisplayWidth(display, screen);
+//     int height = DisplayHeight(display, screen);
+//     float aspect = (float)width / (float)height;
+// 
+//     float projection[16] = {
+//         1.0f / aspect, 0.0f, 0.0f, 0.0f,
+//         0.0f, 1.0f,    0.0f, 0.0f,
+//         0.0f, 0.0f,   -1.0f, 0.0f,
+//         0.0f, 0.0f,    0.0f, 1.0f
+//     };
+// 
+//     GLuint projLoc = glGetUniformLocation(shaderProgram, "projection");
+//     glUniformMatrix4fv(projLoc, 1, GL_FALSE, projection);
+// 
+//     glActiveTexture(GL_TEXTURE0);
+//     glBindTexture(GL_TEXTURE_2D, flowers[currentFlower].textureID);
+//     glUniform1i(glGetUniformLocation(shaderProgram, "currentTexture"), 0);
+// 
+//     glActiveTexture(GL_TEXTURE1);
+//     glBindTexture(GL_TEXTURE_2D, flowers[nextFlower].textureID);
+//     glUniform1i(glGetUniformLocation(shaderProgram, "nextTexture"), 1);
+// 
+//     auto now = std::chrono::steady_clock::now();
+//     float elapsed = std::chrono::duration<float>(now - lastSwitch).count();
+// 
+//     float blendFactor = 0.0f;
+//     if (elapsed > 55.0f && elapsed <= 60.0f) {
+//         blendFactor = (elapsed - 55.0f) / 5.0f;
+//     } else if (elapsed > 60.0f) {
+//         lastSwitch = now;
+//         currentFlower = nextFlower;
+//         nextFlower = (currentFlower + 1) % flowers.size();
+//     }
+// 
+//     glUniform1f(glGetUniformLocation(shaderProgram, "blendFactor"), blendFactor);
+// 
+//     glBindVertexArray(vao);
+//     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+// 
+//     glXSwapBuffers(display, window);
+// }
 
 void FlorbApp::handleEvents() {
     while (XPending(display)) {
