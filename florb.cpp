@@ -176,6 +176,17 @@ void FlorbApp::initWindow() {
 
     glXMakeCurrent(display, window, context);
 
+    GLenum err = glewInit();
+    if (err != GLEW_OK) {
+        std::cerr << "glewInit() returned error : (" << err << ")" << std::endl;
+	exit(-1);
+    }
+
+    if (!GLEW_VERSION_2_1) {
+        std::cerr << "glew version 2.1 is not available" << std::endl;
+	exit(-1);
+    }
+
     XFree(vi);
     XFree(fbc);
 }
