@@ -1,189 +1,387 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
-#include <GL/glew.h>
-#include <GL/glu.h>
+// florb.cpp
+// Modern OpenGL 4.6 + C++17 full-screen textured rotating quad demo
 
 #include <iostream>
 #include <vector>
-#include <string>
-#include <filesystem>
 #include <cmath>
+#include <chrono>
+#include <stdexcept>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glx.h>
+#include <GL/glxext.h>
 
-namespace fs = std::filesystem;
+#define GL_GLEXT_PROTOTYPES
+#include <GL/glext.h>
 
-// Settings
-const int WINDOW_WIDTH = 1200;
-const int WINDOW_HEIGHT = 800;
-const float BASE_RADIUS = 2.0f;
-const float PULSE_AMPLITUDE = 0.4f;
-const int MORPH_INTERVAL_MS = 60000;
+#include <cstring> // For memset
 
-// Globals
-std::vector<GLuint> textures;
-int currentTexture = 0;
-int nextTexture = 1;
-Uint32 lastMorphTime = 0;
+class FlorbApp {
+public:
+    FlorbApp();
+    ~FlorbApp();
+    void run();
 
-float volume = 1.0f;
-bool muted = false;
+private:
+    // Window / GLX
+    Display* display = nullptr;
+    Window window = 0;
+    GLXContext context = nullptr;
+    int screen = 0;
+    Atom wmDeleteMessage;
 
-Mix_Chunk* music = nullptr;
+    // Timing
+    std::chrono::steady_clock::time_point lastTime;
 
-// OpenGL Helpers
-GLuint loadTexture(const std::string& path) {
-    int width, height, channels;
-    unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-    if (!data) {
-        std::cerr << "Failed to load image: " << path << std::endl;
-        return 0;
+    // OpenGL
+    GLuint vao = 0;
+    GLuint vbo = 0;
+    GLuint ebo = 0;
+    GLuint shaderProgram = 0;
+    GLuint texture = 0;
+
+    // Animation state
+    float angle = 0.0f;
+
+    // Methods
+    void initWindow();
+    void initGL();
+    void createShaders();
+    void createGeometry();
+    void createTexture();
+    void mainLoop();
+    void renderFrame();
+    void update();
+    void handleEvents();
+    void cleanup();
+
+    // Helpers
+    GLuint compileShader(GLenum type, const char* source);
+};
+
+const char* vertexShaderSource = R"glsl(
+#version 460 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aTexCoord;
+
+uniform mat4 model;
+uniform mat4 projection;
+
+out vec2 TexCoord;
+
+void main()
+{
+    gl_Position = projection * model * vec4(aPos, 1.0);
+    TexCoord = aTexCoord;
+}
+)glsl";
+
+const char* fragmentShaderSource = R"glsl(
+#version 460 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D ourTexture;
+
+void main()
+{
+    FragColor = texture(ourTexture, TexCoord);
+}
+)glsl";
+
+FlorbApp::FlorbApp() {}
+
+FlorbApp::~FlorbApp() {
+    cleanup();
+}
+
+GLuint FlorbApp::compileShader(GLenum type, const char* source) {
+    GLuint shader = glCreateShader(type);
+    glShaderSource(shader, 1, &source, nullptr);
+    glCompileShader(shader);
+
+    int success = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetShaderInfoLog(shader, 512, nullptr, infoLog);
+        throw std::runtime_error(std::string("Shader compile error: ") + infoLog);
     }
 
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
+    return shader;
+}
+
+void FlorbApp::initWindow() {
+    display = XOpenDisplay(nullptr);
+    if (!display)
+        throw std::runtime_error("Failed to open X display");
+
+    screen = DefaultScreen(display);
+
+    static int visualAttribs[] = {
+        GLX_RENDER_TYPE,   GLX_RGBA_BIT,
+        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+        GLX_DOUBLEBUFFER,  True,
+        GLX_RED_SIZE,      8,
+        GLX_GREEN_SIZE,    8,
+        GLX_BLUE_SIZE,     8,
+        GLX_ALPHA_SIZE,    8,
+        GLX_DEPTH_SIZE,    24,
+        None
+    };
+
+    int fbcount = 0;
+    GLXFBConfig* fbc = glXChooseFBConfig(display, screen, visualAttribs, &fbcount);
+    if (!fbc)
+        throw std::runtime_error("Failed to get FBConfig");
+
+    XVisualInfo* vi = glXGetVisualFromFBConfig(display, fbc[0]);
+    if (!vi)
+        throw std::runtime_error("No appropriate visual found");
+
+    XSetWindowAttributes swa;
+    swa.colormap = XCreateColormap(display, RootWindow(display, vi->screen), vi->visual, AllocNone);
+    swa.event_mask = ExposureMask | KeyPressMask | StructureNotifyMask;
+
+    int screenWidth = DisplayWidth(display, screen);
+    int screenHeight = DisplayHeight(display, screen);
+
+    window = XCreateWindow(display, RootWindow(display, vi->screen),
+                           0, 0, screenWidth, screenHeight, 0,
+                           vi->depth, InputOutput,
+                           vi->visual,
+                           CWColormap | CWEventMask, &swa);
+
+    if (!window)
+        throw std::runtime_error("Failed to create window");
+
+    Atom wmState = XInternAtom(display, "_NET_WM_STATE", False);
+    Atom fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
+    XChangeProperty(display, window, wmState, XA_ATOM, 32,
+                    PropModeReplace, (unsigned char*)&fullscreen, 1);
+
+    wmDeleteMessage = XInternAtom(display, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(display, window, &wmDeleteMessage, 1);
+
+    XMapWindow(display, window);
+    XFlush(display);
+
+    context = glXCreateNewContext(display, fbc[0], GLX_RGBA_TYPE, nullptr, True);
+    if (!context)
+        throw std::runtime_error("Failed to create GL context");
+
+    glXMakeCurrent(display, window, context);
+
+    XFree(vi);
+    XFree(fbc);
+}
+
+void FlorbApp::initGL() {
+    glViewport(0, 0, DisplayWidth(display, screen), DisplayHeight(display, screen));
+    glEnable(GL_DEPTH_TEST);
+}
+
+void FlorbApp::createShaders() {
+    GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+    GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    int success = 0;
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
+        throw std::runtime_error(std::string("Program link error: ") + infoLog);
+    }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+}
+
+void FlorbApp::createGeometry() {
+    float vertices[] = {
+        // positions         // texture coords
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f,
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f
+    };
+
+    unsigned int indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
+
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+}
+
+void FlorbApp::createTexture() {
+    const int texWidth = 64;
+    const int texHeight = 64;
+    std::vector<unsigned char> textureData(texWidth * texHeight * 3);
+
+    for (int y = 0; y < texHeight; ++y) {
+        for (int x = 0; x < texWidth; ++x) {
+            int checker = ((x / 8) % 2) ^ ((y / 8) % 2);
+            unsigned char color = checker ? 255 : 50;
+            textureData[(y * texWidth + x) * 3 + 0] = color;
+            textureData[(y * texWidth + x) * 3 + 1] = color;
+            textureData[(y * texWidth + x) * 3 + 2] = color;
+        }
+    }
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData.data());
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
-                 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-    stbi_image_free(data);
-    return tex;
 }
 
-void drawSphere(float radius) {
-    GLUquadric* quad = gluNewQuadric();
-    gluQuadricTexture(quad, GL_TRUE);
-    gluQuadricNormals(quad, GLU_SMOOTH);
-    gluSphere(quad, radius, 64, 64);
-    gluDeleteQuadric(quad);
+void FlorbApp::renderFrame() {
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(shaderProgram);
+
+    float rad = angle * 3.14159265f / 180.0f;
+    float model[16] = {
+        static_cast<float>(cos(rad)), static_cast<float>(-sin(rad)), 0.0f, 0.0f,
+        static_cast<float>(sin(rad)), static_cast<float>(cos(rad)),  0.0f, 0.0f,
+        0.0f,                         0.0f,                          1.0f, 0.0f,
+        0.0f,                         0.0f,                          0.0f, 1.0f
+    };
+
+    int screenWidth = DisplayWidth(display, screen);
+    int screenHeight = DisplayHeight(display, screen);
+    float aspect = (float)screenWidth / (float)screenHeight;
+    float projection[16] = {
+        1.0f / aspect, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f,    0.0f, 0.0f,
+        0.0f, 0.0f,   -1.0f, 0.0f,
+        0.0f, 0.0f,    0.0f, 1.0f
+    };
+
+    GLuint modelLoc = glGetUniformLocation(shaderProgram, "model");
+    GLuint projLoc = glGetUniformLocation(shaderProgram, "projection");
+
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, projection);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glUniform1i(glGetUniformLocation(shaderProgram, "ourTexture"), 0);
+
+    glBindVertexArray(vao);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    glXSwapBuffers(display, window);
 }
 
-float getAudioLevel() {
-    // Placeholder: no real RMS calculation yet
-    // Would normally read audio buffer here
-    return 0.5f;  // Simulate constant mid pulse for now
+void FlorbApp::update() {
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<float> deltaTime = now - lastTime;
+    lastTime = now;
+
+    angle += 45.0f * deltaTime.count();
 }
 
-void setupOpenGL() {
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glClearColor(0, 0, 0, 1);
-}
+void FlorbApp::handleEvents() {
+    while (XPending(display)) {
+        XEvent event;
+        XNextEvent(display, &event);
 
-int main(int argc, char* argv[]) {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
-        std::cerr << "SDL Init Failed: " << SDL_GetError() << std::endl;
-        return -1;
-    }
-
-    SDL_Window* window = SDL_CreateWindow("Flower Orb",
-                                          SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                          WINDOW_WIDTH, WINDOW_HEIGHT,
-                                          SDL_WINDOW_OPENGL);
-
-    if (!window) {
-        std::cerr << "Window creation failed: " << SDL_GetError() << std::endl;
-        return -1;
-    }
-
-    SDL_GLContext glContext = SDL_GL_CreateContext(window);
-    glewInit();
-    setupOpenGL();
-
-    // Load textures
-    for (const auto& entry : fs::directory_iterator("flowers")) {
-        if (entry.is_regular_file()) {
-            textures.push_back(loadTexture(entry.path().string()));
-        }
-    }
-    if (textures.empty()) {
-        std::cerr << "No flower textures found." << std::endl;
-        return -1;
-    }
-
-    // Load music
-    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-    music = Mix_LoadWAV("audio/music.wav");  // Use WAV/OGG for now
-    if (music) {
-        Mix_PlayChannel(-1, music, -1);
-    }
-
-    lastMorphTime = SDL_GetTicks();
-
-    bool running = true;
-    SDL_Event event;
-
-    while (running) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT)
-                running = false;
-            if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.sym == SDLK_m) {
-                    muted = !muted;
-                    Mix_Volume(-1, muted ? 0 : int(volume * MIX_MAX_VOLUME));
-                }
-                if (event.key.keysym.sym == SDLK_UP) {
-                    volume = std::min(1.0f, volume + 0.1f);
-                    Mix_Volume(-1, int(volume * MIX_MAX_VOLUME));
-                }
-                if (event.key.keysym.sym == SDLK_DOWN) {
-                    volume = std::max(0.0f, volume - 0.1f);
-                    Mix_Volume(-1, int(volume * MIX_MAX_VOLUME));
-                }
+        if (event.type == ClientMessage) {
+            if (event.xclient.data.l[0] == (long)wmDeleteMessage) {
+                cleanup();
+                exit(0);
             }
         }
-
-        Uint32 now = SDL_GetTicks();
-        if (now - lastMorphTime > MORPH_INTERVAL_MS) {
-            currentTexture = nextTexture;
-            nextTexture = rand() % textures.size();
-            lastMorphTime = now;
+        else if (event.type == KeyPress) {
+            cleanup();
+            exit(0);
         }
+    }
+}
 
-        float alpha = (now - lastMorphTime) / float(MORPH_INTERVAL_MS);
-        float pulse = getAudioLevel();
-        float sphereRadius = BASE_RADIUS + PULSE_AMPLITUDE * pulse;
+void FlorbApp::cleanup() {
+    if (shaderProgram) glDeleteProgram(shaderProgram);
+    if (vao) glDeleteVertexArrays(1, &vao);
+    if (vbo) glDeleteBuffers(1, &vbo);
+    if (ebo) glDeleteBuffers(1, &ebo);
+    if (texture) glDeleteTextures(1, &texture);
 
-        // Render
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glLoadIdentity();
-        glTranslatef(0.0f, 0.0f, -6.0f);
-        glRotatef(now / 50.0f, 0.0f, 1.0f, 0.0f);
-        glRotatef(now / 70.0f, 1.0f, 0.0f, 0.0f);
-
-        // Blending current and next textures manually (simple)
-        glBindTexture(GL_TEXTURE_2D, textures[currentTexture]);
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f - alpha);
-        drawSphere(sphereRadius);
-
-        glBindTexture(GL_TEXTURE_2D, textures[nextTexture]);
-        glColor4f(1.0f, 1.0f, 1.0f, alpha);
-        drawSphere(sphereRadius);
-
-        SDL_GL_SwapWindow(window);
-        SDL_Delay(16);  // ~60 FPS
+    if (context) {
+        glXMakeCurrent(display, None, nullptr);
+        glXDestroyContext(display, context);
     }
 
-    for (auto tex : textures) {
-        glDeleteTextures(1, &tex);
+    if (window) {
+        XDestroyWindow(display, window);
     }
 
-    if (music)
-        Mix_FreeChunk(music);
+    if (display) {
+        XCloseDisplay(display);
+    }
+}
 
-    Mix_CloseAudio();
-    SDL_GL_DeleteContext(glContext);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+void FlorbApp::run() {
+    initWindow();
+    initGL();
+    createShaders();
+    createGeometry();
+    createTexture();
+    lastTime = std::chrono::steady_clock::now();
+    mainLoop();
+}
 
+void FlorbApp::mainLoop() {
+    while (true) {
+        handleEvents();
+        update();
+        renderFrame();
+    }
+}
+
+int main() {
+    try {
+        FlorbApp app;
+        app.run();
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "Fatal error: " << ex.what() << std::endl;
+        return -1;
+    }
     return 0;
 }
