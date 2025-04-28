@@ -29,6 +29,10 @@ Display* display = nullptr;
 Window window = 0;
 GLXContext context = 0;
 
+float zoom = 1.6f;
+float offsetX = 0.5f;
+float offsetY = 0.0f;
+
 // Flower class
 class Flower {
 public:
@@ -127,22 +131,24 @@ void main()
 )glsl";
 
 const char* fragmentShaderSource = R"glsl(
-#version 460 core
+#version 330 core
 out vec4 FragColor;
-
 in vec3 fragPos;
 
 uniform sampler2D currentTexture;
+uniform float zoom;
+uniform vec2 centerOffset;
 
 void main()
 {
     vec3 dir = normalize(fragPos);
-    
     vec2 uv;
     uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
     uv.y = asin(dir.y) / 3.14159265 + 0.5;
 
-    uv = clamp(uv, 0.0, 1.0); // ensure within [0,1]
+    uv = (uv - 0.5) * zoom + 0.5 + centerOffset;
+    uv = clamp(uv, 0.0, 1.0);
+    uv.y = 1.0 - uv.y;
 
     FragColor = texture(currentTexture, uv);
 }
@@ -413,8 +419,8 @@ void FlorbApp::renderFrame() {
 
     glUseProgram(shaderProgram);
 
-    int width = DisplayWidth(display, screen);
-    int height = DisplayHeight(display, screen);
+    int width = 800; // Your window width
+    int height = 600;
     float aspect = (float)width / (float)height;
 
     float projection[16] = {
@@ -423,13 +429,14 @@ void FlorbApp::renderFrame() {
         0.0f, 0.0f,   -1.0f, 0.0f,
         0.0f, 0.0f,    0.0f, 1.0f
     };
-
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, projection);
 
-    // Critical correct binding:
+    glUniform1f(glGetUniformLocation(shaderProgram, "zoom"), zoom);
+    glUniform2f(glGetUniformLocation(shaderProgram, "centerOffset"), offsetX, offsetY);
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, flowers[currentFlower].textureID);
-    glUniform1i(glGetUniformLocation(shaderProgram, "currentTexture"), 0); // bind to texture unit 0
+    glUniform1i(glGetUniformLocation(shaderProgram, "currentTexture"), 0);
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
