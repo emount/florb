@@ -1,17 +1,20 @@
 # Makefile for Florb
 
 CXX = g++
-CXXFLAGS = -std=c++17 -O2
-LIBS = -lGL -lGLEW -lX11
-TARGET = florb
-SRC = florb.cpp
+CXXFLAGS = -std=c++17 -Wall -O2
+LIBS = GL GLEW X11
+INC_DIRS = include
 
-INC_DIRS=include
+SRC = main.cpp Florb.cpp
+HEADERS = Florb.h
+TARGET = florb_app
+
+VPATH = $(INC_DIRS)
 
 all: $(TARGET)
 
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -o $(TARGET) $(SRC) $(LIBS)
+$(TARGET): $(SRC) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -o $(TARGET) $(SRC) $(LIBS:%=-l%)
 
 clean:
 	rm -f $(TARGET)
