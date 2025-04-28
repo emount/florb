@@ -86,15 +86,18 @@ std::pair<float, float> Florb::getCenter() {
 }
 
 void Florb::renderFrame() {
+    extern int screenWidth;
+    extern int screenHeight;
+    
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glViewport(0, 0, screenWidth, screenHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
 
-    int width = 800; // Replace with your actual window width
-    int height = 600;
-    float aspect = (float)width / (float)height;
-
+    std::cerr << "renderFrame(" << screenWidth << "x" << screenHeight << ")" << std::endl;
+    float aspect = (float)screenWidth / (float)screenHeight;
+    
     float projection[16] = {
         1.0f / aspect, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f,    0.0f, 0.0f,

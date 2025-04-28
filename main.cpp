@@ -3,18 +3,26 @@
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include "Florb.h"
+#include <chrono>
 #include <iostream>
+#include <thread>
 
 Display* display;
 Window window;
 GLXContext context;
+int screenWidth = 800;
+int screenHeight = 600;
 
 // Initialize OpenGL and X11 Window
 void initOpenGL() {
     display = XOpenDisplay(nullptr);
     if (!display) throw std::runtime_error("Cannot open X11 display");
 
-    int screen = DefaultScreen(display);
+    int screenNum = DefaultScreen(display);
+    Screen* screen = ScreenOfDisplay(display, screenNum);
+
+    screenWidth = screen->width;
+    screenHeight = screen->height;
 
     static int visualAttribs[] = {
         GLX_RGBA,
@@ -23,22 +31,42 @@ void initOpenGL() {
         None
     };
 
-    XVisualInfo* vi = glXChooseVisual(display, screen, visualAttribs);
+    XVisualInfo* vi = glXChooseVisual(display, screenNum, visualAttribs);
     if (!vi) throw std::runtime_error("No appropriate visual found");
 
     Colormap cmap = XCreateColormap(display, RootWindow(display, vi->screen), vi->visual, AllocNone);
 
     XSetWindowAttributes swa;
     swa.colormap = cmap;
-    swa.event_mask = ExposureMask | KeyPressMask;
+    swa.event_mask = ExposureMask | KeyPressMask | StructureNotifyMask;
 
     window = XCreateWindow(display, RootWindow(display, vi->screen),
-                           0, 0, 800, 600, 0, vi->depth, InputOutput,
+                           0, 0, screenWidth, screenHeight, 0, vi->depth, InputOutput,
                            vi->visual, CWColormap | CWEventMask, &swa);
     if (!window) throw std::runtime_error("Failed to create window");
 
+    // Map the window (show it)
     XMapWindow(display, window);
 
+    // Request FULLSCREEN from window manager
+    Atom wmState = XInternAtom(display, "_NET_WM_STATE", False);
+    Atom fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
+
+    XEvent xev = {};
+    xev.type = ClientMessage;
+    xev.xclient.window = window;
+    xev.xclient.message_type = wmState;
+    xev.xclient.format = 32;
+    xev.xclient.data.l[0] = 1; // _NET_WM_STATE_ADD
+    xev.xclient.data.l[1] = fullscreen;
+    xev.xclient.data.l[2] = 0; // no second property to toggle
+    xev.xclient.data.l[3] = 1; // normal application request
+    xev.xclient.data.l[4] = 0;
+
+    XSendEvent(display, DefaultRootWindow(display), False,
+               SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+
+    // Temporary GLX context to load extensions
     GLXContext tempContext = glXCreateContext(display, vi, nullptr, True);
     glXMakeCurrent(display, window, tempContext);
 
@@ -73,7 +101,7 @@ void initOpenGL() {
         GLX_DOUBLEBUFFER, True,
         None
     };
-    fbc = glXChooseFBConfig(display, screen, fbAttribs, &fbcount);
+    fbc = glXChooseFBConfig(display, screenNum, fbAttribs, &fbcount);
     if (!fbc) throw std::runtime_error("Failed to get FBConfig");
 
     glXDestroyContext(display, tempContext);
@@ -87,9 +115,19 @@ void initOpenGL() {
     if (err != GLEW_OK) {
         throw std::runtime_error(std::string("GLEW init failed: ") + (const char*)glewGetErrorString(err));
     }
+
+    // Graphical housekeeping
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 int main() {
+    const int TARGET_FPS = 60;
+    const int FRAME_DURATION_MS = 1000 / TARGET_FPS;
+
     try {
         initOpenGL();
 
@@ -100,16 +138,34 @@ int main() {
 
         bool running = true;
         while (running) {
+            auto frameStart = std::chrono::high_resolution_clock::now();
+        
             while (XPending(display)) {
                 XEvent event;
                 XNextEvent(display, &event);
+        
                 if (event.type == KeyPress) {
                     running = false;
                 }
+                else if (event.type == ConfigureNotify) {
+                    XConfigureEvent xce = event.xconfigure;
+                    if (xce.width != screenWidth || xce.height != screenHeight) {
+                        screenWidth = xce.width;
+                        screenHeight = xce.height;
+                        glViewport(0, 0, screenWidth, screenHeight);
+                    }
+                }
             }
-
+        
             florb.renderFrame();
             glXSwapBuffers(display, window);
+        
+            auto frameEnd = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<float, std::milli> elapsed = frameEnd - frameStart;
+        
+            if (elapsed.count() < FRAME_DURATION_MS) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_DURATION_MS) - elapsed);
+            }
         }
 
         glXMakeCurrent(display, None, nullptr);
