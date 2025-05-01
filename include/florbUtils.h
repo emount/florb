@@ -1,0 +1,15 @@
+#pragma once
+
+#include <string>
+
+namespace FlorbUtils {
+
+    void dumpTexture(GLuint textureID,
+		     int width,
+		     int height,
+		     GLenum format,
+		     int channels);
+    
+    void glCheck(const std::string &str);
+
+}

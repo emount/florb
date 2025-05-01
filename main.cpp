@@ -13,6 +13,9 @@ GLXContext context;
 int screenWidth = 800;
 int screenHeight = 600;
 
+using std::cerr;
+using std::endl;
+
 // Initialize OpenGL and X11 Window
 void initOpenGL() {
     display = XOpenDisplay(nullptr);
@@ -122,6 +125,9 @@ void initOpenGL() {
     glCullFace(GL_BACK);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    const GLubyte* version = glGetString(GL_VERSION);
+    cerr << "[INFO] OpenGL version: " << version << endl;
 }
 
 int main() {

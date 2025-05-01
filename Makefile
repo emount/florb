@@ -2,12 +2,12 @@
 
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -O2
-LIBS = GL GLEW X11
+LIBS = GL GLEW GLU X11
 INC_DIRS = include
 
-SRC = main.cpp Florb.cpp
+SRC = main.cpp Florb.cpp florbUtils.cpp
 HEADERS = Florb.h
-TARGET = florb_app
+TARGET = florb
 
 VPATH = $(INC_DIRS)
 

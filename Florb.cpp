@@ -94,10 +94,8 @@ void Florb::renderFrame() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
-
-    std::cerr << "renderFrame(" << screenWidth << "x" << screenHeight << ")" << std::endl;
-    float aspect = (float)screenWidth / (float)screenHeight;
     
+    float aspect = (float)screenWidth / (float)screenHeight;    
     float projection[16] = {
         1.0f / aspect, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f,    0.0f, 0.0f,
