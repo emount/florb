@@ -11,7 +11,7 @@ using std::sin;
 
 // Florb class implementation
 Florb::Florb() {
-    createSphereGeometry();
+    generateSphere();
     initShader();
 }
 
@@ -84,7 +84,7 @@ void Florb::renderFrame() {
     glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
 }
 
-void Florb::createSphereGeometry() {
+void Florb::generateSphere() {
     const int X_SEGMENTS = 64;
     const int Y_SEGMENTS = 64;
     std::vector<float> vertices;

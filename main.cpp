@@ -152,7 +152,9 @@ int main() {
                 XNextEvent(display, &event);
         
                 if (event.type == KeyPress) {
-                    running = false;
+                    KeySym sym = XLookupKeysym(&event.xkey, 0);
+                    if (sym == XK_Escape || sym == XK_space)
+		        running = false;
                 }
                 else if (event.type == ConfigureNotify) {
                     XConfigureEvent xce = event.xconfigure;
