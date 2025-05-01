@@ -5,14 +5,7 @@
 #include <mutex>
 #include <GL/glew.h>
 
-// Flower class representing a single loaded texture
-class Flower {
-public:
-    GLuint textureID;
-
-    Flower(const std::string& filepath);
-    ~Flower();
-};
+#include "flower.h"
 
 // Florb class encapsulating the sphere state, geometry, textures, and behavior
 class Florb {

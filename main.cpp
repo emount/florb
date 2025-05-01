@@ -2,10 +2,11 @@
 #include <GL/glew.h>
 #include <GL/glx.h>
 #include <GL/gl.h>
-#include "Florb.h"
 #include <chrono>
 #include <iostream>
 #include <thread>
+
+#include "florb.h"
 
 Display* display;
 Window window;
