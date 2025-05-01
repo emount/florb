@@ -37,6 +37,6 @@ public:
     void renderFrame();
 
 private:
-    void createSphereGeometry();
-    void initShader();
+    void generateSphere();
+    void initShaders();
 };

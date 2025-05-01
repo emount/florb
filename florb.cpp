@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "florb.h"
+#include "florbUtils.h"
 
 namespace fs = std::filesystem;
 
@@ -12,7 +13,7 @@ using std::sin;
 // Florb class implementation
 Florb::Florb() {
     generateSphere();
-    initShader();
+    initShaders();
 }
 
 Florb::~Florb() {
@@ -55,8 +56,11 @@ void Florb::renderFrame() {
     extern int screenWidth;
     extern int screenHeight;
     
+    FlorbUtils::glCheck("renderFrame()");
+  
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glViewport(0, 0, screenWidth, screenHeight);
+    FlorbUtils::glCheck("glViewport()");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
@@ -69,19 +73,28 @@ void Florb::renderFrame() {
         0.0f, 0.0f,    0.0f, 1.0f
     };
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, projection);
+    FlorbUtils::glCheck("glUniformMatrix4fv()");
 
     {
         std::lock_guard<std::mutex> lock(stateMutex);
         glUniform1f(glGetUniformLocation(shaderProgram, "zoom"), zoom);
+	FlorbUtils::glCheck("glUniform1f(glGetUniformLocation(zoom)");
         glUniform2f(glGetUniformLocation(shaderProgram, "centerOffset"), offsetX, offsetY);
+	FlorbUtils::glCheck("glUniform2f(glGetUniformLocation(centerOffset)");
     }
 
     glActiveTexture(GL_TEXTURE0);
+    FlorbUtils::glCheck("glActiveTexture()");
     glBindTexture(GL_TEXTURE_2D, flowers[currentFlower].getTextureID());
+    FlorbUtils::glCheck("glBindTexture()");
     glUniform1i(glGetUniformLocation(shaderProgram, "currentTexture"), 0);
+    FlorbUtils::glCheck("glGetUniformLocation()()");
 
     glBindVertexArray(vao);
+    FlorbUtils::glCheck("glBindVertexArray()");
+
     glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+    FlorbUtils::glCheck("glDrawElements()");
 }
 
 void Florb::generateSphere() {
@@ -131,7 +144,7 @@ void Florb::generateSphere() {
     glBindVertexArray(0);
 }
 
-void Florb::initShader() {
+void Florb::initShaders() {
     const char* vertexShaderSource = R"glsl(
         #version 330 core
         layout(location = 0) in vec3 aPos;
