@@ -23,19 +23,6 @@ Flower::Flower(const std::string& filename) :
     
     if (!data) {
         throw std::runtime_error("Failed to load image: " + filename);
-    } else {
-        std::cerr << "[DEBUG] Loaded image : "
-		  << filename
-		  << " ("
-		  << width
-		  << "x"
-		  << height
-		  << "), "
-		  << channels
-	  	  << " channels, assigned texture ID ("
-		  << textureID
-		  << ")"
-		  << endl;
     }
 
     GLenum format;
@@ -51,6 +38,19 @@ Flower::Flower(const std::string& filename) :
     static_cast<void>(format);
 
     glGenTextures(1, &textureID);
+
+    std::cerr << "[DEBUG] Loaded image : "
+	      << filename
+	      << " ("
+	      << width
+	      << "x"
+	      << height
+	      << "), "
+	      << channels
+	      << " channels, assigned texture ID ("
+	      << textureID
+	      << ")"
+	      << endl;
 
     glBindTexture(GL_TEXTURE_2D, textureID);
     FlorbUtils::glCheck("glBindTexture()");

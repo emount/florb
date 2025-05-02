@@ -111,11 +111,11 @@ void Florb::renderFrame() {
     GLuint tex = flowers.empty() ? fallbackTextureID :
                                    flowers[currentFlower].getTextureID();
     
-// TEMPORARY DEBUG    if (!glIsTexture(tex))
-// TEMPORARY DEBUG        std::cerr << "[WARN] Not a valid texture ID!\n";
+    if (!glIsTexture(tex))
+        std::cerr << "[WARN] Not a valid texture ID!\n";
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
-// TEMPORARY DEBUG    FlorbUtils::glCheck("glBindTexture()");
+    FlorbUtils::glCheck("glBindTexture()");
 
     GLint bound;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound);
@@ -124,10 +124,6 @@ void Florb::renderFrame() {
 	      << ", texture ID: "
 	      << bound
 	      << endl;
-
-    GLint activeTex = 0;
-    glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTex);
-    // std::cerr << "[DEBUG] Active texture unit: " << (activeTex - GL_TEXTURE0) << "\n";
 
     GLint texLoc = glGetUniformLocation(shaderProgram, "currentTexture");
     if (texLoc >= 0) {
@@ -138,6 +134,10 @@ void Florb::renderFrame() {
     
     glUniform1i(texLoc, 0);
     // TEMPORARY REINSTATE SOON FlorbUtils::glCheck("glGetUniformLocation()()");
+
+    GLint activeTex = 0;
+    glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTex);
+    // std::cerr << "[DEBUG] Active texture unit: " << (activeTex - GL_TEXTURE0) << "\n";
 
     glBindVertexArray(vao);
     // FlorbUtils::glCheck("glBindVertexArray()");
