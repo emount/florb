@@ -10,12 +10,10 @@
 #include "florb.h"
 #include "florbUtils.h"
 
-// Uncomment to enable class-level debug
-// #define DEBUG_MESSAGES
-
 namespace fs = std::filesystem;
 
 using std::cerr;
+using std::cout;
 using std::endl;
 using std::cos;
 using std::sin;
@@ -75,11 +73,11 @@ void Florb::renderFrame() {
     extern int screenWidth;
     extern int screenHeight;
     
-    FlorbUtils::glCheck("renderFrame()");
+    // FlorbUtils::glCheck("renderFrame()");
   
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glViewport(0, 0, screenWidth, screenHeight);
-    FlorbUtils::glCheck("glViewport()");
+    // FlorbUtils::glCheck("glViewport()");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
@@ -92,38 +90,57 @@ void Florb::renderFrame() {
         0.0f, 0.0f,    0.0f, 1.0f
     };
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, projection);
-    FlorbUtils::glCheck("glUniformMatrix4fv()");
+    // FlorbUtils::glCheck("glUniformMatrix4fv()");
 
     {
         std::lock_guard<std::mutex> lock(stateMutex);
         glUniform1f(glGetUniformLocation(shaderProgram, "zoom"), zoom);
-	FlorbUtils::glCheck("glUniform1f(glGetUniformLocation(zoom)");
+	// FlorbUtils::glCheck("glUniform1f(glGetUniformLocation(zoom)");
         glUniform2f(glGetUniformLocation(shaderProgram, "centerOffset"), offsetX, offsetY);
-	FlorbUtils::glCheck("glUniform2f(glGetUniformLocation(centerOffset)");
+	// FlorbUtils::glCheck("glUniform2f(glGetUniformLocation(centerOffset)");
     }
 
     glActiveTexture(GL_TEXTURE0);
-    FlorbUtils::glCheck("glActiveTexture()");
+    // FlorbUtils::glCheck("glActiveTexture()");
+
+// cout << "Florb::renderFrame() - Rendering flower ["
+// 	 << flowers[currentFlower].getFilename()
+// 	 << "]"
+// 	 << endl;
     
     GLuint tex = flowers.empty() ? fallbackTextureID :
                                    flowers[currentFlower].getTextureID();
-#ifdef DEBUG_MESSAGES
-    std::cerr << "[DEBUG] Texture ID: " << tex << "\n";
-#endif
-
+    
 // TEMPORARY DEBUG    if (!glIsTexture(tex))
 // TEMPORARY DEBUG        std::cerr << "[WARN] Not a valid texture ID!\n";
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
 // TEMPORARY DEBUG    FlorbUtils::glCheck("glBindTexture()");
+    std::cerr << "[DEBUG] Current flower index: " << currentFlower << ", texture ID: " << tex << "\n";
+
+    GLint activeTex = 0;
+    glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTex);
+    // std::cerr << "[DEBUG] Active texture unit: " << (activeTex - GL_TEXTURE0) << "\n";
+
+    GLint texLoc = glGetUniformLocation(shaderProgram, "currentTexture");
+    if (texLoc >= 0) {
+        glUniform1i(texLoc, 0);
+    } else {
+        cerr << "[ERROR] Uniform 'currentTexture' not found\n";
+    }
     
-    glUniform1i(glGetUniformLocation(shaderProgram, "currentTexture"), 0);
-    FlorbUtils::glCheck("glGetUniformLocation()()");
+    glUniform1i(texLoc, 0);
+    // TEMPORARY REINSTATE SOON FlorbUtils::glCheck("glGetUniformLocation()()");
 
     glBindVertexArray(vao);
-    FlorbUtils::glCheck("glBindVertexArray()");
+    // FlorbUtils::glCheck("glBindVertexArray()");
+
+    GLint debugTex;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &debugTex);
+    std::cerr << "[DEBUG] GL_TEXTURE_BINDING_2D: " << debugTex << "\n";
 
     glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
-    FlorbUtils::glCheck("glDrawElements()");
+    // FlorbUtils::glCheck("glDrawElements()");
 }
 
 void Florb::generateSphere() {
@@ -189,6 +206,15 @@ void Florb::initShaders() {
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
+        // GREEN STATIC #version 330 core
+        // GREEN STATIC out vec4 FragColor;
+        // GREEN STATIC uniform sampler2D currentTexture;
+        // GREEN STATIC in vec2 vTexCoord;
+        // GREEN STATIC 
+        // GREEN STATIC void main() {
+        // GREEN STATIC     vec4 color = texture(currentTexture, vTexCoord);
+        // GREEN STATIC     FragColor = color;
+        // GREEN STATIC }
         #version 330 core
         out vec4 FragColor;
         in vec3 fragPos;

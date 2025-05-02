@@ -11,6 +11,7 @@
 class Florb {
 private:
     std::vector<Flower> flowers;
+    std::vector<std::string> flowerPaths;
     unsigned int currentFlower = 0;
 
     float zoom = 1.0f;

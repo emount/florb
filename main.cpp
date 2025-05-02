@@ -137,7 +137,7 @@ void initOpenGL() {
 int main() {
     const int TARGET_FPS(60);
     const int FRAME_DELAY_MS(1000 / TARGET_FPS);
-    auto switchInterval(15UL);
+    auto switchInterval(8UL);
     auto now(std::chrono::steady_clock::now());
 
     try {
@@ -172,11 +172,11 @@ int main() {
 	    now = std::chrono::steady_clock::now();
             auto elapsed(std::chrono::duration_cast<std::chrono::seconds>(now - lastSwitch));
 
-	    std::cout << "[DEBUG] Elapsed : "
-		      << elapsed.count()
-		      << ", switchInterval = "
-		      << switchInterval
-		      << endl;
+	// std::cout << "[DEBUG] Elapsed : "
+	// 	      << elapsed.count()
+	// 	      << ", switchInterval = "
+	// 	      << switchInterval
+	// 	      << endl;
 
             if (static_cast<unsigned long>(elapsed.count()) >= switchInterval) {
                 florb.nextFlower();

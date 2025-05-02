@@ -9,6 +9,7 @@ public:
     Flower(const std::string& filename);
     ~Flower();
 
+    const std::string& getFilename() const;
     GLuint getTextureID() const { return textureID; }
     int getWidth() const { return width; }
     int getHeight() const { return height; }
@@ -16,6 +17,8 @@ public:
     GLenum getFormat() const { return format; }
 
 private:
+    const std::string filename;
+  
     GLuint textureID = 0;
     int width = 0;
     int height = 0;
