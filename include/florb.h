@@ -21,6 +21,8 @@ private:
     GLuint vbo = 0;
     GLuint ebo = 0;
     GLuint shaderProgram = 0;
+    GLuint fallbackTextureID = 0;
+  
     int indexCount = 0;
 
     std::mutex stateMutex;

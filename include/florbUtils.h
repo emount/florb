@@ -4,6 +4,8 @@
 
 namespace FlorbUtils {
 
+    GLuint createDebugTexture();
+
     void dumpTexture(GLuint textureID,
 		     int width,
 		     int height,

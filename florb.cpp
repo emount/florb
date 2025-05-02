@@ -1,5 +1,8 @@
 #include <GL/glew.h>
 #include <GL/glx.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <math.h>
 #include <filesystem>
 #include <iostream>
@@ -18,9 +21,8 @@ using std::string;
 const string Florb::k_ImageDir("images");
 
 // Florb class implementation
-Florb::Florb() {
-    cerr << "[DEBUG] Is context current? "
-	 << (glXGetCurrentContext() ? "yes" : "no") << endl;
+Florb::Florb() :
+    fallbackTextureID(FlorbUtils::createDebugTexture()) {
     loadFlowers(k_ImageDir);
     generateSphere();
     initShaders();
@@ -96,12 +98,13 @@ void Florb::renderFrame() {
     glActiveTexture(GL_TEXTURE0);
     FlorbUtils::glCheck("glActiveTexture()");
     
-    GLuint tex = flowers[currentFlower].getTextureID();
+    GLuint tex = flowers.empty() ? fallbackTextureID :
+                                   flowers[currentFlower].getTextureID();
     std::cerr << "[DEBUG] Texture ID: " << tex << "\n";
 
     if (!glIsTexture(tex))
         std::cerr << "[WARN] Not a valid texture ID!\n";
-    glBindTexture(GL_TEXTURE_2D, flowers[currentFlower].getTextureID());
+    glBindTexture(GL_TEXTURE_2D, tex);
     FlorbUtils::glCheck("glBindTexture()");
     
     glUniform1i(glGetUniformLocation(shaderProgram, "currentTexture"), 0);
@@ -120,13 +123,15 @@ void Florb::generateSphere() {
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
 
+    int radius = 1.0f;
+
     for (int y = 0; y <= Y_SEGMENTS; ++y) {
         for (int x = 0; x <= X_SEGMENTS; ++x) {
             float xSegment = (float)x / (float)X_SEGMENTS;
             float ySegment = (float)y / (float)Y_SEGMENTS;
-            float xPos = std::cos(xSegment * 2.0f * 3.14159265f) * std::sin(ySegment * 3.14159265f);
-            float yPos = std::cos(ySegment * 3.14159265f);
-            float zPos = std::sin(xSegment * 2.0f * 3.14159265f) * std::sin(ySegment * 3.14159265f);
+            float xPos = radius * std::cos(xSegment * 2.0f * 3.14159265f) * std::sin(ySegment * 3.14159265f);
+            float yPos = radius * std::cos(ySegment * 3.14159265f);
+            float zPos = radius * std::sin(xSegment * 2.0f * 3.14159265f) * std::sin(ySegment * 3.14159265f);
 
             vertices.push_back(xPos);
             vertices.push_back(yPos);
@@ -179,16 +184,13 @@ void Florb::initShaders() {
         out vec4 FragColor;
         in vec3 fragPos;
         uniform sampler2D currentTexture;
-        uniform float zoom;
-        uniform vec2 centerOffset;
-        void main()
-        {
+        
+        void main() {
             vec3 dir = normalize(fragPos);
             vec2 uv;
             uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
             uv.y = asin(dir.y) / 3.14159265 + 0.5;
-            uv = (uv - 0.5) * zoom + 0.5 + centerOffset;
-            uv = clamp(uv, 0.0, 1.0);
+            uv = clamp(uv, 0.001, 0.999);
             uv.y = 1.0 - uv.y;
             FragColor = texture(currentTexture, uv);
         }
