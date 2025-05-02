@@ -120,7 +120,6 @@ void initOpenGL() {
 
     GLint testTex = 0;
     glGenTextures(1, (GLuint*)&testTex);
-    std::cerr << "[TEST] glGenTextures returned: " << testTex << "\n";
 
     GLenum err = glewInit();
     if (err != GLEW_OK) {
@@ -135,7 +134,7 @@ void initOpenGL() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     const GLubyte* version = glGetString(GL_VERSION);
-    cerr << "[INFO] OpenGL version: " << version << endl;
+    cout << "[INFO] OpenGL version: " << version << endl;
 }
 
 int main() {
@@ -177,12 +176,6 @@ int main() {
             static auto lastSwitch(std::chrono::steady_clock::now());
 	    now = std::chrono::steady_clock::now();
             auto elapsed(std::chrono::duration_cast<std::chrono::seconds>(now - lastSwitch));
-
-	// std::cout << "[DEBUG] Elapsed : "
-	// 	      << elapsed.count()
-	// 	      << ", switchInterval = "
-	// 	      << switchInterval
-	// 	      << endl;
 
             if (static_cast<unsigned long>(elapsed.count()) >= switchInterval) {
                 florb.nextFlower();

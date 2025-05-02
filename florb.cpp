@@ -76,11 +76,11 @@ void Florb::renderFrame() {
     extern int screenWidth;
     extern int screenHeight;
     
-    // FlorbUtils::glCheck("renderFrame()");
+    FlorbUtils::glCheck("renderFrame()");
   
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glViewport(0, 0, screenWidth, screenHeight);
-    // FlorbUtils::glCheck("glViewport()");
+    FlorbUtils::glCheck("glViewport()");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
@@ -93,99 +93,22 @@ void Florb::renderFrame() {
         0.0f, 0.0f,    0.0f, 1.0f
     };
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, projection);
-    // FlorbUtils::glCheck("glUniformMatrix4fv()");
+    FlorbUtils::glCheck("glUniformMatrix4fv()");
 
     {
         std::lock_guard<std::mutex> lock(stateMutex);
         glUniform1f(glGetUniformLocation(shaderProgram, "zoom"), zoom);
-	// FlorbUtils::glCheck("glUniform1f(glGetUniformLocation(zoom)");
+	FlorbUtils::glCheck("glUniform1f(glGetUniformLocation(zoom)");
         glUniform2f(glGetUniformLocation(shaderProgram, "centerOffset"), offsetX, offsetY);
-	// FlorbUtils::glCheck("glUniform2f(glGetUniformLocation(centerOffset)");
+	FlorbUtils::glCheck("glUniform2f(glGetUniformLocation(centerOffset)");
     }
 
     glActiveTexture(GL_TEXTURE0);
     FlorbUtils::glCheck("glActiveTexture()");
 
-    cout << "Florb::renderFrame() - Rendering flower ["
- 	 << flowers[currentFlower].getFilename()
- 	 << "]"
- 	 << endl;
-
     auto &flower = flowers[currentFlower];
     flower.loadImage();
     GLuint tex = flowers.empty() ? fallbackTextureID : flower.getTextureID();
-
-    /// TEST IMAGE LOAD TO TEXTURE
-    stbi_set_flip_vertically_on_load(false);
-    GLint width, height, channels;
-    GLuint testTex = 0;
-    const char* filename = "test/AvatarPic.png";
-    unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
-    
-    if (!data) {
-        throw std::runtime_error("Failed to load image: " + string(filename));
-    }
-
-    GLenum format;
-    if (channels == 1)
-        format = GL_RED;
-    else if (channels == 3)
-        format = GL_RGB;
-    else if (channels == 4)
-        format = GL_RGBA;
-    else
-        throw std::runtime_error("Unsupported channel count");
-    
-    glGenTextures(1, &testTex);
-
-    std::cerr << "[DEBUG] Loaded image : "
-	      << filename
-	      << " ("
-	      << width
-	      << "x"
-	      << height
-	      << "), "
-	      << channels
-	      << " channels, assigned texture ID ("
-	      << testTex
-	      << ")"
-	      << endl;
-
-    glBindTexture(GL_TEXTURE_2D, testTex);
-    FlorbUtils::glCheck("glBindTexture()");
-		    
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-    FlorbUtils::glCheck("glTexImage2D()");
-
-    GLint texWidth = 0, texHeight = 0;
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texHeight);
-    std::cerr << "Bound texture ID "
-	      << testTex
-	      << " has dimensions ["
-	      << texWidth
-	      << "x"
-	      << texHeight
-	      << "]"
-	      << endl;
-    
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    // glBindTexture(GL_TEXTURE_2D, 0);
-
-    stbi_image_free(data);
-    /// END TEST TEXTURE LOAD
-    
-    // cerr << "[OVERRIDE] Overriding flower texture with test texture" << endl;
-    // 
-    // tex = testTex;
     
     if (!glIsTexture(tex))
         cerr << "[WARN] Texture ID ("
@@ -202,11 +125,6 @@ void Florb::renderFrame() {
 
     GLint bound;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound);
-    std::cerr << "[DEBUG] Current flower index: "
-	      << currentFlower
-	      << ", texture ID: "
-	      << bound
-	      << endl;
 
     GLint texLoc = glGetUniformLocation(shaderProgram, "currentTexture");
     if (texLoc >= 0) {
@@ -216,21 +134,19 @@ void Florb::renderFrame() {
     }
     
     glUniform1i(texLoc, 0);
-    // TEMPORARY REINSTATE SOON FlorbUtils::glCheck("glGetUniformLocation()()");
+    FlorbUtils::glCheck("glGetUniformLocation()()");
 
     GLint activeTex = 0;
     glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTex);
-    // std::cerr << "[DEBUG] Active texture unit: " << (activeTex - GL_TEXTURE0) << "\n";
 
     glBindVertexArray(vao);
-    // FlorbUtils::glCheck("glBindVertexArray()");
+    FlorbUtils::glCheck("glBindVertexArray()");
 
     GLint debugTex;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &debugTex);
-    std::cerr << "[DEBUG] GL_TEXTURE_BINDING_2D: " << debugTex << "\n";
-
+    
     glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
-    // FlorbUtils::glCheck("glDrawElements()");
+    FlorbUtils::glCheck("glDrawElements()");
 }
 
 void Florb::generateSphere() {
@@ -296,15 +212,6 @@ void Florb::initShaders() {
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
-        // GREEN STATIC #version 330 core
-        // GREEN STATIC out vec4 FragColor;
-        // GREEN STATIC uniform sampler2D currentTexture;
-        // GREEN STATIC in vec2 vTexCoord;
-        // GREEN STATIC 
-        // GREEN STATIC void main() {
-        // GREEN STATIC     vec4 color = texture(currentTexture, vTexCoord);
-        // GREEN STATIC     FragColor = color;
-        // GREEN STATIC }
         #version 330 core
         out vec4 FragColor;
         in vec3 fragPos;

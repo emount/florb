@@ -42,19 +42,6 @@ void Flower::loadImage() {
     
     glGenTextures(1, &textureID);
 
-    std::cerr << "[DEBUG] Loaded image : "
-	      << filename
-	      << " ("
-	      << width
-	      << "x"
-	      << height
-	      << "), "
-	      << channels
-	      << " channels, assigned texture ID ("
-	      << textureID
-	      << ")"
-	      << endl;
-
     glBindTexture(GL_TEXTURE_2D, textureID);
     FlorbUtils::glCheck("glBindTexture()");
 		    
@@ -71,18 +58,10 @@ void Flower::loadImage() {
     GLint texWidth = 0, texHeight = 0;
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texHeight);
-    std::cerr << "Bound texture ID "
-	      << textureID
-	      << " has dimensions ["
-	      << texWidth
-	      << "x"
-	      << texHeight
-	      << "]"
-	      << endl;
     
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     stbi_image_free(data);
 }
