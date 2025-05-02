@@ -22,12 +22,11 @@ using std::cos;
 using std::sin;
 using std::string;
 
-const string Florb::k_ImageDir("images");
+const string Florb::k_DefaultImageDir("images");
 
 // Florb class implementation
 Florb::Florb() :
     fallbackTextureID(FlorbUtils::createDebugTexture()) {
-    loadFlowers(k_ImageDir);
     generateSphere();
     initShaders();
 }
@@ -115,7 +114,7 @@ void Florb::renderFrame() {
                                    flowers[currentFlower].getTextureID();
 
     /// TEST IMAGE LOAD TO TEXTURE
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(false);
     GLint width, height, channels;
     GLuint testTex = 0;
     const char* filename = "test/AvatarPic.png";
@@ -161,6 +160,9 @@ void Florb::renderFrame() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    FlorbUtils::glCheck("glTexImage2D()");
 
     GLint texWidth = 0, texHeight = 0;
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);

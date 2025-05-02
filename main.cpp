@@ -150,6 +150,8 @@ int main() {
         glEnable(GL_DEPTH_TEST);
 
         Florb florb;
+	florb.loadFlowers(Florb::k_DefaultImageDir);
+	
         bool running = true;
         while (running) {
             while (XPending(display)) {

@@ -28,8 +28,6 @@ private:
   
     std::mutex stateMutex;
 
-    static const std::string k_ImageDir;
-
 public:
     Florb();
     ~Florb();
@@ -44,6 +42,10 @@ public:
     void setCenter(float x, float y);
   
     void renderFrame();
+
+public:
+  
+    static const std::string k_DefaultImageDir;
 
 private:
     void generateSphere();
