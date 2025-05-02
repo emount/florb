@@ -10,6 +10,9 @@
 #include "florb.h"
 #include "florbUtils.h"
 
+// TEMPORARY DEBUG
+#include "stb_image.h"
+
 namespace fs = std::filesystem;
 
 using std::cerr;
@@ -101,19 +104,102 @@ void Florb::renderFrame() {
     }
 
     glActiveTexture(GL_TEXTURE0);
-    // FlorbUtils::glCheck("glActiveTexture()");
+    FlorbUtils::glCheck("glActiveTexture()");
 
-// cout << "Florb::renderFrame() - Rendering flower ["
-// 	 << flowers[currentFlower].getFilename()
-// 	 << "]"
-// 	 << endl;
+    cout << "Florb::renderFrame() - Rendering flower ["
+ 	 << flowers[currentFlower].getFilename()
+ 	 << "]"
+ 	 << endl;
     
     GLuint tex = flowers.empty() ? fallbackTextureID :
                                    flowers[currentFlower].getTextureID();
+
+    /// TEST IMAGE LOAD TO TEXTURE
+    stbi_set_flip_vertically_on_load(true);
+    GLint width, height, channels;
+    GLuint testTex = 0;
+    const char* filename = "test/AvatarPic.png";
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
+    
+    if (!data) {
+        throw std::runtime_error("Failed to load image: " + string(filename));
+    }
+
+    GLenum format;
+    if (channels == 1)
+        format = GL_RED;
+    else if (channels == 3)
+        format = GL_RGB;
+    else if (channels == 4)
+        format = GL_RGBA;
+    else
+        throw std::runtime_error("Unsupported channel count");
+    
+    static_cast<void>(format);
+
+    glGenTextures(1, &testTex);
+
+    std::cerr << "[DEBUG] Loaded image : "
+	      << filename
+	      << " ("
+	      << width
+	      << "x"
+	      << height
+	      << "), "
+	      << channels
+	      << " channels, assigned texture ID ("
+	      << testTex
+	      << ")"
+	      << endl;
+
+    glBindTexture(GL_TEXTURE_2D, testTex);
+    FlorbUtils::glCheck("glBindTexture()");
+		    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    GLint texWidth = 0, texHeight = 0;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texHeight);
+    std::cerr << "Bound texture ID "
+	      << testTex
+	      << " has dimensions ["
+	      << texWidth
+	      << "x"
+	      << texHeight
+	      << "]"
+	      << endl;
+
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        std::cerr << "[ERROR] OpenGL texture upload failed: " << gluErrorString(err) << "\n";
+    }
+    
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    // glBindTexture(GL_TEXTURE_2D, 0);
+
+    stbi_image_free(data);
+    /// END TEST TEXTURE LOAD
+    
+    cerr << "[OVERRIDE] Overriding flower texture with test texture" << endl;
+
+    tex = testTex;
     
     if (!glIsTexture(tex))
-        std::cerr << "[WARN] Not a valid texture ID!\n";
-    glActiveTexture(GL_TEXTURE0);
+        cerr << "[WARN] Texture ID ("
+	     << tex
+	     << ") is not valid"
+	     << endl;
+
+    if (!glXGetCurrentContext()) {
+        cerr << "[FATAL] OpenGL context is not current" << endl;
+    }
+
     glBindTexture(GL_TEXTURE_2D, tex);
     FlorbUtils::glCheck("glBindTexture()");
 

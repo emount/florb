@@ -18,7 +18,7 @@ using std::string;
 Flower::Flower(const std::string& filename) :
     filename(filename) {
     stbi_set_flip_vertically_on_load(true);
-    int width, height, channels;    
+    int width, height, channels;
     unsigned char* data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
     
     if (!data) {
@@ -57,7 +57,7 @@ Flower::Flower(const std::string& filename) :
 		    
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -88,7 +88,7 @@ Flower::Flower(const std::string& filename) :
     
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // glBindTexture(GL_TEXTURE_2D, 0);
 
     stbi_image_free(data);
 }

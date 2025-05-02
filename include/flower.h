@@ -11,18 +11,18 @@ public:
 
     const std::string& getFilename() const;
     GLuint getTextureID() const { return textureID; }
-    int getWidth() const { return width; }
-    int getHeight() const { return height; }
-    int getChannels() const { return channels; }
+    GLint getWidth() const { return width; }
+    GLint getHeight() const { return height; }
+    GLint getChannels() const { return channels; }
     GLenum getFormat() const { return format; }
 
 private:
     const std::string filename;
   
     GLuint textureID = 0;
-    int width = 0;
-    int height = 0;
-    int channels = 0;
+    GLint width = 0;
+    GLint height = 0;
+    GLint channels = 0;
     GLenum format = 0;
 
     void loadFromFile(const std::string& filename);
