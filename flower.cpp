@@ -30,7 +30,7 @@ Flower::Flower(const std::string& filename) :
 		  << width
 		  << "x"
 		  << height
-		  << ", "
+		  << "), "
 		  << channels
 	  	  << " channels, assigned texture ID ("
 		  << textureID
@@ -53,7 +53,16 @@ Flower::Flower(const std::string& filename) :
     glGenTextures(1, &textureID);
 
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    GLint texWidth = 0;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
+    std::cerr << "Bound texture ID " << textureID << " has width " << texWidth << "\n";
+    
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 #ifdef DEBUG_IMAGES
@@ -67,11 +76,8 @@ Flower::Flower(const std::string& filename) :
     if (err != GL_NO_ERROR) {
         std::cerr << "[ERROR] OpenGL texture upload failed: " << gluErrorString(err) << "\n";
     }
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 

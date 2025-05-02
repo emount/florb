@@ -137,7 +137,7 @@ void initOpenGL() {
 int main() {
     const int TARGET_FPS(60);
     const int FRAME_DELAY_MS(1000 / TARGET_FPS);
-    auto switchInterval(8UL);
+    auto switchInterval(5UL);
     auto now(std::chrono::steady_clock::now());
 
     try {
