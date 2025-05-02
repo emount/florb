@@ -116,7 +116,14 @@ void Florb::renderFrame() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
 // TEMPORARY DEBUG    FlorbUtils::glCheck("glBindTexture()");
-    std::cerr << "[DEBUG] Current flower index: " << currentFlower << ", texture ID: " << tex << "\n";
+
+    GLint bound;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound);
+    std::cerr << "[DEBUG] Current flower index: "
+	      << currentFlower
+	      << ", texture ID: "
+	      << bound
+	      << endl;
 
     GLint activeTex = 0;
     glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTex);

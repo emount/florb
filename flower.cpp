@@ -53,15 +53,24 @@ Flower::Flower(const std::string& filename) :
     glGenTextures(1, &textureID);
 
     glBindTexture(GL_TEXTURE_2D, textureID);
-
+    FlorbUtils::glCheck("glBindTexture()");
+		    
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    GLint texWidth = 0;
+    GLint texWidth = 0, texHeight = 0;
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
-    std::cerr << "Bound texture ID " << textureID << " has width " << texWidth << "\n";
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texHeight);
+    std::cerr << "Bound texture ID "
+	      << textureID
+	      << " has dimensions ["
+	      << texWidth
+	      << "x"
+	      << texHeight
+	      << "]"
+	      << endl;
     
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 

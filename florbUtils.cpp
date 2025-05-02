@@ -1,4 +1,5 @@
 #include <GL/glew.h>
+#include <GL/glu.h>
 #include <iomanip>
 #include <vector>
 
@@ -61,6 +62,7 @@ void FlorbUtils::glCheck(const string &str) {
     GLenum err;
   
     while ((err = glGetError()) != GL_NO_ERROR) {
+      const GLubyte* errStr = gluErrorString(err);
       cerr << "[" << str << " : GL ERROR (";
         switch(err) {
         case GL_INVALID_ENUM:
@@ -78,6 +80,9 @@ void FlorbUtils::glCheck(const string &str) {
         default:
 	    cerr << err;
 	}
-	cerr << ")]" << endl;
+	cerr << ")] : \""
+	     << errStr
+	     << "\""
+	     << endl;
     }
 }

@@ -118,6 +118,10 @@ void initOpenGL() {
 
     glXMakeCurrent(display, window, context);
 
+    GLint testTex = 0;
+    glGenTextures(1, (GLuint*)&testTex);
+    std::cerr << "[TEST] glGenTextures returned: " << testTex << "\n";
+
     GLenum err = glewInit();
     if (err != GLEW_OK) {
         throw std::runtime_error(std::string("GLEW init failed: ") + (const char*)glewGetErrorString(err));
@@ -193,6 +197,7 @@ int main() {
         }
 
         glXMakeCurrent(display, None, nullptr);
+
         glXDestroyContext(display, context);
         XDestroyWindow(display, window);
         XCloseDisplay(display);
