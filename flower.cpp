@@ -8,16 +8,21 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-// Uncomment to replace image data with a red texture
-// #define DEBUG_IMAGES
-
 using std::cerr;
 using std::endl;
 using std::string;
 
 Flower::Flower(const std::string& filename) :
-    filename(filename) {
-    stbi_set_flip_vertically_on_load(true);
+    filename(filename) { }
+
+Flower::~Flower() {
+    if (textureID != 0) {
+        glDeleteTextures(1, &textureID);
+    }
+}
+
+void Flower::loadImage() {
+    stbi_set_flip_vertically_on_load(false);
     int width, height, channels;
     unsigned char* data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
     
@@ -35,8 +40,6 @@ Flower::Flower(const std::string& filename) :
     else
         throw std::runtime_error("Unsupported channel count");
     
-    static_cast<void>(format);
-
     glGenTextures(1, &textureID);
 
     std::cerr << "[DEBUG] Loaded image : "
@@ -62,12 +65,8 @@ Flower::Flower(const std::string& filename) :
     
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-#ifdef DEBUG_IMAGES
-    unsigned char red[4] = { 255, 0, 0, 255 };
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, red);
-#else
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-#endif
+    FlorbUtils::glCheck("glTexImage2D()");
 
     GLint texWidth = 0, texHeight = 0;
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
@@ -80,23 +79,12 @@ Flower::Flower(const std::string& filename) :
 	      << texHeight
 	      << "]"
 	      << endl;
-
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        std::cerr << "[ERROR] OpenGL texture upload failed: " << gluErrorString(err) << "\n";
-    }
     
     glGenerateMipmap(GL_TEXTURE_2D);
 
     // glBindTexture(GL_TEXTURE_2D, 0);
 
     stbi_image_free(data);
-}
-
-Flower::~Flower() {
-    if (textureID != 0) {
-        glDeleteTextures(1, &textureID);
-    }
 }
 
 const string& Flower::getFilename() const {

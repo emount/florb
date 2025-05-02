@@ -42,6 +42,7 @@ void Florb::loadFlowers(const std::string& directory) {
     for (const auto& entry : fs::directory_iterator(directory)) {
         if (entry.is_regular_file()) {
             flowers.emplace_back(entry.path().string());
+	    flowers.back().loadImage();
         }
     }
 }
@@ -109,9 +110,10 @@ void Florb::renderFrame() {
  	 << flowers[currentFlower].getFilename()
  	 << "]"
  	 << endl;
-    
-    GLuint tex = flowers.empty() ? fallbackTextureID :
-                                   flowers[currentFlower].getTextureID();
+
+    auto &flower = flowers[currentFlower];
+    flower.loadImage();
+    GLuint tex = flowers.empty() ? fallbackTextureID : flower.getTextureID();
 
     /// TEST IMAGE LOAD TO TEXTURE
     stbi_set_flip_vertically_on_load(false);
@@ -134,8 +136,6 @@ void Florb::renderFrame() {
     else
         throw std::runtime_error("Unsupported channel count");
     
-    static_cast<void>(format);
-
     glGenTextures(1, &testTex);
 
     std::cerr << "[DEBUG] Loaded image : "
@@ -175,11 +175,6 @@ void Florb::renderFrame() {
 	      << texHeight
 	      << "]"
 	      << endl;
-
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        std::cerr << "[ERROR] OpenGL texture upload failed: " << gluErrorString(err) << "\n";
-    }
     
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -188,9 +183,9 @@ void Florb::renderFrame() {
     stbi_image_free(data);
     /// END TEST TEXTURE LOAD
     
-    cerr << "[OVERRIDE] Overriding flower texture with test texture" << endl;
-
-    tex = testTex;
+    // cerr << "[OVERRIDE] Overriding flower texture with test texture" << endl;
+    // 
+    // tex = testTex;
     
     if (!glIsTexture(tex))
         cerr << "[WARN] Texture ID ("

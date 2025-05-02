@@ -9,6 +9,8 @@ public:
     Flower(const std::string& filename);
     ~Flower();
 
+    void loadImage();
+
     const std::string& getFilename() const;
     GLuint getTextureID() const { return textureID; }
     GLint getWidth() const { return width; }
