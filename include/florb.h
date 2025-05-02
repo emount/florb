@@ -25,6 +25,8 @@ private:
 
     std::mutex stateMutex;
 
+    static const std::string k_ImageDir;
+
 public:
     Florb();
     ~Florb();

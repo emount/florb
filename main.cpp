@@ -141,8 +141,6 @@ int main() {
         glEnable(GL_DEPTH_TEST);
 
         Florb florb;
-        florb.loadFlowers("images"); // Directory containing your flower images
-
         bool running = true;
         while (running) {
             auto frameStart = std::chrono::high_resolution_clock::now();

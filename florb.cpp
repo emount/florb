@@ -1,3 +1,5 @@
+#include <GL/glew.h>
+#include <GL/glx.h>
 #include <math.h>
 #include <filesystem>
 #include <iostream>
@@ -7,11 +9,19 @@
 
 namespace fs = std::filesystem;
 
+using std::cerr;
+using std::endl;
 using std::cos;
 using std::sin;
+using std::string;
+
+const string Florb::k_ImageDir("images");
 
 // Florb class implementation
 Florb::Florb() {
+    cerr << "[DEBUG] Is context current? "
+	 << (glXGetCurrentContext() ? "yes" : "no") << endl;
+    loadFlowers(k_ImageDir);
     generateSphere();
     initShaders();
 }
@@ -85,8 +95,15 @@ void Florb::renderFrame() {
 
     glActiveTexture(GL_TEXTURE0);
     FlorbUtils::glCheck("glActiveTexture()");
+    
+    GLuint tex = flowers[currentFlower].getTextureID();
+    std::cerr << "[DEBUG] Texture ID: " << tex << "\n";
+
+    if (!glIsTexture(tex))
+        std::cerr << "[WARN] Not a valid texture ID!\n";
     glBindTexture(GL_TEXTURE_2D, flowers[currentFlower].getTextureID());
     FlorbUtils::glCheck("glBindTexture()");
+    
     glUniform1i(glGetUniformLocation(shaderProgram, "currentTexture"), 0);
     FlorbUtils::glCheck("glGetUniformLocation()()");
 
