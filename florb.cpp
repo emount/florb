@@ -10,6 +10,9 @@
 #include "florb.h"
 #include "florbUtils.h"
 
+// Uncomment to enable class-level debug
+// #define DEBUG_MESSAGES
+
 namespace fs = std::filesystem;
 
 using std::cerr;
@@ -41,6 +44,10 @@ void Florb::loadFlowers(const std::string& directory) {
             flowers.emplace_back(entry.path().string());
         }
     }
+}
+
+void Florb::nextFlower() {
+    if(++currentFlower >= flowers.size()) currentFlower = 0;
 }
 
 void Florb::setZoom(float z) {
@@ -100,12 +107,14 @@ void Florb::renderFrame() {
     
     GLuint tex = flowers.empty() ? fallbackTextureID :
                                    flowers[currentFlower].getTextureID();
+#ifdef DEBUG_MESSAGES
     std::cerr << "[DEBUG] Texture ID: " << tex << "\n";
+#endif
 
-    if (!glIsTexture(tex))
-        std::cerr << "[WARN] Not a valid texture ID!\n";
+// TEMPORARY DEBUG    if (!glIsTexture(tex))
+// TEMPORARY DEBUG        std::cerr << "[WARN] Not a valid texture ID!\n";
     glBindTexture(GL_TEXTURE_2D, tex);
-    FlorbUtils::glCheck("glBindTexture()");
+// TEMPORARY DEBUG    FlorbUtils::glCheck("glBindTexture()");
     
     glUniform1i(glGetUniformLocation(shaderProgram, "currentTexture"), 0);
     FlorbUtils::glCheck("glGetUniformLocation()()");

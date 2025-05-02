@@ -1,12 +1,23 @@
 #include <GL/glew.h>
-#include <iostream>
+#include <iomanip>
 #include <vector>
+
 #include "florbUtils.h"
+
+namespace chrono = std::chrono;
+
+using chrono::system_clock;
+using chrono::time_point;
 
 using std::cerr;
 using std::endl;
+using std::localtime;
 using std::min;
+using std::ostream;
+using std::put_time;
 using std::string;
+using std::time_t;
+using std::tm;
 using std::vector;
 
 GLuint FlorbUtils::createDebugTexture() {

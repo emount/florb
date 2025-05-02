@@ -3,10 +3,12 @@
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <thread>
 
 #include "florb.h"
+#include "florbUtils.h"
 
 Display* display;
 Window window;
@@ -15,6 +17,7 @@ int screenWidth = 800;
 int screenHeight = 600;
 
 using std::cerr;
+using std::cout;
 using std::endl;
 
 // Initialize OpenGL and X11 Window
@@ -132,8 +135,10 @@ void initOpenGL() {
 }
 
 int main() {
-    const int TARGET_FPS = 60;
-    const int FRAME_DURATION_MS = 1000 / TARGET_FPS;
+    const int TARGET_FPS(60);
+    const int FRAME_DELAY_MS(1000 / TARGET_FPS);
+    auto switchInterval(15UL);
+    auto now(std::chrono::steady_clock::now());
 
     try {
         initOpenGL();
@@ -143,8 +148,6 @@ int main() {
         Florb florb;
         bool running = true;
         while (running) {
-            auto frameStart = std::chrono::high_resolution_clock::now();
-        
             while (XPending(display)) {
                 XEvent event;
                 XNextEvent(display, &event);
@@ -163,15 +166,29 @@ int main() {
                     }
                 }
             }
-        
+	    
+            // Update timing for flower transition
+            static auto lastSwitch(std::chrono::steady_clock::now());
+	    now = std::chrono::steady_clock::now();
+            auto elapsed(std::chrono::duration_cast<std::chrono::seconds>(now - lastSwitch));
+
+	    std::cout << "[DEBUG] Elapsed : "
+		      << elapsed.count()
+		      << ", switchInterval = "
+		      << switchInterval
+		      << endl;
+
+            if (static_cast<unsigned long>(elapsed.count()) >= switchInterval) {
+                florb.nextFlower();
+                lastSwitch = now;
+            }
+
+	    // Render a flower frame
             florb.renderFrame();
             glXSwapBuffers(display, window);
         
-            auto frameEnd = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<float, std::milli> elapsed = frameEnd - frameStart;
-        
-            if (elapsed.count() < FRAME_DURATION_MS) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_DURATION_MS) - elapsed);
+            if (elapsed.count() < FRAME_DELAY_MS) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_DELAY_MS) - elapsed);
             }
         }
 

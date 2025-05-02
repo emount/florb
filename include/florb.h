@@ -11,7 +11,7 @@
 class Florb {
 private:
     std::vector<Flower> flowers;
-    int currentFlower = 0;
+    unsigned int currentFlower = 0;
 
     float zoom = 1.0f;
     float offsetX = 0.0f;
@@ -24,7 +24,7 @@ private:
     GLuint fallbackTextureID = 0;
   
     int indexCount = 0;
-
+  
     std::mutex stateMutex;
 
     static const std::string k_ImageDir;
@@ -34,10 +34,14 @@ public:
     ~Florb();
 
     void loadFlowers(const std::string& directory);
-    void setZoom(float z);
-    void setCenter(float x, float y);
+    void nextFlower();
+  
     float getZoom();
+    void setZoom(float z);
+  
     std::pair<float, float> getCenter();
+    void setCenter(float x, float y);
+  
     void renderFrame();
 
 private:
