@@ -59,6 +59,15 @@ Flower::Flower(const std::string& filename) :
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+#ifdef DEBUG_IMAGES
+    unsigned char red[4] = { 255, 0, 0, 255 };
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, red);
+#else
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+#endif
 
     GLint texWidth = 0, texHeight = 0;
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
@@ -71,15 +80,6 @@ Flower::Flower(const std::string& filename) :
 	      << texHeight
 	      << "]"
 	      << endl;
-    
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-#ifdef DEBUG_IMAGES
-    unsigned char red[4] = { 255, 0, 0, 255 };
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, red);
-#else
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-#endif
 
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
