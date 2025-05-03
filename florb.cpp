@@ -299,17 +299,32 @@ void Florb::initShaders() {
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
-#version 330 core
-out vec4 FragColor;
-
-uniform float vignette;
-uniform vec2 resolution;
-
-void main() {
-    vec2 screenUV = gl_FragCoord.xy / resolution;
-
-    FragColor = vec4(0.0, screenUV.x, screenUV.y, 1.0);
-}
+        #version 330 core
+        out vec4 FragColor;
+        
+        uniform vec2 resolution;
+        uniform float vignette; // vignette = 0.1 means 10% of outer radius is faded
+        
+        void main() {
+            // Normalized screen coordinates [0, 1]
+            vec2 uv = gl_FragCoord.xy / resolution;
+        
+            // Centered coordinates [-0.5, 0.5]
+            vec2 centered = uv - 0.5;
+        
+            // Radius from center
+            float r = length(centered);
+        
+            // Convert vignette factor to inner radius
+            float inner = 0.5 - vignette;
+            float falloff = 0.5 - inner;
+        
+            // Linear ramp from inner to outer radius
+            float mask = clamp((r - inner) / falloff, 0.0, 1.0);
+        
+            // Final output (for debugging, showing the mask as grayscale)
+            FragColor = vec4(vec3(mask), 1.0);
+        }
     )glsl";
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
