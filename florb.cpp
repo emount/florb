@@ -72,14 +72,15 @@ void Florb::loadConfig() {
         }
 
         if (config.contains("zoom") && config["zoom"].is_number()) {
-            setZoom(config["zoom"]);
+            auto zoomFactor(1.0f / static_cast<float>(config["zoom"]));
+            setZoom(zoomFactor);
         }
 
         if (config.contains("image_path") && config["image_path"].is_string()) {
             imagePath = config["image_path"];
         } else {
-	    imagePath = k_DefaultImagePath;
-	}
+        imagePath = k_DefaultImagePath;
+    }
 
     } catch (const exception& exc) {
         cerr << "[ERROR] Failed to parse \"florb.json\" : " << exc.what() << endl;
@@ -92,7 +93,7 @@ void Florb::loadFlowers() {
         for (const auto& entry : fs::directory_iterator(imagePath)) {
             if (entry.is_regular_file()) {
                 flowers.emplace_back(entry.path().string());
-    	    flowers.back().loadImage();
+            flowers.back().loadImage();
             }
         }
     } else {
@@ -147,15 +148,15 @@ void Florb::renderFrame() {
         textureID = fallbackTextureID;
     } else {
         auto &flower = flowers[currentFlower];
-	flower.loadImage();
-	textureID = flower.getTextureID();
+    flower.loadImage();
+    textureID = flower.getTextureID();
     }
     
     if (!glIsTexture(textureID))
         cerr << "[WARN] Texture ID ("
-	     << textureID
-	     << ") is not valid"
-	     << endl;
+         << textureID
+         << ") is not valid"
+         << endl;
 
     glUseProgram(shaderProgram);
     
@@ -177,13 +178,10 @@ void Florb::renderFrame() {
     glUniform1i(texLoc, 0);
 
     // Set offset and zoom parameters for textures
-    GLuint centerLoc = glGetUniformLocation(shaderProgram, "centerOffset");
-    // GLuint offsetLoc = glGetUniformLocation(shaderProgram, "offset");
+    GLuint offsetLoc = glGetUniformLocation(shaderProgram, "offset");
     GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
-
     glUniform1f(zoomLoc, zoom);
-    glUniform2f(centerLoc, offsetX, offsetY);
-    // glUniform2f(offsetLoc, offsetX, offsetY);   
+    glUniform2f(offsetLoc, offsetX, offsetY);   
 
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -289,20 +287,21 @@ void Florb::initShaders() {
         in vec3 fragPos;
         uniform sampler2D currentTexture;
         uniform float zoom;
-        uniform vec2 centerOffset;
+        uniform vec2 offset;
         
         void main() {
             vec3 dir = normalize(fragPos);
         
-            // Compute spherical UV coordinates
+            // Convert direction vector to spherical UV
             vec2 uv;
             uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
             uv.y = asin(dir.y) / 3.14159265 + 0.5;
         
-            // Apply zoom-centered panning
-            uv = (uv - centerOffset) * zoom + centerOffset;
+            // Apply zoom and pan centered at offset
+            uv = (uv - 0.5) * zoom + 0.5;
+            uv = clamp(uv, 0.0, 1.0);
         
-            // Flip vertical and clamp
+            uv += offset; // additional offset AFTER projection
             uv.y = 1.0 - uv.y;
             uv = clamp(uv, 0.0, 1.0);
         
