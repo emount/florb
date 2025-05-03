@@ -192,9 +192,11 @@ void Florb::renderFrame() {
     glUniform1i(texLoc, 0);
 
     // Set offset and zoom parameters for textures
+    GLuint resolutionLoc = glGetUniformLocation(shaderProgram, "resolution");
     GLuint offsetLoc = glGetUniformLocation(shaderProgram, "offset");
     GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
     int vignetteLoc = glGetUniformLocation(shaderProgram, "vignette");
+    glUniform2f(resolutionLoc, screenWidth, screenHeight);   
     glUniform1f(zoomLoc, zoom);
     glUniform2f(offsetLoc, offsetX, offsetY);   
     glUniform1f(vignetteLoc, vignette);
@@ -297,44 +299,17 @@ void Florb::initShaders() {
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
-        #version 330 core
-        out vec4 FragColor;
-        
-        in vec3 fragPos;
-        uniform sampler2D currentTexture;
-        uniform float zoom;
-        uniform vec2 offset;
-        uniform float vignette;
-        
-        void main() {
-            vec3 dir = normalize(fragPos);
+#version 330 core
+out vec4 FragColor;
 
-            // Convert direction vector to spherical UV
-            vec2 uv;
-            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
-            uv.y = asin(dir.y) / 3.14159265 + 0.5;
-        
-            // Apply zoom and pan centered at offset
-            uv = (uv - 0.5) * zoom + 0.5;
-            uv = clamp(uv, 0.0, 1.0);
+uniform float vignette;
+uniform vec2 resolution;
 
-            // Additional offset after projection
-            uv += offset;
-            uv.y = 1.0 - uv.y;
-            uv = clamp(uv, 0.0, 1.0);
-        
-        
-            // Compute vignette effect
-            vec2 delta = uv - vec2(0.5);
-            float dist = length(delta);
-            float vignetteStrength = smoothstep(0.0, vignette, dist);
+void main() {
+    vec2 screenUV = gl_FragCoord.xy / resolution;
 
-            // Sample texture and apply vignette
-            vec4 color = texture(currentTexture, uv);
-            color.rgb *= (1.0 - vignetteStrength);
-        
-            FragColor = color;
-        }
+    FragColor = vec4(0.0, screenUV.x, screenUV.y, 1.0);
+}
     )glsl";
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
