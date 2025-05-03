@@ -14,7 +14,9 @@ public:
     ~Florb();
 
     void nextFlower();
-    
+
+    void setTitle(const std::string &title);
+  
     float getVignetteRadius();
     void setVignetteRadius(float r);  
 
@@ -37,6 +39,8 @@ private:
     void initShaders();
 
 public:
+
+    static const std::string k_DefaultTitle;
   
     static const std::string k_DefaultImagePath;
   

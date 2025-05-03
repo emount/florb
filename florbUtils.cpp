@@ -1,7 +1,11 @@
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <iomanip>
-#include <vector>
+#include <string>
+#include <vector> 
 
 #include "florbUtils.h"
 
@@ -56,6 +60,18 @@ void FlorbUtils::dumpTexture(GLuint textureID,
         cerr << (int)pixels[i] << " ";
     }
     cerr << endl;
+}
+
+void FlorbUtils::setWindowTitle(Display *display, Window window, const string &title) {
+    XStoreName(display, window, title.c_str());
+
+    // Set modern window manager title
+    XTextProperty windowName;
+    char* name = const_cast<char*>(title.c_str());
+    if (XStringListToTextProperty(&name, 1, &windowName) != 0) {
+        XSetWMName(display, window, &windowName);
+        XFree(windowName.value);
+    }
 }
 
 void FlorbUtils::glCheck(const string &str) {

@@ -10,9 +10,10 @@
 #include "florb.h"
 #include "florbUtils.h"
 
-Display* display;
+Display *display;
 Window window;
 GLXContext context;
+
 int screenWidth = 800;
 int screenHeight = 600;
 

@@ -30,7 +30,12 @@ using std::sin;
 using std::string;
 using std::vector;
 
+extern Display *display;
+extern Window window;
+
 using json = nlohmann::json_abi_v3_12_0::json;
+
+const string Florb::k_DefaultTitle("Florb v0.3");
 
 const string Florb::k_DefaultImagePath("images");
 
@@ -67,6 +72,12 @@ void Florb::loadConfig() {
     try {
         file >> config;
 
+        if (config.contains("title") && config["title"].is_string()) {
+	    setTitle(config["title"]);
+	} else {
+	    setTitle(k_DefaultTitle);
+	}
+	
         if (config.contains("image_path") && config["image_path"].is_string()) {
             imagePath = config["image_path"];
         } else {
@@ -120,6 +131,11 @@ void Florb::nextFlower() {
 float Florb::getVignetteRadius() {
     lock_guard<mutex> lock(stateMutex);
     return vignetteRadius;
+}
+
+void Florb::setTitle(const string &title) {
+    lock_guard<mutex> lock(stateMutex);
+    FlorbUtils::setWindowTitle(display, window, title);
 }
 
 void Florb::setVignetteRadius(float r) {
