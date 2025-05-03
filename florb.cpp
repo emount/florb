@@ -32,7 +32,7 @@ using std::vector;
 
 using json = nlohmann::json_abi_v3_12_0::json;
 
-const string Florb::k_DefaultImageDir("images");
+const string Florb::k_DefaultImagePath("images");
 
 const float Florb::k_SphereRadius(1.0f);
 
@@ -44,6 +44,7 @@ const int Florb::k_StackCount(72);
 Florb::Florb() :
     fallbackTextureID(FlorbUtils::createDebugTexture()) {
     loadConfig();
+    loadFlowers();
     generateSphere(k_SphereRadius, k_SectorCount, k_StackCount);
     initShaders();
 }
@@ -76,19 +77,26 @@ void Florb::loadConfig() {
 
         if (config.contains("image_path") && config["image_path"].is_string()) {
             imagePath = config["image_path"];
-        }
+        } else {
+	    imagePath = k_DefaultImagePath;
+	}
 
     } catch (const exception& exc) {
         cerr << "[ERROR] Failed to parse \"florb.json\" : " << exc.what() << endl;
     }
 }
 
-void Florb::loadFlowers(const string& directory) {
-    for (const auto& entry : fs::directory_iterator(directory)) {
-        if (entry.is_regular_file()) {
-            flowers.emplace_back(entry.path().string());
-	    flowers.back().loadImage();
+void Florb::loadFlowers() {
+    fs::path filepath(imagePath);
+    if(fs::is_directory(filepath)) {
+        for (const auto& entry : fs::directory_iterator(imagePath)) {
+            if (entry.is_regular_file()) {
+                flowers.emplace_back(entry.path().string());
+    	    flowers.back().loadImage();
+            }
         }
+    } else {
+        cerr << "Image path \"" << imagePath << "\" does not exist" << endl;
     }
 }
 

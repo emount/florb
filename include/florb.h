@@ -9,6 +9,30 @@
 
 // Florb class encapsulating the sphere state, geometry, textures, and behavior
 class Florb {
+public:
+    Florb();
+    ~Florb();
+
+    void nextFlower();
+  
+    float getZoom();
+    void setZoom(float z);
+  
+    std::pair<float, float> getCenter();
+    void setCenter(float x, float y);
+  
+    void renderFrame();
+
+private:
+    void loadConfig();
+    void loadFlowers();
+    void generateSphere(float radius, int sectorCount, int stackCount);
+    void initShaders();
+
+public:
+  
+    static const std::string k_DefaultImagePath;
+  
 private:
     std::string imagePath;
   
@@ -33,29 +57,5 @@ private:
     static const float k_SphereRadius;
     static const int k_SectorCount;
     static const int k_StackCount;
-
-public:
-    Florb();
-    ~Florb();
-
-    void loadConfig();
-    void loadFlowers(const std::string& directory);
-    void nextFlower();
-  
-    float getZoom();
-    void setZoom(float z);
-  
-    std::pair<float, float> getCenter();
-    void setCenter(float x, float y);
-  
-    void renderFrame();
-
-public:
-  
-    static const std::string k_DefaultImageDir;
-
-private:
-    void generateSphere(float radius, int sectorCount, int stackCount);
-    void initShaders();
   
 };
