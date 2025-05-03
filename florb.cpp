@@ -299,53 +299,57 @@ void Florb::initShaders() {
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
-#version 330 core
-out vec4 FragColor;
-
-in vec3 fragPos;
-uniform sampler2D currentTexture;
-uniform float zoom;
-uniform vec2 offset;
-uniform float vignette;       // vignette width as fraction (0.0 - 1.0)
-uniform vec2 resolution;      // screen resolution (width, height)
-
-void main() {
-    vec3 dir = normalize(fragPos);
-
-    vec2 uv;
-    uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
-    uv.y = asin(dir.y) / 3.14159265 + 0.5;
-
-    uv = (uv - 0.5) * zoom + 0.5 + offset;
-    uv.y = 1.0 - uv.y;
-
-    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
-    vec4 color = texture(currentTexture, uv);
-
-    // Aspect-corrected center-relative coords
-    vec2 screenUV = gl_FragCoord.xy / resolution;
-    vec2 centered = screenUV - vec2(0.5);
-    centered.x *= resolution.x / resolution.y;  // aspect correction
-
-    float radius = length(centered);
-    float fadeStart = 1.0 - vignette;
-    float fadeEnd = 1.0;
-
-    if (radius > fadeStart && radius <= fadeEnd) {
-        float t = (radius - fadeStart) / (fadeEnd - fadeStart); // 0 to 1 in band
-        float bands = floor(t * 10.0);
-        if (mod(bands, 2.0) < 1.0) {
-            color.rgb *= 1.0 - ((radius - fadeStart) / (fadeEnd - fadeStart));
-        } else {
-            // TEMPORARY
-            // Background color, pass this in as a variable later on
-            FragColor = vec4(0.1, 0.1, 0.1, 1.0);
+        #version 330 core
+        out vec4 FragColor;
+        
+        in vec3 fragPos;
+        uniform sampler2D currentTexture;
+        uniform float zoom;
+        uniform vec2 offset;
+        uniform float vignette;       // vignette width as fraction (0.0 - 1.0)
+        uniform vec2 resolution;      // screen resolution (width, height)
+        
+        void main() {
+            vec3 dir = normalize(fragPos);
+        
+            vec2 uv;
+            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
+            uv.y = asin(dir.y) / 3.14159265 + 0.5;
+        
+            uv = (uv - 0.5) * zoom + 0.5 + offset;
+            uv.y = 1.0 - uv.y;
+        
+            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
+            vec4 color = texture(currentTexture, uv);
+        
+            // Aspect-corrected center-relative coords
+            vec2 screenUV = gl_FragCoord.xy / resolution;
+            vec2 centered = screenUV - vec2(0.5);
+            centered.x *= resolution.x / resolution.y;  // aspect correction
+        
+            float radius = length(centered);
+            float fadeStart = 1.0 - vignette;
+            float fadeEnd = 1.0;
+        
+            if (radius > fadeStart && radius <= fadeEnd) {
+                // Zero to one in band
+                float t = (radius - fadeStart) / (fadeEnd - fadeStart);
+                float bands = floor(t * 10.0);
+                if (mod(bands, 2.0) < 1.0) {
+                    FragColor = vec4(t * color.r,
+                                     t * color.g,
+                                     t * color.b,
+                                     1.0);
+                } else {
+                    // TEMPORARY
+                    // Background color, pass this in as a variable later on
+                    FragColor = vec4(0.1, 0.1, 0.1, 1.0);
+                }
+            } else {
+                // Center region gets unmodified image data
+                FragColor = color;
+            }
         }
-    } else {
-        // Center region gets unmodified image data
-        FragColor = color;
-    }
-}
     )glsl";
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
