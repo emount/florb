@@ -176,6 +176,15 @@ void Florb::renderFrame() {
     int texLoc = glGetUniformLocation(shaderProgram, "currentTexture");
     glUniform1i(texLoc, 0);
 
+    // Set offset and zoom parameters for textures
+    GLuint centerLoc = glGetUniformLocation(shaderProgram, "centerOffset");
+    // GLuint offsetLoc = glGetUniformLocation(shaderProgram, "offset");
+    GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
+
+    glUniform1f(zoomLoc, zoom);
+    glUniform2f(centerLoc, offsetX, offsetY);
+    // glUniform2f(offsetLoc, offsetX, offsetY);   
+
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
@@ -183,7 +192,7 @@ void Florb::renderFrame() {
     glBindVertexArray(vao);
     FlorbUtils::glCheck("glBindVertexArray(vao)");
 
-    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
     FlorbUtils::glCheck("glDrawElements()");
     
     glBindVertexArray(0);
@@ -275,24 +284,27 @@ void Florb::initShaders() {
 
     const char* fragmentShaderSource = R"glsl(
         #version 330 core
-        
-        in vec3 fragPos;
         out vec4 FragColor;
         
+        in vec3 fragPos;
         uniform sampler2D currentTexture;
+        uniform float zoom;
+        uniform vec2 centerOffset;
         
-        void main()
-        {
+        void main() {
             vec3 dir = normalize(fragPos);
         
-            // Convert 3D direction to spherical coordinates
-            float u = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
-            float v = asin(dir.y) / 3.14159265 + 0.5;
+            // Compute spherical UV coordinates
+            vec2 uv;
+            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
+            uv.y = asin(dir.y) / 3.14159265 + 0.5;
         
-            vec2 uv = vec2(u, 1.0 - v); // Flip V
+            // Apply zoom-centered panning
+            uv = (uv - centerOffset) * zoom + centerOffset;
         
-            // Uncomment to visualize UVs directly
-            // FragColor = vec4(uv, 0.0, 1.0);
+            // Flip vertical and clamp
+            uv.y = 1.0 - uv.y;
+            uv = clamp(uv, 0.0, 1.0);
         
             FragColor = texture(currentTexture, uv);
         }

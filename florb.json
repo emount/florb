@@ -1,5 +1,5 @@
 {
     "image_path" : "images",
-    "center" : [0.5, 0.5],
-    "zoom" : 2.5
+    "center" : [0.0, 0.5],
+    "zoom" : 2.0
 }
