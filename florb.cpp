@@ -5,10 +5,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <cmath>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 
 #include "florb.h"
 #include "florbUtils.h"
+#include "nlohmann/json.hpp"
 
 // TEMPORARY DEBUG
 #include "stb_image.h"
@@ -16,11 +18,19 @@
 namespace fs = std::filesystem;
 
 using std::cerr;
+using std::cos;
 using std::cout;
 using std::endl;
-using std::cos;
+using std::exception;
+using std::ifstream;
+using std::lock_guard;
+using std::mutex;
+using std::pair;
 using std::sin;
 using std::string;
+using std::vector;
+
+using json = nlohmann::json_abi_v3_12_0::json;
 
 const string Florb::k_DefaultImageDir("images");
 
@@ -33,6 +43,7 @@ const int Florb::k_StackCount(72);
 // Florb class implementation
 Florb::Florb() :
     fallbackTextureID(FlorbUtils::createDebugTexture()) {
+    loadConfig();
     generateSphere(k_SphereRadius, k_SectorCount, k_StackCount);
     initShaders();
 }
@@ -44,7 +55,35 @@ Florb::~Florb() {
     glDeleteProgram(shaderProgram);
 }
 
-void Florb::loadFlowers(const std::string& directory) {
+void Florb::loadConfig() {
+    ifstream file("florb.json");
+    if (!file.is_open()) {
+        cerr << "[WARN] Could not open florb.json for configuration" << endl;
+        return;
+    }
+
+    json config;
+    try {
+        file >> config;
+
+        if (config.contains("center") && config["center"].is_array() && config["center"].size() == 2) {
+            setCenter(config["center"][0], config["center"][1]);
+        }
+
+        if (config.contains("zoom") && config["zoom"].is_number()) {
+            setZoom(config["zoom"]);
+        }
+
+        if (config.contains("image_path") && config["image_path"].is_string()) {
+            imagePath = config["image_path"];
+        }
+
+    } catch (const exception& exc) {
+        cerr << "[ERROR] Failed to parse \"florb.json\" : " << exc.what() << endl;
+    }
+}
+
+void Florb::loadFlowers(const string& directory) {
     for (const auto& entry : fs::directory_iterator(directory)) {
         if (entry.is_regular_file()) {
             flowers.emplace_back(entry.path().string());
@@ -58,23 +97,23 @@ void Florb::nextFlower() {
 }
 
 void Florb::setZoom(float z) {
-    std::lock_guard<std::mutex> lock(stateMutex);
+    lock_guard<mutex> lock(stateMutex);
     zoom = z;
 }
 
 void Florb::setCenter(float x, float y) {
-    std::lock_guard<std::mutex> lock(stateMutex);
+    lock_guard<mutex> lock(stateMutex);
     offsetX = x;
     offsetY = y;
 }
 
 float Florb::getZoom() {
-    std::lock_guard<std::mutex> lock(stateMutex);
+    lock_guard<mutex> lock(stateMutex);
     return zoom;
 }
 
-std::pair<float, float> Florb::getCenter() {
-    std::lock_guard<std::mutex> lock(stateMutex);
+pair<float, float> Florb::getCenter() {
+    lock_guard<mutex> lock(stateMutex);
     return {offsetX, offsetY};
 }
 
@@ -143,8 +182,8 @@ void Florb::renderFrame() {
 }
 
 void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
-    std::vector<float> vertices;
-    std::vector<unsigned int> indices;
+    vector<float> vertices;
+    vector<unsigned int> indices;
 
     const float PI = 3.14159265359f;
 

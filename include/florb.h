@@ -10,6 +10,8 @@
 // Florb class encapsulating the sphere state, geometry, textures, and behavior
 class Florb {
 private:
+    std::string imagePath;
+  
     std::vector<Flower> flowers;
     std::vector<std::string> flowerPaths;
     unsigned int currentFlower = 0;
@@ -36,6 +38,7 @@ public:
     Florb();
     ~Florb();
 
+    void loadConfig();
     void loadFlowers(const std::string& directory);
     void nextFlower();
   
