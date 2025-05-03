@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <math.h>
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 
@@ -77,76 +77,63 @@ void Florb::renderFrame() {
     extern int screenHeight;
     
     FlorbUtils::glCheck("renderFrame()");
-  
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glViewport(0, 0, screenWidth, screenHeight);
-    FlorbUtils::glCheck("glViewport()");
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(shaderProgram);
-    
-    float aspect = (float)screenWidth / (float)screenHeight;    
-    float projection[16] = {
-        1.0f / aspect, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f,    0.0f, 0.0f,
-        0.0f, 0.0f,   -1.0f, 0.0f,
-        0.0f, 0.0f,    0.0f, 1.0f
-    };
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, projection);
-    FlorbUtils::glCheck("glUniformMatrix4fv()");
-
-    {
-        std::lock_guard<std::mutex> lock(stateMutex);
-        glUniform1f(glGetUniformLocation(shaderProgram, "zoom"), zoom);
-	FlorbUtils::glCheck("glUniform1f(glGetUniformLocation(zoom)");
-        glUniform2f(glGetUniformLocation(shaderProgram, "centerOffset"), offsetX, offsetY);
-	FlorbUtils::glCheck("glUniform2f(glGetUniformLocation(centerOffset)");
+    if (!glXGetCurrentContext()) {
+        cerr << "[renderFrame()] OpenGL context is not current" << endl;
     }
 
-    glActiveTexture(GL_TEXTURE0);
-    FlorbUtils::glCheck("glActiveTexture()");
+    // Set a dark gray background color for the window
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-    auto &flower = flowers[currentFlower];
-    flower.loadImage();
-    GLuint tex = flowers.empty() ? fallbackTextureID : flower.getTextureID();
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    GLuint textureID;
+    if(flowers.empty()) {
+        textureID = fallbackTextureID;
+    } else {
+        auto &flower = flowers[currentFlower];
+	flower.loadImage();
+	textureID = flower.getTextureID();
+    }
     
-    if (!glIsTexture(tex))
+    if (!glIsTexture(textureID))
         cerr << "[WARN] Texture ID ("
-	     << tex
+	     << textureID
 	     << ") is not valid"
 	     << endl;
 
-    if (!glXGetCurrentContext()) {
-        cerr << "[FATAL] OpenGL context is not current" << endl;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, tex);
-    FlorbUtils::glCheck("glBindTexture()");
-
-    GLint bound;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound);
-
-    GLint texLoc = glGetUniformLocation(shaderProgram, "currentTexture");
-    if (texLoc >= 0) {
-        glUniform1i(texLoc, 0);
-    } else {
-        cerr << "[ERROR] Uniform 'currentTexture' not found\n";
-    }
+    glUseProgram(shaderProgram);
     
-    glUniform1i(texLoc, 0);
-    FlorbUtils::glCheck("glGetUniformLocation()()");
+    // Projection and view matrices
+    float aspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
+    glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f),
+                                 glm::vec3(0.0f, 0.0f, 0.0f),
+                                 glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 projView = projection * view;
 
-    GLint activeTex = 0;
-    glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTex);
+    // Set the uniform once per frame
+    int projViewLoc = glGetUniformLocation(shaderProgram, "projView");
+    glUniformMatrix4fv(projViewLoc, 1, GL_FALSE, glm::value_ptr(projView));
+    FlorbUtils::glCheck("glUniformMatrix4fv()");
+
+    // Use texture unit 0
+    int texLoc = glGetUniformLocation(shaderProgram, "currentTexture");
+    glUniform1i(texLoc, 0);
+
+    // Activate texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textureID);
 
     glBindVertexArray(vao);
-    FlorbUtils::glCheck("glBindVertexArray()");
+    FlorbUtils::glCheck("glBindVertexArray(vao)");
 
-    GLint debugTex;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &debugTex);
-    
     glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
     FlorbUtils::glCheck("glDrawElements()");
+    
+    glBindVertexArray(0);
 }
 
 void Florb::generateSphere() {
@@ -185,6 +172,8 @@ void Florb::generateSphere() {
     glGenBuffers(1, &ebo);
 
     glBindVertexArray(vao);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
@@ -192,8 +181,8 @@ void Florb::generateSphere() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
     glBindVertexArray(0);
 }
@@ -201,31 +190,72 @@ void Florb::generateSphere() {
 void Florb::initShaders() {
     const char* vertexShaderSource = R"glsl(
         #version 330 core
+        
         layout(location = 0) in vec3 aPos;
         out vec3 fragPos;
-        uniform mat4 projection;
+        
+        uniform mat4 projView;
+        
         void main()
         {
-            fragPos = aPos;
-            gl_Position = projection * vec4(aPos, 1.0);
+            fragPos = aPos; // Pass world-space position to fragment shader
+            gl_Position = projView * vec4(aPos, 1.0);
         }
+//        #version 330 core
+//        layout(location = 0) in vec3 aPos;
+//        out vec3 fragPos;
+//        uniform mat4 projView;
+//        
+//        void main()
+//        {
+//            fragPos = aPos;
+//            gl_Position = projView * vec4(aPos, 1.0);
+//        }
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
         #version 330 core
-        out vec4 FragColor;
+        
         in vec3 fragPos;
+        out vec4 FragColor;
+        
         uniform sampler2D currentTexture;
         
-        void main() {
+        void main()
+        {
             vec3 dir = normalize(fragPos);
-            vec2 uv;
-            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
-            uv.y = asin(dir.y) / 3.14159265 + 0.5;
-            uv = clamp(uv, 0.001, 0.999);
-            uv.y = 1.0 - uv.y;
+        
+            // Convert 3D direction to spherical coordinates
+            float u = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
+            float v = asin(dir.y) / 3.14159265 + 0.5;
+        
+            vec2 uv = vec2(u, 1.0 - v); // Flip V
+        
+            // Uncomment to visualize UVs directly
+            // FragColor = vec4(uv, 0.0, 1.0);
+        
             FragColor = texture(currentTexture, uv);
         }
+//        #version 330 core
+//        out vec4 FragColor;
+//        in vec3 fragPos;
+//        
+//        uniform sampler2D currentTexture;
+//        uniform float zoom;
+//        uniform vec2 centerOffset;
+//        
+//        void main()
+//        {
+//            vec3 dir = normalize(fragPos);
+//            vec2 uv;
+//            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
+//            uv.y = asin(dir.y) / 3.14159265 + 0.5;
+//            uv = (uv - 0.5) * zoom + 0.5 + centerOffset;
+//            uv = clamp(uv, 0.0, 1.0);
+//            uv.y = 1.0 - uv.y;
+//            FragColor = vec4(uv, 0.0, 1.0);
+//            // FragColor = texture(currentTexture, uv);
+//        }
     )glsl";
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
