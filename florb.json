@@ -1,6 +1,9 @@
 {
     "image_path" : "images",
-    "vignette" : 0.70,
+    "vignette" : {
+	"radius" : 0.70,
+	"exponent" : 2.0
+    },
     "center" : [0.25, 0.00],
     "zoom" : 1.0
 }

@@ -70,11 +70,19 @@ void Florb::loadConfig() {
         if (config.contains("image_path") && config["image_path"].is_string()) {
             imagePath = config["image_path"];
         } else {
-        imagePath = k_DefaultImagePath;
-    }
+            imagePath = k_DefaultImagePath;
+        }
 
-        if (config.contains("vignette") && config["vignette"].is_number()) {
-            setVignette(config["vignette"]);
+        if (config.contains("vignette") && config["vignette"].is_object()) {
+	    const auto &vignette(config["vignette"]);
+
+	    if (vignette.contains("radius") and vignette["radius"].is_number()) {
+		setVignetteRadius(vignette["radius"]);
+	    }
+
+	    if (vignette.contains("exponent") and vignette["exponent"].is_number()) {
+		setVignetteExponent(vignette["exponent"]);
+	    }
         }
 
         if (config.contains("center") && config["center"].is_array() && config["center"].size() == 2) {
@@ -109,14 +117,24 @@ void Florb::nextFlower() {
     if(++currentFlower >= flowers.size()) currentFlower = 0;
 }
 
-float Florb::getVignette() {
+float Florb::getVignetteRadius() {
     lock_guard<mutex> lock(stateMutex);
-    return vignette;
+    return vignetteRadius;
 }
 
-void Florb::setVignette(float v) {
+void Florb::setVignetteRadius(float r) {
     lock_guard<mutex> lock(stateMutex);
-    vignette = v;
+    vignetteRadius = r;
+}
+
+float Florb::getVignetteExponent() {
+    lock_guard<mutex> lock(stateMutex);
+    return vignetteExponent;
+}
+
+void Florb::setVignetteExponent(float r) {
+    lock_guard<mutex> lock(stateMutex);
+    vignetteExponent = r;
 }
 
 pair<float, float> Florb::getCenter() {
@@ -195,11 +213,13 @@ void Florb::renderFrame() {
     GLuint resolutionLoc = glGetUniformLocation(shaderProgram, "resolution");
     GLuint offsetLoc = glGetUniformLocation(shaderProgram, "offset");
     GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
-    int vignetteLoc = glGetUniformLocation(shaderProgram, "vignette");
+    int vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
+    int vignetteExponentLoc = glGetUniformLocation(shaderProgram, "vignetteExponent");
     glUniform2f(resolutionLoc, screenWidth, screenHeight);   
     glUniform1f(zoomLoc, zoom);
     glUniform2f(offsetLoc, offsetX, offsetY);   
-    glUniform1f(vignetteLoc, vignette);
+    glUniform1f(vignetteRadiusLoc, vignetteRadius);
+    glUniform1f(vignetteExponentLoc, vignetteExponent);
 
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -306,8 +326,9 @@ void Florb::initShaders() {
         uniform sampler2D currentTexture;
         uniform float zoom;
         uniform vec2 offset;
-        uniform float vignette;       // vignette width as fraction (0.0 - 1.0)
-        uniform vec2 resolution;      // screen resolution (width, height)
+        uniform float vignetteRadius;
+        uniform float vignetteExponent;
+        uniform vec2 resolution;
         
         void main() {
             vec3 dir = normalize(fragPos);
@@ -328,7 +349,7 @@ void Florb::initShaders() {
             centered.x *= resolution.x / resolution.y;  // aspect correction
         
             float radius = length(centered);
-            float fadeStart = 1.0 - vignette;
+            float fadeStart = 1.0 - vignetteRadius;
             float fadeEnd = 1.0;
         
             if (radius > fadeStart && radius <= fadeEnd) {
