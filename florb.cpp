@@ -357,9 +357,10 @@ void Florb::initShaders() {
                 float t = (radius - fadeStart) / (fadeEnd - fadeStart);
                 float bands = floor(t * 10.0);
                 if (mod(bands, 2.0) < 1.0) {
-                    FragColor = vec4(t * color.r,
-                                     t * color.g,
-                                     t * color.b,
+                    float weight = (1.0 - clamp(pow(10 * t, 2.0), 0.0, 1.0));
+                    FragColor = vec4(weight * color.r,
+                                     weight * color.g,
+                                     weight * color.b,
                                      1.0);
                 } else {
                     // TEMPORARY
