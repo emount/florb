@@ -14,12 +14,16 @@ public:
     ~Florb();
 
     void nextFlower();
+    
+    float getVignette();
+    void setVignette(float v);  
+
+    std::pair<float, float> getCenter();
+    void setCenter(float x, float y);
   
     float getZoom();
     void setZoom(float z);
   
-    std::pair<float, float> getCenter();
-    void setCenter(float x, float y);
   
     void renderFrame();
 
@@ -40,6 +44,7 @@ private:
     std::vector<std::string> flowerPaths;
     unsigned int currentFlower = 0;
 
+    float vignette = 0.0f;
     float zoom = 1.0f;
     float offsetX = 0.0f;
     float offsetY = 0.0f;

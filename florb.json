@@ -1,5 +1,6 @@
 {
     "image_path" : "images",
+    "vignette" : 0.70,
     "center" : [0.25, 0.00],
     "zoom" : 1.0
 }

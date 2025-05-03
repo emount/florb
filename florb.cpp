@@ -67,6 +67,16 @@ void Florb::loadConfig() {
     try {
         file >> config;
 
+        if (config.contains("image_path") && config["image_path"].is_string()) {
+            imagePath = config["image_path"];
+        } else {
+        imagePath = k_DefaultImagePath;
+    }
+
+        if (config.contains("vignette") && config["vignette"].is_number()) {
+            setVignette(config["vignette"]);
+        }
+
         if (config.contains("center") && config["center"].is_array() && config["center"].size() == 2) {
             setCenter(config["center"][0], config["center"][1]);
         }
@@ -75,12 +85,6 @@ void Florb::loadConfig() {
             auto zoomFactor(1.0f / static_cast<float>(config["zoom"]));
             setZoom(zoomFactor);
         }
-
-        if (config.contains("image_path") && config["image_path"].is_string()) {
-            imagePath = config["image_path"];
-        } else {
-        imagePath = k_DefaultImagePath;
-    }
 
     } catch (const exception& exc) {
         cerr << "[ERROR] Failed to parse \"florb.json\" : " << exc.what() << endl;
@@ -105,9 +109,19 @@ void Florb::nextFlower() {
     if(++currentFlower >= flowers.size()) currentFlower = 0;
 }
 
-void Florb::setZoom(float z) {
+float Florb::getVignette() {
     lock_guard<mutex> lock(stateMutex);
-    zoom = z;
+    return vignette;
+}
+
+void Florb::setVignette(float v) {
+    lock_guard<mutex> lock(stateMutex);
+    vignette = v;
+}
+
+pair<float, float> Florb::getCenter() {
+    lock_guard<mutex> lock(stateMutex);
+    return {offsetX, offsetY};
 }
 
 void Florb::setCenter(float x, float y) {
@@ -121,9 +135,9 @@ float Florb::getZoom() {
     return zoom;
 }
 
-pair<float, float> Florb::getCenter() {
+void Florb::setZoom(float z) {
     lock_guard<mutex> lock(stateMutex);
-    return {offsetX, offsetY};
+    zoom = z;
 }
 
 void Florb::renderFrame() {
@@ -180,8 +194,10 @@ void Florb::renderFrame() {
     // Set offset and zoom parameters for textures
     GLuint offsetLoc = glGetUniformLocation(shaderProgram, "offset");
     GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
+    int vignetteLoc = glGetUniformLocation(shaderProgram, "vignette");
     glUniform1f(zoomLoc, zoom);
     glUniform2f(offsetLoc, offsetX, offsetY);   
+    glUniform1f(vignetteLoc, vignette);
 
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -288,10 +304,11 @@ void Florb::initShaders() {
         uniform sampler2D currentTexture;
         uniform float zoom;
         uniform vec2 offset;
+        uniform float vignette;
         
         void main() {
             vec3 dir = normalize(fragPos);
-        
+
             // Convert direction vector to spherical UV
             vec2 uv;
             uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
@@ -300,12 +317,23 @@ void Florb::initShaders() {
             // Apply zoom and pan centered at offset
             uv = (uv - 0.5) * zoom + 0.5;
             uv = clamp(uv, 0.0, 1.0);
-        
-            uv += offset; // additional offset AFTER projection
+
+            // Additional offset after projection
+            uv += offset;
             uv.y = 1.0 - uv.y;
             uv = clamp(uv, 0.0, 1.0);
         
-            FragColor = texture(currentTexture, uv);
+        
+            // Compute vignette effect
+            vec2 delta = uv - vec2(0.5);
+            float dist = length(delta);
+            float vignetteStrength = smoothstep(0.0, vignette, dist);
+
+            // Sample texture and apply vignette
+            vec4 color = texture(currentTexture, uv);
+            color.rgb *= (1.0 - vignetteStrength);
+        
+            FragColor = color;
         }
     )glsl";
 
