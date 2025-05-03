@@ -28,6 +28,10 @@ private:
   
     std::mutex stateMutex;
 
+    static const float k_SphereRadius;
+    static const int k_SectorCount;
+    static const int k_StackCount;
+
 public:
     Florb();
     ~Florb();
@@ -48,6 +52,7 @@ public:
     static const std::string k_DefaultImageDir;
 
 private:
-    void generateSphere();
+    void generateSphere(float radius, int sectorCount, int stackCount);
     void initShaders();
+  
 };

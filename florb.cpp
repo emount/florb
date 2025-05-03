@@ -24,10 +24,16 @@ using std::string;
 
 const string Florb::k_DefaultImageDir("images");
 
+const float Florb::k_SphereRadius(1.0f);
+
+// Sphere rendering parameters for high-detail, production quality rendering
+const int Florb::k_SectorCount(144);
+const int Florb::k_StackCount(72);
+
 // Florb class implementation
 Florb::Florb() :
     fallbackTextureID(FlorbUtils::createDebugTexture()) {
-    generateSphere();
+    generateSphere(k_SphereRadius, k_SectorCount, k_StackCount);
     initShaders();
 }
 
@@ -130,38 +136,51 @@ void Florb::renderFrame() {
     glBindVertexArray(vao);
     FlorbUtils::glCheck("glBindVertexArray(vao)");
 
-    glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
     FlorbUtils::glCheck("glDrawElements()");
     
     glBindVertexArray(0);
 }
 
-void Florb::generateSphere() {
-    const int X_SEGMENTS = 64;
-    const int Y_SEGMENTS = 64;
+void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
 
-    int radius = 1.0f;
+    const float PI = 3.14159265359f;
 
-    for (int y = 0; y <= Y_SEGMENTS; ++y) {
-        for (int x = 0; x <= X_SEGMENTS; ++x) {
-            float xSegment = (float)x / (float)X_SEGMENTS;
-            float ySegment = (float)y / (float)Y_SEGMENTS;
-            float xPos = radius * std::cos(xSegment * 2.0f * 3.14159265f) * std::sin(ySegment * 3.14159265f);
-            float yPos = radius * std::cos(ySegment * 3.14159265f);
-            float zPos = radius * std::sin(xSegment * 2.0f * 3.14159265f) * std::sin(ySegment * 3.14159265f);
+    for (int i = 0; i <= stackCount; ++i) {
+        float stackAngle = PI / 2 - i * (PI / stackCount);  // from pi/2 to -pi/2
+        float xy = radius * cosf(stackAngle);
+        float z = radius * sinf(stackAngle);
 
-            vertices.push_back(xPos);
-            vertices.push_back(yPos);
-            vertices.push_back(zPos);
+        for (int j = 0; j <= sectorCount; ++j) {
+            float sectorAngle = j * 2 * PI / sectorCount;  // from 0 to 2pi
+
+            float x = xy * cosf(sectorAngle);
+            float y = xy * sinf(sectorAngle);
+            float u = (float)j / sectorCount;
+            float v = (float)i / stackCount;
+
+            vertices.push_back(x);
+            vertices.push_back(y);
+            vertices.push_back(z);
+            vertices.push_back(u);
+            vertices.push_back(v);
         }
     }
 
-    for (int y = 0; y < Y_SEGMENTS; ++y) {
-        for (int x = 0; x <= X_SEGMENTS; ++x) {
-            indices.push_back(y * (X_SEGMENTS + 1) + x);
-            indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+    for (int i = 0; i < stackCount; ++i) {
+        for (int j = 0; j < sectorCount; ++j) {
+            int first = i * (sectorCount + 1) + j;
+            int second = first + sectorCount + 1;
+
+            indices.push_back(first);
+            indices.push_back(second);
+            indices.push_back(first + 1);
+
+            indices.push_back(second);
+            indices.push_back(second + 1);
+            indices.push_back(first + 1);
         }
     }
 
@@ -172,8 +191,6 @@ void Florb::generateSphere() {
     glGenBuffers(1, &ebo);
 
     glBindVertexArray(vao);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
@@ -181,8 +198,13 @@ void Florb::generateSphere() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    // Texture coordinate attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 }
@@ -191,7 +213,8 @@ void Florb::initShaders() {
     const char* vertexShaderSource = R"glsl(
         #version 330 core
         
-        layout(location = 0) in vec3 aPos;
+        layout (location = 0) in vec3 aPos;
+        layout (location = 1) in vec2 aTexCoord;
         out vec3 fragPos;
         
         uniform mat4 projView;
@@ -201,16 +224,6 @@ void Florb::initShaders() {
             fragPos = aPos; // Pass world-space position to fragment shader
             gl_Position = projView * vec4(aPos, 1.0);
         }
-//        #version 330 core
-//        layout(location = 0) in vec3 aPos;
-//        out vec3 fragPos;
-//        uniform mat4 projView;
-//        
-//        void main()
-//        {
-//            fragPos = aPos;
-//            gl_Position = projView * vec4(aPos, 1.0);
-//        }
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
@@ -236,26 +249,6 @@ void Florb::initShaders() {
         
             FragColor = texture(currentTexture, uv);
         }
-//        #version 330 core
-//        out vec4 FragColor;
-//        in vec3 fragPos;
-//        
-//        uniform sampler2D currentTexture;
-//        uniform float zoom;
-//        uniform vec2 centerOffset;
-//        
-//        void main()
-//        {
-//            vec3 dir = normalize(fragPos);
-//            vec2 uv;
-//            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
-//            uv.y = asin(dir.y) / 3.14159265 + 0.5;
-//            uv = (uv - 0.5) * zoom + 0.5 + centerOffset;
-//            uv = clamp(uv, 0.0, 1.0);
-//            uv.y = 1.0 - uv.y;
-//            FragColor = vec4(uv, 0.0, 1.0);
-//            // FragColor = texture(currentTexture, uv);
-//        }
     )glsl";
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
