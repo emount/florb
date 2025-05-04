@@ -37,13 +37,19 @@ RUN apt install -y      \
         bash-completion \
         clang           \
         emacs           \
-	perl            \
+        libglew-dev     \
+        libglm-dev      \
+        libx11-dev      \
+        perl            \
         expect          \
         gcc-14          \
         g++-14          \
         git             \
         make            \
-        sudo            
+        sudo
+
+# Create a symbolic link to g++-14
+RUN ln -s /usr/bin/g++-14 /usr/bin/g++
 
 # Define the default username and home directory as overrideable arguments
 ARG SHELL_USER=florb
@@ -69,4 +75,16 @@ RUN chmod 755 ${SHELL_HOME}/.bashrc
 
 WORKDIR ${SHELL_HOME}
 
-CMD ["/bin/bash"]
+# Fetch and build Florb
+RUN git clone https://github.com/emount/florb.git; \
+         cd florb; \
+    git checkout ${FLORB_VERSION}; \
+    make
+
+# Link to the user's image path in their home directory
+RUN ln -s ${SHELL_HOME}/host-home/images florb/images
+
+WORKDIR ${SHELL_HOME}/florb
+
+CMD ["/bin/bash", "-c", "${SHELL_HOME}/florb/florb"]
+

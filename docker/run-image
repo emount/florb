@@ -27,6 +27,7 @@ print_usage() {
 
 
 imageName=florb
+florbVersion=v0.4
 linkedUser=${USER}
 hostHome=/home/${linkedUser}
 portArgs=""
@@ -52,27 +53,28 @@ OPTIND=1
 
 # Bind mounts are declared as <source_path>:<target_path>
 declare -a BIND_MOUNTS=(
-    "${hostHome}:${containerHome}/host-home"
+    "${hostHome}:${hostHome}/host-home"
 )
 
-# Begin with a bind mount for sharing the X11 socket connection with
-# the container, making the local window environment seamless.
-mountArgs="--mount type=bind,source=/tmp/.X11-unix,target=/tmp/.X11-unix "
+# Iterate through any user-declared bind mounts
 for bindMount in "${BIND_MOUNTS[@]}"
 do
     IFS=':' read -r -a bindArray <<< "${bindMount}"
     mountArgs="${mountArgs}--mount type=bind,source=${bindArray[0]},target=${bindArray[1]} "
 done
 
-#
+# Allow any hosts to connect to the local X server
+xhost +
+
 # Run the Docker image with its bind mountings and display variable; inject
 # any remaining command-line parameters as Docker options.
-#
-docker run --name=${imageName}-basic \
-           --rm \
-           -it \
+docker run --name=${imageName} \
            --env DISPLAY=${DISPLAY} \
-           --security-opt seccomp:unconfined \
+	   --env FLORB_VERSION=${florbVersion} \
            --privileged \
+           --rm \
+           --security-opt seccomp:unconfined \
+           -it \
            -v /dev/bus/usb:/dev/bus/usb \
+           -v /tmp/.X11-unix:/tmp/.X11-unix \
            ${portArgs}${mountArgs}${imageName}
