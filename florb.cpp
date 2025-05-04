@@ -196,8 +196,8 @@ void Florb::renderFrame() {
         textureID = fallbackTextureID;
     } else {
         auto &flower = flowers[currentFlower];
-    flower.loadImage();
-    textureID = flower.getTextureID();
+	flower.loadImage();
+	textureID = flower.getTextureID();
     }
     
     if (!glIsTexture(textureID))

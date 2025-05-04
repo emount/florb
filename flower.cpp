@@ -39,6 +39,11 @@ void Flower::loadImage() {
         format = GL_RGBA;
     else
         throw std::runtime_error("Unsupported channel count");
+
+    // Discard any existing texture
+    if (textureID != 0) {
+        glDeleteTextures(1, &textureID);
+    }
     
     glGenTextures(1, &textureID);
 

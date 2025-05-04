@@ -10,6 +10,9 @@
 #include "florb.h"
 #include "florbUtils.h"
 
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 4
+
 Display *display;
 Window window;
 GLXContext context;
@@ -143,6 +146,12 @@ int main() {
     const int FRAME_DELAY_MS(1000 / TARGET_FPS);
     auto switchInterval(5UL);
     auto now(std::chrono::steady_clock::now());
+
+    std::cout << "Florb v"
+	      << VERSION_MAJOR
+	      << "."
+	      << VERSION_MINOR
+	      << endl;
 
     try {
         initOpenGL();
