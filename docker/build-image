@@ -1,0 +1,136 @@
+#!/bin/bash
+#
+# File        : build-image
+# Author      : Eldridge M. Mount IV
+# Description : Script for building Docker images
+#
+#               Generally speaking, the Dockerfile for an image contains the
+#               majority of customizations to be made to an image. However,
+#               most provide overrideable environment variables for customizing
+#               aspects of the image for use.
+#
+#               This script facilitates customization of Docker images, and in
+#               particular enforces the linking of a host user account to the
+#               username / UID / GID used within the image. This greatly eases the
+#               sharing of bind-mounted filesystems between host and containers.
+
+# Bail on error
+set -e
+
+
+#
+# Usage function
+#
+function print_usage {
+    echo "This script is used for building Docker images"                        1>&2;
+    echo ""                                                                      1>&2;
+    echo "Usage syntax : `basename ${0}` -i <imagename> -u <username> [options]" 1>&2;
+    echo ""                                                                      1>&2;
+    echo "Required parameters :"                                                 1>&2;
+    echo ""                                                                      1>&2;
+    echo "  -i imagename  Specify the name of the Docker image to be created"    1>&2;
+    echo "  -u username   Specify the shell username to link to the image"       1>&2;
+    echo ""                                                                      1>&2;
+    echo "Optional parameters :"                                                 1>&2;
+    echo ""                                                                      1>&2;
+    echo "  -h  Prints this helpful message"                                     1>&2;
+    echo "  -n  Perform a non-cached Docker build"                               1>&2;
+    echo "  -v  Version to assign to the image"                                  1>&2;
+}
+
+
+#
+# Entry point for the script
+#
+imageName=florb
+linkedUser=${USER}
+cacheOption=""
+while getopts "hi:nu:v:" option; do
+
+    case ${option} in
+        h)
+            print_usage
+            return 2> /dev/null || exit
+            ;;
+    
+        i)
+            imageName=${OPTARG}
+            ;;
+    
+        n)
+            cacheOption="--no-cache "
+            ;;
+    
+        u)
+            linkedUser=${OPTARG}
+            ;;
+
+        v)
+            imageVersion=${OPTARG}
+            ;;
+    
+        \?)
+            >&2 echo "Invalid option: -${OPTARG}"
+            print_usage
+            return 2> /dev/null || exit
+
+    esac
+done
+
+
+# Screen for required parameters
+if [[ ${linkedUser} == "none" ]]
+then
+    >&2 echo -e "\nERROR : Linked username required (-u option)"
+    print_usage
+    return 2> /dev/null || exit
+fi
+
+if [[ ${imageName} == "none" ]]
+then
+    >&2 echo -e "\nERROR : Docker image name required (-i option)"
+    print_usage
+    return 2> /dev/null || exit
+fi
+
+
+# Clear the argument stack, we don't want child scripts to get them
+while [[ $# -gt 0 ]]; do
+    shift;
+done
+
+
+# Map the specified username to an existing account on the host;
+# this is usually just the present user, ${USER}.
+linkedUid=$(id -u ${linkedUser})
+linkedGid=$(id -g ${linkedUser})
+
+#
+# Build the Docker build argument list dynamically
+#
+declare -a BUILD_ARGS=(
+    "SHELL_USER:${linkedUser}" \
+    "SHELL_UID:${linkedUid}" \
+    "SHELL_GID:${linkedGid}" \
+)
+
+# Conditionally include a defined version environment variable for
+# use building and / or within the image
+if [[ ${imageVersion} != "none" ]]
+then
+    echo "Image version ${imageVersion}"
+    BUILD_ARGS=(${BUILD_ARGS[@]} "IMAGE_VERSION:${imageVersion}")
+fi
+
+for buildArg in "${BUILD_ARGS[@]}"
+do
+    IFS=':' read -r -a argArray <<< "${buildArg}"
+    extraArgs="${extraArgs}--build-arg ${argArray[0]}=${argArray[1]} "
+done
+
+
+#
+# Image build step
+#
+echo "Building Docker image \"${imageName}\", linked user : ${linkedUser} (${linkedUid}:${linkedGid})"
+docker build ${cacheOption} ${extraArgs} -t ${imageName} .

@@ -1,0 +1,78 @@
+#!/bin/bash
+#
+# File        : run-image-basic.sh
+# Author      : Eldridge M. Mount IV
+# Description : Simple script for running Docker images
+#
+#               This script runs a Docker image for purpose of use or initial
+#               development and demonstration. Specifically, the invoking user's
+#               home directory is bind-mapped into the resulting container, and
+#               provisions are made for running X applications seamlessly within
+#               the existing window environment.
+#
+#               Refer to script 'infer-params' for parameter inference details.
+
+# Locate ourselves within the filesystem, even through symlinks
+scriptDir="$(dirname "$(readlink -f "$0")")"
+
+print_usage() {
+    echo "Usage : `basename ${0}` [-v]"              1>&2;
+    echo ""                                          1>&2;
+    echo "Optional parameters :"                     1>&2;
+    echo ""                                          1>&2;
+    echo "  -h  Prints this helpful message"         1>&2;
+    echo "  -p  For port mapping a single port"      1>&2;
+    echo "  -v  Infer version from parent directory" 1>&2;
+}
+
+
+imageName=florb
+linkedUser=${USER}
+hostHome=/home/${linkedUser}
+portArgs=""
+while getopts "hvp" opt; do
+    case "${opt}" in
+        h)
+            print_usage
+            return 2> /dev/null || exit
+            ;;
+
+        p)
+            portArgs="-p ${OPTARG}"
+            ;;
+
+        *)
+            >&2 echo "Invalid option: -${OPTARG}"
+            print_usage
+            return 2> /dev/null || exit
+            ;;
+    esac
+done
+OPTIND=1
+
+# Bind mounts are declared as <source_path>:<target_path>
+declare -a BIND_MOUNTS=(
+    "${hostHome}:${containerHome}/host-home"
+)
+
+# Begin with a bind mount for sharing the X11 socket connection with
+# the container, making the local window environment seamless.
+mountArgs="--mount type=bind,source=/tmp/.X11-unix,target=/tmp/.X11-unix "
+for bindMount in "${BIND_MOUNTS[@]}"
+do
+    IFS=':' read -r -a bindArray <<< "${bindMount}"
+    mountArgs="${mountArgs}--mount type=bind,source=${bindArray[0]},target=${bindArray[1]} "
+done
+
+#
+# Run the Docker image with its bind mountings and display variable; inject
+# any remaining command-line parameters as Docker options.
+#
+docker run --name=${imageName}-basic \
+           --rm \
+           -it \
+           --env DISPLAY=${DISPLAY} \
+           --security-opt seccomp:unconfined \
+           --privileged \
+           -v /dev/bus/usb:/dev/bus/usb \
+           ${portArgs}${mountArgs}${imageName}
