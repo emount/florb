@@ -1,0 +1,18 @@
+Florb feature wish list
+-----------------------
+
+Dust motes swirling on the orb's surface
+Adjustable lighting
+Adjustable camera angle and zoom
+Hybrid AI flower generation
+Image transition modes:
+  Quick flip
+  Slow blend
+  Rotation of orb (new flower on back)
+Screenshot / video and flower image save
+ASMR audio generation
+User audio input
+Volume / balance / EQ control
+Web interface
+  REST API for dynamic Florb controls
+  JavaScript / React.JS / ??? pages
