@@ -3,7 +3,7 @@
     "image_path" : "images",
     "vignette" : {
 	"radius" : 0.70,
-	"exponent" : 2.0
+	"exponent" : 3.0
     },
     "center" : [0.25, 0.00],
     "zoom" : 0.90

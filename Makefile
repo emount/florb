@@ -1,7 +1,8 @@
 # Makefile for Florb
 
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -O2
+# CXXFLAGS = -std=c++17 -Wall -O2
+CXXFLAGS = -std=c++17 -Wall -g
 LIBS = GL GLEW GLU X11
 INC_DIRS = include
 
