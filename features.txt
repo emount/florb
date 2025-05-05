@@ -2,10 +2,21 @@ Florb feature wish list
 -----------------------
 
 Florb icon of the Glorious Anomaly
+Specular reflections
 Sphere smoothness setting (clamped exponent for x/y segments)
 Pulsing lighting
 Orb shadow
-Dust motes swirling on the orb's surface
+Motes
+    Number as clamped exponent
+    Size also clamped
+    Color as floating-point RGB
+    Movement
+        Speed
+	    Uniform
+	    Random
+        Trajectory
+	    Circular
+	    Spiral
 Adjustable camera angle and zoom
 Hybrid AI flower generation
 Image transition modes:
@@ -19,6 +30,12 @@ Volume / balance / EQ control
 Web interface
   REST API for dynamic Florb controls
   JavaScript / React.JS / ??? pages
+
+
+Refactoring
+-----------
+
+Generate shader code programatically
 
 
 Debug features

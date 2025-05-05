@@ -320,19 +320,22 @@ void Florb::renderFrame() {
     int texLoc = glGetUniformLocation(shaderProgram, "currentTexture");
     glUniform1i(texLoc, 0);
 
-    // Set offset and zoom parameters for textures
+
+    // Set screen resolution uniform
     GLuint resolutionLoc = glGetUniformLocation(shaderProgram, "resolution");
+    glUniform2f(resolutionLoc, screenWidth, screenHeight);
+    
+    
+    // Set offset and zoom uniforms
     GLuint offsetLoc = glGetUniformLocation(shaderProgram, "offset");
     GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
-    GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
-    GLuint vignetteExponentLoc = glGetUniformLocation(shaderProgram, "vignetteExponent");
     GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDir");
-    GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
-    
-    glUniform2f(resolutionLoc, screenWidth, screenHeight);   
+    GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");    
     glUniform1f(zoomLoc, zoom);
     glUniform2f(offsetLoc, offsetX, offsetY);
 
+
+    // Set light uniforms
     glUniform3f(lightDirectionLoc,
                 lightDirection[0],
                 lightDirection[1],
@@ -346,9 +349,38 @@ void Florb::renderFrame() {
     };
     glUniform3f(lightColorLoc, actualColor[0], actualColor[1], actualColor[2]);
 
+
+    // Set vignette effect uniforms
+    GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
+    GLuint vignetteExponentLoc = glGetUniformLocation(shaderProgram, "vignetteExponent");
     glUniform1f(vignetteRadiusLoc, vignetteRadius);
     glUniform1f(vignetteExponentLoc, vignetteExponent);
 
+    
+    // Time uniform for all physical effects
+    float time(0.0f); // TEMPORARY DEBUG - Need to track monotonic time
+    GLuint timeLoc = glGetUniformLocation(shaderProgram, "time");
+    glUniform1f(timeLoc, time);
+
+    
+    // Dust mote uniforms
+    const int dustMoteCount(32);
+    GLuint dustMoteCountLoc = glGetUniformLocation(shaderProgram, "dustMoteCount");
+    GLuint dustMoteCentersLoc = glGetUniformLocation(shaderProgram, "dustMoteCenters");
+    GLuint dustMoteRadiiLoc = glGetUniformLocation(shaderProgram, "dustMoteRadii");
+    GLuint dustMoteSpeedsLoc = glGetUniformLocation(shaderProgram, "dustMoteSpeeds");
+    glUniform1i(dustMoteCountLoc, dustMoteCount);
+
+    vector<float> dustMoteCenters((2 * dustMoteCount), 0.0); // NEED TO RANDOMIZE
+    vector<float> dustMoteRadii(dustMoteCount, 2.0);
+    vector<float> dustMoteSpeeds(dustMoteCount, 2.0); // NEED TO RANDOMIZE
+    glUniform2fv(dustMoteCentersLoc, dustMoteCenters.size(), dustMoteCenters.data());
+    glUniform1fv(dustMoteRadiiLoc, dustMoteRadii.size(), dustMoteRadii.data());
+    glUniform1fv(dustMoteSpeedsLoc, dustMoteSpeeds.size(), dustMoteSpeeds.data());
+
+
+    // NEED dustMotesRadii uniform!
+    
 
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -427,12 +459,12 @@ void Florb::initShaders() {
         #version 330 core
         layout (location = 0) in vec3 aPos;
         
-        uniform vec2 resolution;
-
         out vec2 fragUV;
         out vec3 fragPos;
         out vec3 fragNormal;
-        
+
+        uniform vec2 resolution;
+
         void main()
         {
             // Aspect ratio correction
@@ -459,16 +491,25 @@ void Florb::initShaders() {
         in vec3 fragNormal;
 
         out vec4 FragColor;
+
+        uniform int dustMoteCount;
+
+        uniform float time;
+        uniform float dustMoteRadii[32];    // For individual radius control
+        uniform vec2 dustMoteCenters[32];   // UV positions
+        uniform float dustMoteSpeeds[32];   // Angular speeds
         
+        uniform float vignetteRadius;
+        uniform float vignetteExponent;
+        uniform float zoom;
+        
+        uniform vec2 offset;
+        uniform vec2 resolution;
+
         uniform vec3 lightDir;
         uniform vec3 lightColor;
 
         uniform sampler2D currentTexture;
-        uniform float zoom;
-        uniform vec2 offset;
-        uniform float vignetteRadius;
-        uniform float vignetteExponent;
-        uniform vec2 resolution;
         
         void main() {
             vec3 dir = normalize(fragPos);
@@ -483,17 +524,38 @@ void Florb::initShaders() {
             if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
                 discard;
 
+            // Sample texture color
             vec4 color = texture(currentTexture, uv);
-        
+
+            // Generate dust motes
+            float dust = 0.0;
+            for (int i = 0; i < 32; ++i) {
+                // Orbit the mote position over time
+                float angle = time * dustMoteSpeeds[i];
+                vec2 orbit = vec2(cos(angle), sin(angle)) * 0.01; // small orbit radius
+                vec2 motePos = dustMoteCenters[i] + orbit;
+            
+                float dist = distance(uv, motePos);
+                float radius = dustMoteRadii[i] / resolution.y; // convert px to UV units
+                float alpha = smoothstep(radius, 0.0, dist);    // fade from edge to center
+                dust += alpha;
+            }
+             
+            // Clamp and overlay white dust mote glow
+            color.rgb += vec3(clamp(dust, 0.0, 1.0));
+
+
             // Aspect-corrected center-relative coords
             vec2 screenUV = gl_FragCoord.xy / resolution;
             vec2 centered = screenUV - vec2(0.5);
             centered.x *= resolution.x / resolution.y;
 
+
             // Diffuse lighting
             vec3 norm = normalize(fragNormal);
             vec3 light = normalize(-lightDir);
-            
+
+
             // Vignette effect
             float radius = length(centered);
             float fadeStart = 1.0 - vignetteRadius;
@@ -518,6 +580,7 @@ void Florb::initShaders() {
                 vignette = 1.0;
             }
 
+
             // Exaggerated intensity
             float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0) * 2.5;
             float gamma = 2.2;
@@ -530,10 +593,6 @@ void Florb::initShaders() {
                              vignette * intensity * lightColor.g * color.g,
                              vignette * intensity * lightColor.b * color.b,
                              1.0);
-            // FragColor = vec4(vignette * intensity * color.r,
-            //                  vignette * intensity * color.g,
-            //                  vignette * intensity * color.b,
-            //                  1.0);
         }
     )glsl";
     
@@ -550,7 +609,7 @@ void Florb::initShaders() {
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
     glCompileShader(fragmentShader);
-    FlorbUtils::glCheck("glCompileShader(vertexShader)");
+    FlorbUtils::glCheck("glCompileShader(fragmentShader)");
     
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success)
