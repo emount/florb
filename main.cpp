@@ -131,11 +131,17 @@ void initOpenGL() {
     }
 
     // Graphical housekeeping
-    glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
+    
     glDisable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
+    glCullFace(GL_BACK);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // Wireframe view
+
     
     const GLubyte* version = glGetString(GL_VERSION);
     cout << "[INFO] OpenGL version: " << version << endl;
@@ -177,6 +183,7 @@ int main() {
                         screenWidth = xce.width;
                         screenHeight = xce.height;
                         glViewport(0, 0, screenWidth, screenHeight);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     }
                 }
             }

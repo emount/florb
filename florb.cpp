@@ -1,6 +1,5 @@
 #include <GL/glew.h>
 #include <GL/glx.h>
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <cmath>
@@ -44,6 +43,9 @@ const float Florb::k_SphereRadius(1.0f);
 // Sphere rendering parameters for high-detail, production quality rendering
 const int Florb::k_SectorCount(144);
 const int Florb::k_StackCount(72);
+const int Florb::k_XSegments(64); // Smoother sphere - 128
+const int Florb::k_YSegments(64); // Smoother sphere - 128
+
 
 // Florb class implementation
 Florb::Florb() :
@@ -185,10 +187,10 @@ void Florb::renderFrame() {
     }
 
     // Set a dark gray background color for the window
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
     GLuint textureID;
@@ -207,6 +209,7 @@ void Florb::renderFrame() {
          << endl;
 
     glUseProgram(shaderProgram);
+    FlorbUtils::glCheck("glUseProgram");
     
     // Projection and view matrices
     float aspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
@@ -229,13 +232,18 @@ void Florb::renderFrame() {
     GLuint resolutionLoc = glGetUniformLocation(shaderProgram, "resolution");
     GLuint offsetLoc = glGetUniformLocation(shaderProgram, "offset");
     GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
-    int vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
-    int vignetteExponentLoc = glGetUniformLocation(shaderProgram, "vignetteExponent");
+    GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
+    GLuint vignetteExponentLoc = glGetUniformLocation(shaderProgram, "vignetteExponent");
+    GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDirection");
+    
     glUniform2f(resolutionLoc, screenWidth, screenHeight);   
     glUniform1f(zoomLoc, zoom);
     glUniform2f(offsetLoc, offsetX, offsetY);   
     glUniform1f(vignetteRadiusLoc, vignetteRadius);
     glUniform1f(vignetteExponentLoc, vignetteExponent);
+
+    // TEMPORARY - Turn this into a config
+    glUniform3f(lightDirectionLoc, 0.0, 0.5, 1.0); // 30 degrees above viewer
 
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -244,75 +252,50 @@ void Florb::renderFrame() {
     glBindVertexArray(vao);
     FlorbUtils::glCheck("glBindVertexArray(vao)");
 
-    glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+    // glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_POINTS, 0, indexCount);
+    // glDrawElements(GL_POINTS, indexCount, GL_UNSIGNED_INT, 0);
+
     FlorbUtils::glCheck("glDrawElements()");
     
     glBindVertexArray(0);
+    FlorbUtils::glCheck("glBindVertexArray(0) - A");
 }
 
-void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
-    vector<float> vertices;
-    vector<unsigned int> indices;
+void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
+    std::vector<Vertex> vertices;
 
-    const float PI = 3.14159265359f;
+    for (int y = 0; y <= Y_SEGMENTS; ++y) {
+        for (int x = 0; x <= X_SEGMENTS; ++x) {
+            float xSegment = (float)x / X_SEGMENTS;
+            float ySegment = (float)y / Y_SEGMENTS;
+            float xPos = radius * std::cos(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
+            float yPos = radius * std::cos(ySegment * M_PI);
+            float zPos = radius * std::sin(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
 
-    for (int i = 0; i <= stackCount; ++i) {
-        float stackAngle = PI / 2 - i * (PI / stackCount);  // from pi/2 to -pi/2
-        float xy = radius * cosf(stackAngle);
-        float z = radius * sinf(stackAngle);
-
-        for (int j = 0; j <= sectorCount; ++j) {
-            float sectorAngle = j * 2 * PI / sectorCount;  // from 0 to 2pi
-
-            float x = xy * cosf(sectorAngle);
-            float y = xy * sinf(sectorAngle);
-            float u = (float)j / sectorCount;
-            float v = (float)i / stackCount;
-
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(z);
-            vertices.push_back(u);
+            Vertex v;
+            v.position = glm::vec3(xPos, yPos, zPos);
+            v.normal = glm::normalize(v.position); // for lighting later
             vertices.push_back(v);
         }
     }
 
-    for (int i = 0; i < stackCount; ++i) {
-        for (int j = 0; j < sectorCount; ++j) {
-            int first = i * (sectorCount + 1) + j;
-            int second = first + sectorCount + 1;
-
-            indices.push_back(first);
-            indices.push_back(second);
-            indices.push_back(first + 1);
-
-            indices.push_back(second);
-            indices.push_back(second + 1);
-            indices.push_back(first + 1);
-        }
-    }
-
-    indexCount = indices.size();
+    indexCount = static_cast<int>(vertices.size());
 
     glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
-
     glBindVertexArray(vao);
 
+    glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-
-    // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    // Vertex position attributes
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
 
-    // Texture coordinate attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    // Vertex normal attributes
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
     glBindVertexArray(0);
 }
@@ -320,18 +303,31 @@ void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
 void Florb::initShaders() {
     const char* vertexShaderSource = R"glsl(
         #version 330 core
-        
-        layout (location = 0) in vec3 aPos;
-        layout (location = 1) in vec2 aTexCoord;
-        out vec3 fragPos;
+        layout(location = 0) in vec3 aPos;
+        layout(location = 1) in vec3 aNormal;
         
         uniform mat4 projView;
         
-        void main()
-        {
-            fragPos = aPos; // Pass world-space position to fragment shader
+        void main() {
             gl_Position = projView * vec4(aPos, 1.0);
+            gl_PointSize = 1.0;
         }
+
+//        layout (location = 0) in vec3 aPos;
+//        layout (location = 1) in vec3 aNormal;
+//        
+//        out vec3 fragPos;
+//        out vec3 fragNormal;
+//        
+//        uniform mat4 model;
+//        uniform mat4 view;
+//        uniform mat4 projection;
+//        
+//        void main() {
+//            fragPos = vec3(model * vec4(aPos, 1.0));
+//            fragNormal = mat3(transpose(inverse(model))) * aNormal;
+//            gl_Position = projection * view * vec4(fragPos, 1.0);
+//        }
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
@@ -339,6 +335,10 @@ void Florb::initShaders() {
         out vec4 FragColor;
         
         in vec3 fragPos;
+        in vec3 fragNormal;
+
+        uniform vec3 lightDirection;
+
         uniform sampler2D currentTexture;
         uniform float zoom;
         uniform vec2 offset;
@@ -356,52 +356,78 @@ void Florb::initShaders() {
             uv = (uv - 0.5) * zoom + 0.5 + offset;
             uv.y = 1.0 - uv.y;
         
-            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
+            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+                discard;
+
             vec4 color = texture(currentTexture, uv);
         
             // Aspect-corrected center-relative coords
             vec2 screenUV = gl_FragCoord.xy / resolution;
             vec2 centered = screenUV - vec2(0.5);
-            centered.x *= resolution.x / resolution.y;  // aspect correction
-        
+            centered.x *= resolution.x / resolution.y;
+
+            // Diffuse lighting
+            float intensity = max(dot(normalize(fragNormal), lightDirection), 0.0);
+
+            // Vignette effect
             float radius = length(centered);
             float fadeStart = 1.0 - vignetteRadius;
             float fadeEnd = 1.0;
-        
+
+            float vignette;
             if (radius > fadeStart && radius <= fadeEnd) {
                 // Zero to one in band
                 float t = (radius - fadeStart) / (fadeEnd - fadeStart);
                 float bands = floor(t * 10.0);
+
                 if (mod(bands, 2.0) < 1.0) {
-                    float weight = (1.0 - clamp(pow(10 * t, 2.0), 0.0, 1.0));
-                    FragColor = vec4(weight * color.r,
-                                     weight * color.g,
-                                     weight * color.b,
-                                     1.0);
+                    vignette = (1.0 - clamp(pow(10 * t, 2.0), 0.0, 1.0));
                 } else {
                     // TEMPORARY
                     // Background color, pass this in as a variable later on
                     FragColor = vec4(0.1, 0.1, 0.1, 1.0);
+                    return;
                 }
             } else {
                 // Center region gets unmodified image data
-                FragColor = color;
+                vignette = 1.0;
             }
+
+            // Factor in all weights
+            FragColor = vec4(vignette * intensity * color.r,
+                             vignette * intensity * color.g,
+                             vignette * intensity * color.b,
+                             1.0);
+
+            // TEMPORARY DEBUG - Solid white
+            FragColor = vec4(1.0, 1.0, 1.0, 1.0);
         }
     )glsl";
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
+    FlorbUtils::glCheck("glCompileShader(vertexShader)");
+
+    GLint success;
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+      cerr << "Vertex shader compilation error" << endl;    
 
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
     glCompileShader(fragmentShader);
+    FlorbUtils::glCheck("glCompileShader(vertexShader)");
+    
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+      cerr << "Fragment shader compilation error" << endl;
 
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+    FlorbUtils::glCheck("glLinkProgram()");
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);

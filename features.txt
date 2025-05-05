@@ -1,8 +1,9 @@
 Florb feature wish list
 -----------------------
 
-Dust motes swirling on the orb's surface
+Florb icon of the Glorious Anomaly
 Adjustable lighting
+Dust motes swirling on the orb's surface
 Adjustable camera angle and zoom
 Hybrid AI flower generation
 Image transition modes:

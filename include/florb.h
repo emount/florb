@@ -4,6 +4,7 @@
 #include <string>
 #include <mutex>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 
 #include "flower.h"
 
@@ -43,6 +44,14 @@ public:
     static const std::string k_DefaultTitle;
   
     static const std::string k_DefaultImagePath;
+
+private:
+
+    // Structure for passing vertices to the vertex shader
+    struct Vertex {
+        glm::vec3 position;
+        glm::vec3 normal;
+    };
   
 private:
     std::string imagePath;
@@ -68,7 +77,11 @@ private:
     std::mutex stateMutex;
 
     static const float k_SphereRadius;
+  
     static const int k_SectorCount;
     static const int k_StackCount;
+
+    static const int k_XSegments;
+    static const int k_YSegments;
   
 };
