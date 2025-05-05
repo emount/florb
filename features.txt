@@ -2,6 +2,7 @@ Florb feature wish list
 -----------------------
 
 Florb icon of the Glorious Anomaly
+Sphere smoothness setting (clamped exponent for x/y segments)
 Adjustable lighting
 Dust motes swirling on the orb's surface
 Adjustable camera angle and zoom

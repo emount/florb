@@ -75,11 +75,11 @@ void Florb::loadConfig() {
         file >> config;
 
         if (config.contains("title") && config["title"].is_string()) {
-	    setTitle(config["title"]);
-	} else {
-	    setTitle(k_DefaultTitle);
-	}
-	
+            setTitle(config["title"]);
+        } else {
+            setTitle(k_DefaultTitle);
+        }
+    
         if (config.contains("image_path") && config["image_path"].is_string()) {
             imagePath = config["image_path"];
         } else {
@@ -87,15 +87,15 @@ void Florb::loadConfig() {
         }
 
         if (config.contains("vignette") && config["vignette"].is_object()) {
-	    const auto &vignette(config["vignette"]);
-
-	    if (vignette.contains("radius") and vignette["radius"].is_number()) {
-		setVignetteRadius(vignette["radius"]);
-	    }
-
-	    if (vignette.contains("exponent") and vignette["exponent"].is_number()) {
-		setVignetteExponent(vignette["exponent"]);
-	    }
+            const auto &vignette(config["vignette"]);
+	    
+            if (vignette.contains("radius") and vignette["radius"].is_number()) {
+                setVignetteRadius(vignette["radius"]);
+            }
+	    
+            if (vignette.contains("exponent") and vignette["exponent"].is_number()) {
+                setVignetteExponent(vignette["exponent"]);
+            }
         }
 
         if (config.contains("center") && config["center"].is_array() && config["center"].size() == 2) {
@@ -198,15 +198,15 @@ void Florb::renderFrame() {
         textureID = fallbackTextureID;
     } else {
         auto &flower = flowers[currentFlower];
-	flower.loadImage();
-	textureID = flower.getTextureID();
+    flower.loadImage();
+        textureID = flower.getTextureID();
     }
     
     if (!glIsTexture(textureID))
         cerr << "[WARN] Texture ID ("
-         << textureID
-         << ") is not valid"
-         << endl;
+             << textureID
+             << ") is not valid"
+             << endl;
 
     glUseProgram(shaderProgram);
     FlorbUtils::glCheck("glUseProgram");
@@ -234,7 +234,7 @@ void Florb::renderFrame() {
     GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
     GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
     GLuint vignetteExponentLoc = glGetUniformLocation(shaderProgram, "vignetteExponent");
-    GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDirection");
+    GLuint lightDirLoc = glGetUniformLocation(shaderProgram, "lightDir");
     
     glUniform2f(resolutionLoc, screenWidth, screenHeight);   
     glUniform1f(zoomLoc, zoom);
@@ -242,8 +242,14 @@ void Florb::renderFrame() {
     glUniform1f(vignetteRadiusLoc, vignetteRadius);
     glUniform1f(vignetteExponentLoc, vignetteExponent);
 
+    // TEMPORARY DEBUG
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightDir"), 0.0f, -1.0f, -1.0f);
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightColor"), 1.0f, 1.0f, 1.0f);
+    glUniform3f(glGetUniformLocation(shaderProgram, "objectColor"), 1.0f, 0.6f, 0.2f); // orange
+
+
     // TEMPORARY - Turn this into a config
-    glUniform3f(lightDirectionLoc, 0.0, 0.5, 1.0); // 30 degrees above viewer
+    glUniform3f(lightDirLoc, 0.0, 0.5, 1.0); // 30 degrees above viewer
 
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -302,19 +308,24 @@ void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
 
 void Florb::initShaders() {
     const char* vertexShaderSource = R"glsl(
-        #version 330 core
-        layout(location = 0) in vec3 aPos;
-        layout(location = 1) in vec3 aNormal;
-        
-        uniform mat4 projView;
-        
-        void main() {
-            gl_Position = projView * vec4(aPos, 1.0);
-            gl_PointSize = 1.0;
-        }
+#version 330 core
+layout(location = 0) in vec3 aPos;
 
-//        layout (location = 0) in vec3 aPos;
-//        layout (location = 1) in vec3 aNormal;
+out vec3 fragPos;
+out vec3 fragNormal;
+
+uniform mat4 projView;
+
+void main()
+{
+    fragPos = aPos;
+    fragNormal = normalize(aPos); // synthetic normal for unit sphere
+    gl_Position = projView * vec4(aPos, 1.0);
+}
+//        #version 330 core
+//        
+//        layout(location = 0) in vec3 aPos;
+//        layout(location = 1) in vec3 aNormal;
 //        
 //        out vec3 fragPos;
 //        out vec3 fragNormal;
@@ -324,84 +335,107 @@ void Florb::initShaders() {
 //        uniform mat4 projection;
 //        
 //        void main() {
-//            fragPos = vec3(model * vec4(aPos, 1.0));
-//            fragNormal = mat3(transpose(inverse(model))) * aNormal;
-//            gl_Position = projection * view * vec4(fragPos, 1.0);
+//            vec4 worldPos = model * vec4(aPos, 1.0);
+//            fragPos = worldPos.xyz;
+//        
+//            mat3 normalMatrix = transpose(inverse(mat3(model)));
+//            fragNormal = normalMatrix * aNormal;
+//        
+//            gl_Position = projection * view * worldPos;
 //        }
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
         #version 330 core
+        in vec3 fragNormal;
         out vec4 FragColor;
         
-        in vec3 fragPos;
-        in vec3 fragNormal;
-
-        uniform vec3 lightDirection;
-
-        uniform sampler2D currentTexture;
-        uniform float zoom;
-        uniform vec2 offset;
-        uniform float vignetteRadius;
-        uniform float vignetteExponent;
-        uniform vec2 resolution;
+        uniform vec3 lightDir;
         
         void main() {
-            vec3 dir = normalize(fragPos);
-        
-            vec2 uv;
-            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
-            uv.y = asin(dir.y) / 3.14159265 + 0.5;
-        
-            uv = (uv - 0.5) * zoom + 0.5 + offset;
-            uv.y = 1.0 - uv.y;
-        
-            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
-                discard;
-
-            vec4 color = texture(currentTexture, uv);
-        
-            // Aspect-corrected center-relative coords
-            vec2 screenUV = gl_FragCoord.xy / resolution;
-            vec2 centered = screenUV - vec2(0.5);
-            centered.x *= resolution.x / resolution.y;
-
-            // Diffuse lighting
-            float intensity = max(dot(normalize(fragNormal), lightDirection), 0.0);
-
-            // Vignette effect
-            float radius = length(centered);
-            float fadeStart = 1.0 - vignetteRadius;
-            float fadeEnd = 1.0;
-
-            float vignette;
-            if (radius > fadeStart && radius <= fadeEnd) {
-                // Zero to one in band
-                float t = (radius - fadeStart) / (fadeEnd - fadeStart);
-                float bands = floor(t * 10.0);
-
-                if (mod(bands, 2.0) < 1.0) {
-                    vignette = (1.0 - clamp(pow(10 * t, 2.0), 0.0, 1.0));
-                } else {
-                    // TEMPORARY
-                    // Background color, pass this in as a variable later on
-                    FragColor = vec4(0.1, 0.1, 0.1, 1.0);
-                    return;
-                }
-            } else {
-                // Center region gets unmodified image data
-                vignette = 1.0;
-            }
-
-            // Factor in all weights
-            FragColor = vec4(vignette * intensity * color.r,
-                             vignette * intensity * color.g,
-                             vignette * intensity * color.b,
-                             1.0);
-
-            // TEMPORARY DEBUG - Solid white
-            FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0);
+            FragColor = vec4(vec3(intensity), 1.0);
         }
+
+//        #version 330 core
+//        in vec3 fragPos;
+//        in vec3 fragNormal;
+//
+//        out vec4 FragColor;
+//        
+//        uniform vec3 lightDir;
+//        uniform vec3 lightColor;
+//        uniform vec3 objectColor;
+//
+//        uniform sampler2D currentTexture;
+//        uniform float zoom;
+//        uniform vec2 offset;
+//        uniform float vignetteRadius;
+//        uniform float vignetteExponent;
+//        uniform vec2 resolution;
+//        
+//        void main() {
+//            vec3 dir = normalize(fragPos);
+//        
+//            vec2 uv;
+//            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
+//            uv.y = asin(dir.y) / 3.14159265 + 0.5;
+//        
+//            uv = (uv - 0.5) * zoom + 0.5 + offset;
+//            uv.y = 1.0 - uv.y;
+//        
+//            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+//                discard;
+//
+//            vec4 color = texture(currentTexture, uv);
+//        
+//            // Aspect-corrected center-relative coords
+//            vec2 screenUV = gl_FragCoord.xy / resolution;
+//            vec2 centered = screenUV - vec2(0.5);
+//            centered.x *= resolution.x / resolution.y;
+//
+//            // Diffuse lighting
+//            vec3 norm = normalize(fragNormal);
+//            vec3 light = normalize(-lightDir);
+//            
+//            float intensity = max(dot(norm, light), 0.0);
+//        
+//            // Vignette effect
+//            float radius = length(centered);
+//            float fadeStart = 1.0 - vignetteRadius;
+//            float fadeEnd = 1.0;
+//
+//            float vignette;
+//            if (radius > fadeStart && radius <= fadeEnd) {
+//                // Zero to one in band
+//                float t = (radius - fadeStart) / (fadeEnd - fadeStart);
+//                float bands = floor(t * 10.0);
+//
+//                if (mod(bands, 2.0) < 1.0) {
+//                    vignette = (1.0 - clamp(pow(10 * t, 2.0), 0.0, 1.0));
+//                } else {
+//                    // TEMPORARY
+//                    // Background color, pass this in as a variable later on
+//                    FragColor = vec4(0.1, 0.1, 0.1, 1.0);
+//                    return;
+//                }
+//            } else {
+//                // Center region gets unmodified image data
+//                vignette = 1.0;
+//            }
+//
+//            // vec3 diffuse = diff * lightColor;
+//            // vec3 result = objectColor * diffuse;
+//            // FragColor = vec4(result, 1.0);
+//
+//            // Factor in all weights
+//            // FragColor = vec4(vignette * intensity * color.r,
+//            //                  vignette * intensity * color.g,
+//            //                  vignette * intensity * color.b,
+//            //                  1.0);
+//
+//            FragColor = vec4(fragNormal * 0.5 + 0.5, 1.0);  // visualize normals as colors
+//        }
     )glsl";
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
