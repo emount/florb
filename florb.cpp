@@ -193,6 +193,13 @@ void Florb::renderFrame() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
+    // Set either solid or wireframe rendering
+    if (false) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
     GLuint textureID;
     if(flowers.empty()) {
         textureID = fallbackTextureID;
@@ -245,7 +252,8 @@ void Florb::renderFrame() {
 
     // TEMPORARY - Change these to configs
     glUniform3f(lightDirLoc, 0.0f, -1.0f, -1.0f);
-    glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
+    // glUniform3f(lightColorLoc, 1.000f, 1.000f, 1.000f); // White light
+    glUniform3f(lightColorLoc, 0.700f, 0.647f, 0.000f); // Medium orange light
 
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -425,14 +433,14 @@ void Florb::initShaders() {
             vec4 texColor = texture(currentTexture, fragUV);
 
             // Factor in all weights
-            // FragColor = vec4(vignette * intensity * lightColor.r * color.r,
-            //                  vignette * intensity * lightColor.g * color.g,
-            //                  vignette * intensity * lightColor.b * color.b,
-            //                  1.0);
-            FragColor = vec4(vignette * intensity * color.r,
-                             vignette * intensity * color.g,
-                             vignette * intensity * color.b,
+            FragColor = vec4(vignette * intensity * lightColor.r * color.r,
+                             vignette * intensity * lightColor.g * color.g,
+                             vignette * intensity * lightColor.b * color.b,
                              1.0);
+            // FragColor = vec4(vignette * intensity * color.r,
+            //                  vignette * intensity * color.g,
+            //                  vignette * intensity * color.b,
+            //                  1.0);
         }
     )glsl";
     
