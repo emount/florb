@@ -1,10 +1,11 @@
 #pragma once
 
-#include <vector>
-#include <string>
-#include <mutex>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <mutex>
+#include <string>
+#include <vector>
+#include <random>
 
 #include "flower.h"
 
@@ -106,5 +107,9 @@ private:
 
     static const int k_XSegments;
     static const int k_YSegments;
+
+    std::random_device rd;
+    std::mt19937 gen;
+    std::uniform_real_distribution<float> dist;
   
 };

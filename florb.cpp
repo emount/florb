@@ -20,16 +20,21 @@ using std::endl;
 using std::exception;
 using std::ifstream;
 using std::lock_guard;
+using std::mt19937;
 using std::mutex;
 using std::pair;
+using std::random_device;
 using std::sin;
 using std::string;
+using std::uniform_real_distribution;
 using std::vector;
 
 extern Display *display;
 extern Window window;
 
 using json = nlohmann::json_abi_v3_12_0::json;
+
+using namespace std::chrono;
 
 const string Florb::k_DefaultTitle("Florb v0.3");
 
@@ -48,11 +53,15 @@ const int Florb::k_YSegments(64); // Smoother sphere - 128
 Florb::Florb() :
     lightDirection(3, 0.0f),
     lightColor(3, 0.0f),
-    fallbackTextureID(FlorbUtils::createDebugTexture()) {
+    fallbackTextureID(FlorbUtils::createDebugTexture()),
+    dist(0.0f, 1.0f) {
     loadConfigs();
     loadFlowers();
     generateSphere(k_SphereRadius, k_SectorCount, k_StackCount);
     initShaders();
+
+    // Seed the Mersenne Twister
+    gen.seed(rd());
 }
 
 Florb::~Florb() {
@@ -271,6 +280,12 @@ void Florb::renderFrame() {
         cerr << "[renderFrame()] OpenGL context is not current" << endl;
     }
 
+    // Update the time uniform for physical effects
+    static steady_clock::time_point startTime = steady_clock::now();
+    float timeSeconds = duration<float>(steady_clock::now() - startTime).count();
+    GLuint timeLoc = glGetUniformLocation(shaderProgram, "time");
+    glUniform1f(timeLoc, timeSeconds);
+
     // Set a dark gray background color for the window
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -357,31 +372,26 @@ void Florb::renderFrame() {
     glUniform1f(vignetteExponentLoc, vignetteExponent);
 
     
-    // Time uniform for all physical effects
-    float time(0.0f); // TEMPORARY DEBUG - Need to track monotonic time
-    GLuint timeLoc = glGetUniformLocation(shaderProgram, "time");
-    glUniform1f(timeLoc, time);
-
-    
     // Dust mote uniforms
-    const int dustMoteCount(32);
-    GLuint dustMoteCountLoc = glGetUniformLocation(shaderProgram, "dustMoteCount");
-    GLuint dustMoteCentersLoc = glGetUniformLocation(shaderProgram, "dustMoteCenters");
-    GLuint dustMoteRadiiLoc = glGetUniformLocation(shaderProgram, "dustMoteRadii");
-    GLuint dustMoteSpeedsLoc = glGetUniformLocation(shaderProgram, "dustMoteSpeeds");
-    glUniform1i(dustMoteCountLoc, dustMoteCount);
+    const int moteCount(32);
+    GLuint moteCountLoc = glGetUniformLocation(shaderProgram, "moteCount");
+    GLuint moteCentersLoc = glGetUniformLocation(shaderProgram, "moteCenters");
+    GLuint moteRadiiLoc = glGetUniformLocation(shaderProgram, "moteRadii");
+    GLuint moteSpeedsLoc = glGetUniformLocation(shaderProgram, "moteSpeeds");
+    glUniform1i(moteCountLoc, moteCount);
 
-    vector<float> dustMoteCenters((2 * dustMoteCount), 0.0); // NEED TO RANDOMIZE
-    vector<float> dustMoteRadii(dustMoteCount, 2.0);
-    vector<float> dustMoteSpeeds(dustMoteCount, 2.0); // NEED TO RANDOMIZE
-    glUniform2fv(dustMoteCentersLoc, dustMoteCenters.size(), dustMoteCenters.data());
-    glUniform1fv(dustMoteRadiiLoc, dustMoteRadii.size(), dustMoteRadii.data());
-    glUniform1fv(dustMoteSpeedsLoc, dustMoteSpeeds.size(), dustMoteSpeeds.data());
+    // Randomize dust mote centers
+    vector<float> moteCenters((2 * moteCount), 0.0);
+    for (auto i = 0; i < (2 * moteCount); i++) {
+        moteCenters[i] = dist(gen);
+    }
+    vector<float> moteRadii(moteCount, 5.0);
+    vector<float> moteSpeeds(moteCount, 2.0); // NEED TO RANDOMIZE
+    glUniform2fv(moteCentersLoc, moteCenters.size(), moteCenters.data());
+    glUniform1fv(moteRadiiLoc, moteRadii.size(), moteRadii.data());
+    glUniform1fv(moteSpeedsLoc, moteSpeeds.size(), moteSpeeds.data());
 
-
-    // NEED dustMotesRadii uniform!
     
-
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
@@ -492,12 +502,12 @@ void Florb::initShaders() {
 
         out vec4 FragColor;
 
-        uniform int dustMoteCount;
+        uniform int moteCount;
 
         uniform float time;
-        uniform float dustMoteRadii[32];    // For individual radius control
-        uniform vec2 dustMoteCenters[32];   // UV positions
-        uniform float dustMoteSpeeds[32];   // Angular speeds
+        uniform float moteRadii[32];    // For individual radius control
+        uniform vec2 moteCenters[32];   // UV positions
+        uniform float moteSpeeds[32];   // Angular speeds
         
         uniform float vignetteRadius;
         uniform float vignetteExponent;
@@ -531,12 +541,12 @@ void Florb::initShaders() {
             float dust = 0.0;
             for (int i = 0; i < 32; ++i) {
                 // Orbit the mote position over time
-                float angle = time * dustMoteSpeeds[i];
+                float angle = time * moteSpeeds[i];
                 vec2 orbit = vec2(cos(angle), sin(angle)) * 0.01; // small orbit radius
-                vec2 motePos = dustMoteCenters[i] + orbit;
+                vec2 motePos = moteCenters[i] + orbit;
             
                 float dist = distance(uv, motePos);
-                float radius = dustMoteRadii[i] / resolution.y; // convert px to UV units
+                float radius = moteRadii[i] / resolution.y; // convert px to UV units
                 float alpha = smoothstep(radius, 0.0, dist);    // fade from edge to center
                 dust += alpha;
             }
