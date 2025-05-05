@@ -49,8 +49,10 @@ const int Florb::k_YSegments(64); // Smoother sphere - 128
 
 // Florb class implementation
 Florb::Florb() :
+    lightDirection(3, 0.0f),
+    lightColor(3, 0.0f),
     fallbackTextureID(FlorbUtils::createDebugTexture()) {
-    loadConfig();
+    loadConfigs();
     loadFlowers();
     generateSphere(k_SphereRadius, k_SectorCount, k_StackCount);
     initShaders();
@@ -63,7 +65,7 @@ Florb::~Florb() {
     glDeleteProgram(shaderProgram);
 }
 
-void Florb::loadConfig() {
+void Florb::loadConfigs() {
     ifstream file("florb.json");
     if (!file.is_open()) {
         cerr << "[WARN] Could not open florb.json for configuration" << endl;
@@ -86,6 +88,27 @@ void Florb::loadConfig() {
             imagePath = k_DefaultImagePath;
         }
 
+	// Light configs
+        if (config.contains("light") && config["light"].is_object()) {
+            const auto &light(config["light"]);
+	    
+            if (light.contains("direction") and light["direction"].is_array()) {
+	        const auto &direction(light["direction"]);
+                setLightDirection(direction[0], direction[1], direction[2]);
+            }
+	    
+            if (light.contains("intensity") and light["intensity"].is_number()) {
+                setLightIntensity(light["intensity"]);
+            }
+	    
+            if (light.contains("color") and light["color"].is_array()) {
+	        const auto &color(light["color"]);
+                setLightColor(color[0], color[1], color[2]);
+            }
+	    
+        }
+
+	// Vignette configs
         if (config.contains("vignette") && config["vignette"].is_object()) {
             const auto &vignette(config["vignette"]);
 	    
@@ -98,9 +121,12 @@ void Florb::loadConfig() {
             }
         }
 
+	// Pan / tilt / zoom configs
         if (config.contains("center") && config["center"].is_array() && config["center"].size() == 2) {
             setCenter(config["center"][0], config["center"][1]);
         }
+
+	// TODO - Add tilt (center-axis rotation) config
 
         if (config.contains("zoom") && config["zoom"].is_number()) {
             auto zoomFactor(1.0f / static_cast<float>(config["zoom"]));
@@ -130,14 +156,48 @@ void Florb::nextFlower() {
     if(++currentFlower >= flowers.size()) currentFlower = 0;
 }
 
-float Florb::getVignetteRadius() {
-    lock_guard<mutex> lock(stateMutex);
-    return vignetteRadius;
-}
-
 void Florb::setTitle(const string &title) {
     lock_guard<mutex> lock(stateMutex);
     FlorbUtils::setWindowTitle(display, window, title);
+}
+
+const vector<float>& Florb::getLightDirection() const {
+    lock_guard<mutex> lock(stateMutex);
+    return lightDirection;
+}
+
+void Florb::setLightDirection(float alpha, float beta, float phi) {
+    lock_guard<mutex> lock(stateMutex);
+    lightDirection[0] = alpha;
+    lightDirection[1] = beta;
+    lightDirection[2] = phi;
+}
+
+float Florb::getLightIntensity() const {
+    lock_guard<mutex> lock(stateMutex);
+    return lightIntensity;
+}
+
+void Florb::setLightIntensity(float i) {
+    lock_guard<mutex> lock(stateMutex);
+    lightIntensity = i;
+}
+
+const vector<float>& Florb::getLightColor() const {
+    lock_guard<mutex> lock(stateMutex);
+    return lightColor;
+}
+
+void Florb::setLightColor(float r, float g, float b) {
+    lock_guard<mutex> lock(stateMutex);
+    lightColor[0] = r;
+    lightColor[1] = g;
+    lightColor[2] = b;
+}
+
+float Florb::getVignetteRadius() const {
+    lock_guard<mutex> lock(stateMutex);
+    return vignetteRadius;
 }
 
 void Florb::setVignetteRadius(float r) {
@@ -145,7 +205,7 @@ void Florb::setVignetteRadius(float r) {
     vignetteRadius = r;
 }
 
-float Florb::getVignetteExponent() {
+float Florb::getVignetteExponent() const {
     lock_guard<mutex> lock(stateMutex);
     return vignetteExponent;
 }
@@ -155,7 +215,7 @@ void Florb::setVignetteExponent(float r) {
     vignetteExponent = r;
 }
 
-pair<float, float> Florb::getCenter() {
+pair<float, float> Florb::getCenter() const {
     lock_guard<mutex> lock(stateMutex);
     return {offsetX, offsetY};
 }
@@ -166,7 +226,7 @@ void Florb::setCenter(float x, float y) {
     offsetY = y;
 }
 
-float Florb::getZoom() {
+float Florb::getZoom() const {
     lock_guard<mutex> lock(stateMutex);
     return zoom;
 }
@@ -241,19 +301,29 @@ void Florb::renderFrame() {
     GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
     GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
     GLuint vignetteExponentLoc = glGetUniformLocation(shaderProgram, "vignetteExponent");
-    GLuint lightDirLoc = glGetUniformLocation(shaderProgram, "lightDir");
+    GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDir");
     GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
     
     glUniform2f(resolutionLoc, screenWidth, screenHeight);   
     glUniform1f(zoomLoc, zoom);
-    glUniform2f(offsetLoc, offsetX, offsetY);   
+    glUniform2f(offsetLoc, offsetX, offsetY);
+
+    glUniform3f(lightDirectionLoc,
+		lightDirection[0],
+		lightDirection[1],
+		lightDirection[2]);
+    
+    // Weight light color with intensity
+    vector<float> actualColor = {
+      (lightIntensity * lightColor[0]),
+      (lightIntensity * lightColor[1]),
+      (lightIntensity * lightColor[2])
+    };
+    glUniform3f(lightColorLoc, actualColor[0], actualColor[1], actualColor[2]);
+
     glUniform1f(vignetteRadiusLoc, vignetteRadius);
     glUniform1f(vignetteExponentLoc, vignetteExponent);
 
-    // TEMPORARY - Change these to configs
-    glUniform3f(lightDirLoc, 0.0f, -1.0f, -1.0f);
-    // glUniform3f(lightColorLoc, 1.000f, 1.000f, 1.000f); // White light
-    glUniform3f(lightColorLoc, 0.700f, 0.647f, 0.000f); // Medium orange light
 
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -274,7 +344,7 @@ void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
     vector<unsigned int> indices;
 
     for (int y = 0; y <= Y_SEGMENTS; ++y) {
-	    // For lighting
+	    // For light
 
         for (int x = 0; x <= X_SEGMENTS; ++x) {
             float xSegment = (float)x / X_SEGMENTS;
@@ -285,7 +355,7 @@ void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
 
             Vertex v;
             v.position = glm::vec3(xPos, yPos, zPos); // Position
-            v.normal = glm::normalize(v.position); // For lighting
+            v.normal = glm::normalize(v.position); // For light
             vertices.push_back(v);
         }
     }

@@ -1,6 +1,11 @@
 {
     "title" : "Eldridge's Wildflowers",
     "image_path" : "images",
+    "light" : {
+	"direction" : [0.0, -0.5, -1.0],
+	"intensity" : 0.60,
+	"color" : [1.000, 1.000, 1.000]
+    },
     "vignette" : {
 	"radius" : 0.70,
 	"exponent" : 3.0

@@ -17,24 +17,32 @@ public:
     void nextFlower();
 
     void setTitle(const std::string &title);
+
+    const std::vector<float>& getLightDirection() const;
+    void setLightDirection(float alpha, float beta, float phi);
+
+    float getLightIntensity() const;
+    void setLightIntensity(float i);
+
+    const std::vector<float>& getLightColor() const;
+    void setLightColor(float r, float g, float b);
   
-    float getVignetteRadius();
+    float getVignetteRadius() const;
     void setVignetteRadius(float r);  
 
-    float getVignetteExponent();
+    float getVignetteExponent() const;
     void setVignetteExponent(float e);  
 
-    std::pair<float, float> getCenter();
+    std::pair<float, float> getCenter() const;
     void setCenter(float x, float y);
   
-    float getZoom();
+    float getZoom() const;
     void setZoom(float z);
-  
   
     void renderFrame();
 
 private:
-    void loadConfig();
+    void loadConfigs();
     void loadFlowers();
     void generateSphere(float radius, int sectorCount, int stackCount);
     void initShaders();
@@ -60,8 +68,13 @@ private:
     std::vector<std::string> flowerPaths;
     unsigned int currentFlower = 0;
 
+    std::vector<float> lightDirection;
+    float lightIntensity;
+    std::vector<float> lightColor;
+
     float vignetteRadius = 0.0f;
     float vignetteExponent = 0.0f;
+  
     float zoom = 1.0f;
     float offsetX = 0.0f;
     float offsetY = 0.0f;
@@ -74,7 +87,7 @@ private:
   
     int indexCount = 0;
   
-    std::mutex stateMutex;
+    mutable std::mutex stateMutex;
 
     static const float k_SphereRadius;
   
