@@ -327,60 +327,33 @@ void Florb::initShaders() {
         layout (location = 0) in vec3 aPos;
         
         uniform vec2 resolution;
-        
+
+        out vec2 fragUV;
+        out vec3 fragPos;
         out vec3 fragNormal;
         
         void main()
         {
+            // Aspect ratio correction
             vec3 pos = aPos;
-            pos.x *= resolution.y / resolution.x;  // aspect correction
+            pos.x *= resolution.y / resolution.x;
+
+            // Assign fragment position and normal
+            fragPos = aPos;
+            fragNormal = normalize(pos);
+
+            // Generate spherical UV coordinates
+            vec3 dir = normalize(aPos);
+            fragUV.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
+            fragUV.y = asin(dir.y) / 3.14159265 + 0.5;
         
-            fragNormal = normalize(pos);           // store aspect-corrected normal
-        
-            gl_Position = vec4(pos, 1.0);          // project directly to screen for debug
+            gl_Position = vec4(pos, 1.0);
         }
-//        #version 330 core
-//        
-//        layout(location = 0) in vec3 aPos;
-//        layout(location = 1) in vec3 aNormal;
-//        
-//        out vec3 fragPos;
-//        out vec3 fragNormal;
-//        
-//        uniform mat4 model;
-//        uniform mat4 view;
-//        uniform mat4 projection;
-//        
-//        void main() {
-//            vec4 worldPos = model * vec4(aPos, 1.0);
-//            fragPos = worldPos.xyz;
-//        
-//            mat3 normalMatrix = transpose(inverse(mat3(model)));
-//            fragNormal = normalMatrix * aNormal;
-//        
-//            gl_Position = projection * view * worldPos;
-//        }
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
-//        #version 330 core
-//        in vec3 fragNormal;
-//        out vec4 FragColor;
-//        
-//        uniform vec3 lightDir;
-//        uniform vec3 lightColor;
-//        uniform vec3 objectColor;
-//        
-//        void main() {
-//            // Exaggerated intensity
-//            float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0) * 2.5;
-//            float gamma = 2.2;
-//            vec3 corrected = pow(vec3(intensity), vec3(1.0 / gamma));
-//            vec3 diffuse = intensity * lightColor * objectColor;
-//            FragColor = vec4(diffuse, 1.0);
-//        }
-
         #version 330 core
+        in vec2 fragUV;
         in vec3 fragPos;
         in vec3 fragNormal;
 
@@ -448,7 +421,8 @@ void Florb::initShaders() {
             float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0) * 2.5;
             float gamma = 2.2;
             vec3 corrected = pow(vec3(intensity), vec3(1.0 / gamma));
-            vec3 diffuse = intensity * lightColor;
+            float diffuse = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0);
+            vec4 texColor = texture(currentTexture, fragUV);
 
             // Factor in all weights
             // FragColor = vec4(vignette * intensity * lightColor.r * color.r,

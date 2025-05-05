@@ -6,6 +6,7 @@ Sphere smoothness setting (clamped exponent for x/y segments)
 Adjustable lighting
   Basic intensity
   Pulsing lighting
+Orb shadow
 Dust motes swirling on the orb's surface
 Adjustable camera angle and zoom
 Hybrid AI flower generation
