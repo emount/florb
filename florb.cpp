@@ -254,10 +254,7 @@ void Florb::renderFrame() {
     glBindVertexArray(vao);
     FlorbUtils::glCheck("glBindVertexArray(vao)");
 
-    // glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
-    glDrawArrays(GL_POINTS, 0, indexCount);
-    // glDrawElements(GL_POINTS, indexCount, GL_UNSIGNED_INT, 0);
-
+    glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
     FlorbUtils::glCheck("glDrawElements()");
     
     glBindVertexArray(0);
@@ -266,6 +263,7 @@ void Florb::renderFrame() {
 
 void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
     std::vector<Vertex> vertices;
+    vector<unsigned int> indices;
 
     for (int y = 0; y <= Y_SEGMENTS; ++y) {
 	    // For lighting
@@ -284,27 +282,43 @@ void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
         }
     }
 
-    indexCount = static_cast<int>(vertices.size());
+    // Generate indices
+    for (int y = 0; y < Y_SEGMENTS; ++y) {
+        for (int x = 0; x <= X_SEGMENTS; ++x) {
+            indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+            indices.push_back(y * (X_SEGMENTS + 1) + x);
+        }
+    }
 
-    // for (int i = 0; i < 5; ++i)
-    //     std::cout << "Normal " << i << ": " << glm::to_string(vertices[i].normal) << std::endl;
+    indexCount = static_cast<int>(indices.size());
 
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
+    // Load vertices
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+    FlorbUtils::glCheck("glBufferData(GL_ARRAY_BUFFER)");
+
+    // Load indices
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+    FlorbUtils::glCheck("glBufferData(GL_ELEMENT_ARRAY_BUFFER)");
 
     // Vertex position attributes
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
     glEnableVertexAttribArray(0);
+    FlorbUtils::glCheck("glEnableVertexAttribArray(0)");
 
     // Vertex normal attributes
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
     glEnableVertexAttribArray(1);
+    FlorbUtils::glCheck("glEnableVertexAttribArray(1)");
 
     glBindVertexArray(0);
+    FlorbUtils::glCheck("glBindVertexArray(0)");
 }
 
 void Florb::initShaders() {
@@ -447,7 +461,7 @@ void Florb::initShaders() {
                              1.0);
         }
     )glsl";
-
+    
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
