@@ -24,4 +24,4 @@ Web interface
 Debug features
 --------------
 
-Wire mesh option for fragment shader
+None pending

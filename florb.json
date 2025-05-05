@@ -11,5 +11,8 @@
 	"exponent" : 3.0
     },
     "center" : [0.25, 0.00],
-    "zoom" : 0.90
+    "zoom" : 0.90,
+    "debug" : {
+	"render_mode" : "fill"
+    }
 }

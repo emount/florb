@@ -11,6 +11,11 @@
 // Florb class encapsulating the sphere state, geometry, textures, and behavior
 class Florb {
 public:
+  
+    // Enumerated type for render mode
+    enum class RenderMode { FILL, LINE };
+
+public:
     Florb();
     ~Florb();
 
@@ -38,6 +43,9 @@ public:
   
     float getZoom() const;
     void setZoom(float z);
+  
+    const RenderMode& getRenderMode() const;
+    void setRenderMode(const RenderMode &r);
   
     void renderFrame();
 
@@ -78,6 +86,8 @@ private:
     float zoom = 1.0f;
     float offsetX = 0.0f;
     float offsetY = 0.0f;
+
+    RenderMode renderMode;
 
     GLuint vao = 0;
     GLuint vbo = 0;

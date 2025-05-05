@@ -11,9 +11,6 @@
 #include "florbUtils.h"
 #include "nlohmann/json.hpp"
 
-// TEMPORARY DEBUG
-#include "stb_image.h"
-
 namespace fs = std::filesystem;
 
 using std::cerr;
@@ -88,49 +85,67 @@ void Florb::loadConfigs() {
             imagePath = k_DefaultImagePath;
         }
 
-	// Light configs
+        // Light configs
         if (config.contains("light") && config["light"].is_object()) {
             const auto &light(config["light"]);
-	    
+            
             if (light.contains("direction") and light["direction"].is_array()) {
-	        const auto &direction(light["direction"]);
+                const auto &direction(light["direction"]);
                 setLightDirection(direction[0], direction[1], direction[2]);
             }
-	    
+            
             if (light.contains("intensity") and light["intensity"].is_number()) {
                 setLightIntensity(light["intensity"]);
             }
-	    
+            
             if (light.contains("color") and light["color"].is_array()) {
-	        const auto &color(light["color"]);
+                const auto &color(light["color"]);
                 setLightColor(color[0], color[1], color[2]);
             }
-	    
+            
         }
 
-	// Vignette configs
+        // Vignette configs
         if (config.contains("vignette") && config["vignette"].is_object()) {
             const auto &vignette(config["vignette"]);
-	    
+            
             if (vignette.contains("radius") and vignette["radius"].is_number()) {
                 setVignetteRadius(vignette["radius"]);
             }
-	    
+            
             if (vignette.contains("exponent") and vignette["exponent"].is_number()) {
                 setVignetteExponent(vignette["exponent"]);
             }
         }
 
-	// Pan / tilt / zoom configs
+        // Pan / tilt / zoom configs
         if (config.contains("center") && config["center"].is_array() && config["center"].size() == 2) {
             setCenter(config["center"][0], config["center"][1]);
         }
 
-	// TODO - Add tilt (center-axis rotation) config
+        // TODO - Add tilt (center-axis rotation) config
 
         if (config.contains("zoom") && config["zoom"].is_number()) {
             auto zoomFactor(1.0f / static_cast<float>(config["zoom"]));
             setZoom(zoomFactor);
+        }
+
+        // Debug configs
+        if (config.contains("debug") && config["debug"].is_object()) {
+            const auto &debug(config["debug"]);
+
+            if (debug.contains("render_mode") && debug["render_mode"].is_string()) {
+                if(debug["render_mode"] == "fill") {
+                    setRenderMode(RenderMode::FILL);
+                } else if(debug["render_mode"] == "line") {
+                    setRenderMode(RenderMode::LINE);
+                } else {
+		  cerr << "Invalid render_mode config value \""
+		       << debug["render_mode"]
+		       << "\""
+		       << endl;
+                }
+            }
         }
 
     } catch (const exception& exc) {
@@ -235,6 +250,16 @@ void Florb::setZoom(float z) {
     lock_guard<mutex> lock(stateMutex);
     zoom = z;
 }
+  
+const Florb::RenderMode& Florb::getRenderMode() const {
+    lock_guard<mutex> lock(stateMutex);
+    return renderMode;
+}
+
+void Florb::setRenderMode(const Florb::RenderMode &r) {
+    lock_guard<mutex> lock(stateMutex);
+    renderMode = r;
+}
 
 void Florb::renderFrame() {
     extern int screenWidth;
@@ -253,8 +278,8 @@ void Florb::renderFrame() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    // Set either solid or wireframe rendering
-    if (false) {
+    // Set either line or fill rendering
+    if (renderMode == RenderMode::LINE) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -309,9 +334,9 @@ void Florb::renderFrame() {
     glUniform2f(offsetLoc, offsetX, offsetY);
 
     glUniform3f(lightDirectionLoc,
-		lightDirection[0],
-		lightDirection[1],
-		lightDirection[2]);
+                lightDirection[0],
+                lightDirection[1],
+                lightDirection[2]);
     
     // Weight light color with intensity
     vector<float> actualColor = {
@@ -344,8 +369,6 @@ void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
     vector<unsigned int> indices;
 
     for (int y = 0; y <= Y_SEGMENTS; ++y) {
-	    // For light
-
         for (int x = 0; x <= X_SEGMENTS; ++x) {
             float xSegment = (float)x / X_SEGMENTS;
             float ySegment = (float)y / Y_SEGMENTS;
