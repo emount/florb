@@ -249,7 +249,7 @@ void Florb::renderFrame() {
 
 
     // TEMPORARY - Turn this into a config
-    glUniform3f(lightDirLoc, 0.0, 0.5, 1.0); // 30 degrees above viewer
+    glUniform3f(lightDirLoc, 0.0, 1.0, 1.0); // 0 degrees above viewer
 
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -358,11 +358,16 @@ void Florb::initShaders() {
         out vec4 FragColor;
         
         uniform vec3 lightDir;
+        uniform vec3 lightColor;
+        uniform vec3 objectColor;
         
         void main() {
-            float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0);
-            // FragColor = vec4(vec3(intensity), 1.0);
-            FragColor = vec4(fragNormal * 0.5 + 0.5, 1.0);  // visualize normals
+            // Exaggerated intensity
+            float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0) * 2.5;
+            float gamma = 2.2;
+            vec3 corrected = pow(vec3(intensity), vec3(1.0 / gamma));
+            vec3 diffuse = intensity * lightColor * objectColor;
+            FragColor = vec4(diffuse, 1.0);
         }
 
 //        #version 330 core
