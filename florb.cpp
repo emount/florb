@@ -38,7 +38,7 @@ const string Florb::k_DefaultTitle("Florb v0.3");
 
 const string Florb::k_DefaultImagePath("images");
 
-const float Florb::k_SphereRadius(1.0f);
+const float Florb::k_SphereRadius(0.8f);
 
 // Sphere rendering parameters for high-detail, production quality rendering
 const int Florb::k_SectorCount(144);
@@ -272,6 +272,8 @@ void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
     std::vector<Vertex> vertices;
 
     for (int y = 0; y <= Y_SEGMENTS; ++y) {
+	    // For lighting
+
         for (int x = 0; x <= X_SEGMENTS; ++x) {
             float xSegment = (float)x / X_SEGMENTS;
             float ySegment = (float)y / Y_SEGMENTS;
@@ -280,48 +282,53 @@ void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
             float zPos = radius * std::sin(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
 
             Vertex v;
-            v.position = glm::vec3(xPos, yPos, zPos);
-            v.normal = glm::normalize(v.position); // for lighting later
+            v.position = glm::vec3(xPos, yPos, zPos); // Position
+            v.normal = glm::normalize(v.position); // For lighting
             vertices.push_back(v);
         }
     }
 
     indexCount = static_cast<int>(vertices.size());
 
+    // for (int i = 0; i < 5; ++i)
+    //     std::cout << "Normal " << i << ": " << glm::to_string(vertices[i].normal) << std::endl;
+
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
     // Vertex position attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
 
     // Vertex normal attributes
-    glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 }
 
 void Florb::initShaders() {
     const char* vertexShaderSource = R"glsl(
-#version 330 core
-layout(location = 0) in vec3 aPos;
-
-out vec3 fragPos;
-out vec3 fragNormal;
-
-uniform mat4 projView;
-
-void main()
-{
-    fragPos = aPos;
-    fragNormal = normalize(aPos); // synthetic normal for unit sphere
-    gl_Position = projView * vec4(aPos, 1.0);
-}
+        #version 330 core
+        layout (location = 0) in vec3 aPos;
+        
+        uniform vec2 resolution;
+        
+        out vec3 fragNormal;
+        
+        void main()
+        {
+            vec3 pos = aPos;
+            pos.x *= resolution.y / resolution.x;  // aspect correction
+        
+            fragNormal = normalize(pos);           // store aspect-corrected normal
+        
+            gl_Position = vec4(pos, 1.0);          // project directly to screen for debug
+        }
 //        #version 330 core
 //        
 //        layout(location = 0) in vec3 aPos;
@@ -354,7 +361,8 @@ void main()
         
         void main() {
             float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0);
-            FragColor = vec4(vec3(intensity), 1.0);
+            // FragColor = vec4(vec3(intensity), 1.0);
+            FragColor = vec4(fragNormal * 0.5 + 0.5, 1.0);  // visualize normals
         }
 
 //        #version 330 core
