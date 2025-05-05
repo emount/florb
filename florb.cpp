@@ -235,6 +235,7 @@ void Florb::renderFrame() {
     GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
     GLuint vignetteExponentLoc = glGetUniformLocation(shaderProgram, "vignetteExponent");
     GLuint lightDirLoc = glGetUniformLocation(shaderProgram, "lightDir");
+    GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
     
     glUniform2f(resolutionLoc, screenWidth, screenHeight);   
     glUniform1f(zoomLoc, zoom);
@@ -242,14 +243,9 @@ void Florb::renderFrame() {
     glUniform1f(vignetteRadiusLoc, vignetteRadius);
     glUniform1f(vignetteExponentLoc, vignetteExponent);
 
-    // TEMPORARY DEBUG
-    glUniform3f(glGetUniformLocation(shaderProgram, "lightDir"), 0.0f, -1.0f, -1.0f);
-    glUniform3f(glGetUniformLocation(shaderProgram, "lightColor"), 1.0f, 1.0f, 1.0f);
-    glUniform3f(glGetUniformLocation(shaderProgram, "objectColor"), 1.0f, 0.6f, 0.2f); // orange
-
-
-    // TEMPORARY - Turn this into a config
-    glUniform3f(lightDirLoc, 0.0, 1.0, 1.0); // 0 degrees above viewer
+    // TEMPORARY - Change these to configs
+    glUniform3f(lightDirLoc, 0.0f, -1.0f, -1.0f);
+    glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
 
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -353,102 +349,103 @@ void Florb::initShaders() {
     )glsl";
 
     const char* fragmentShaderSource = R"glsl(
-        #version 330 core
-        in vec3 fragNormal;
-        out vec4 FragColor;
-        
-        uniform vec3 lightDir;
-        uniform vec3 lightColor;
-        uniform vec3 objectColor;
-        
-        void main() {
-            // Exaggerated intensity
-            float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0) * 2.5;
-            float gamma = 2.2;
-            vec3 corrected = pow(vec3(intensity), vec3(1.0 / gamma));
-            vec3 diffuse = intensity * lightColor * objectColor;
-            FragColor = vec4(diffuse, 1.0);
-        }
-
 //        #version 330 core
-//        in vec3 fragPos;
 //        in vec3 fragNormal;
-//
 //        out vec4 FragColor;
 //        
 //        uniform vec3 lightDir;
 //        uniform vec3 lightColor;
 //        uniform vec3 objectColor;
-//
-//        uniform sampler2D currentTexture;
-//        uniform float zoom;
-//        uniform vec2 offset;
-//        uniform float vignetteRadius;
-//        uniform float vignetteExponent;
-//        uniform vec2 resolution;
 //        
 //        void main() {
-//            vec3 dir = normalize(fragPos);
-//        
-//            vec2 uv;
-//            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
-//            uv.y = asin(dir.y) / 3.14159265 + 0.5;
-//        
-//            uv = (uv - 0.5) * zoom + 0.5 + offset;
-//            uv.y = 1.0 - uv.y;
-//        
-//            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
-//                discard;
-//
-//            vec4 color = texture(currentTexture, uv);
-//        
-//            // Aspect-corrected center-relative coords
-//            vec2 screenUV = gl_FragCoord.xy / resolution;
-//            vec2 centered = screenUV - vec2(0.5);
-//            centered.x *= resolution.x / resolution.y;
-//
-//            // Diffuse lighting
-//            vec3 norm = normalize(fragNormal);
-//            vec3 light = normalize(-lightDir);
-//            
-//            float intensity = max(dot(norm, light), 0.0);
-//        
-//            // Vignette effect
-//            float radius = length(centered);
-//            float fadeStart = 1.0 - vignetteRadius;
-//            float fadeEnd = 1.0;
-//
-//            float vignette;
-//            if (radius > fadeStart && radius <= fadeEnd) {
-//                // Zero to one in band
-//                float t = (radius - fadeStart) / (fadeEnd - fadeStart);
-//                float bands = floor(t * 10.0);
-//
-//                if (mod(bands, 2.0) < 1.0) {
-//                    vignette = (1.0 - clamp(pow(10 * t, 2.0), 0.0, 1.0));
-//                } else {
-//                    // TEMPORARY
-//                    // Background color, pass this in as a variable later on
-//                    FragColor = vec4(0.1, 0.1, 0.1, 1.0);
-//                    return;
-//                }
-//            } else {
-//                // Center region gets unmodified image data
-//                vignette = 1.0;
-//            }
-//
-//            // vec3 diffuse = diff * lightColor;
-//            // vec3 result = objectColor * diffuse;
-//            // FragColor = vec4(result, 1.0);
-//
-//            // Factor in all weights
-//            // FragColor = vec4(vignette * intensity * color.r,
-//            //                  vignette * intensity * color.g,
-//            //                  vignette * intensity * color.b,
-//            //                  1.0);
-//
-//            FragColor = vec4(fragNormal * 0.5 + 0.5, 1.0);  // visualize normals as colors
+//            // Exaggerated intensity
+//            float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0) * 2.5;
+//            float gamma = 2.2;
+//            vec3 corrected = pow(vec3(intensity), vec3(1.0 / gamma));
+//            vec3 diffuse = intensity * lightColor * objectColor;
+//            FragColor = vec4(diffuse, 1.0);
 //        }
+
+        #version 330 core
+        in vec3 fragPos;
+        in vec3 fragNormal;
+
+        out vec4 FragColor;
+        
+        uniform vec3 lightDir;
+        uniform vec3 lightColor;
+
+        uniform sampler2D currentTexture;
+        uniform float zoom;
+        uniform vec2 offset;
+        uniform float vignetteRadius;
+        uniform float vignetteExponent;
+        uniform vec2 resolution;
+        
+        void main() {
+            vec3 dir = normalize(fragPos);
+        
+            vec2 uv;
+            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
+            uv.y = asin(dir.y) / 3.14159265 + 0.5;
+        
+            uv = (uv - 0.5) * zoom + 0.5 + offset;
+            uv.y = 1.0 - uv.y;
+        
+            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+                discard;
+
+            vec4 color = texture(currentTexture, uv);
+        
+            // Aspect-corrected center-relative coords
+            vec2 screenUV = gl_FragCoord.xy / resolution;
+            vec2 centered = screenUV - vec2(0.5);
+            centered.x *= resolution.x / resolution.y;
+
+            // Diffuse lighting
+            vec3 norm = normalize(fragNormal);
+            vec3 light = normalize(-lightDir);
+            
+            // Vignette effect
+            float radius = length(centered);
+            float fadeStart = 1.0 - vignetteRadius;
+            float fadeEnd = 1.0;
+
+            float vignette;
+            if (radius > fadeStart && radius <= fadeEnd) {
+                // Zero to one in band
+                float t = (radius - fadeStart) / (fadeEnd - fadeStart);
+                float bands = floor(t * 10.0);
+
+                if (mod(bands, 2.0) < 1.0) {
+                    vignette = (1.0 - clamp(pow(10 * t, 2.0), 0.0, 1.0));
+                } else {
+                    // TEMPORARY
+                    // Background color, pass this in as a variable later on
+                    FragColor = vec4(0.1, 0.1, 0.1, 1.0);
+                    return;
+                }
+            } else {
+                // Center region gets unmodified image data
+                vignette = 1.0;
+            }
+
+            // Exaggerated intensity
+            float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0) * 2.5;
+            float gamma = 2.2;
+            vec3 corrected = pow(vec3(intensity), vec3(1.0 / gamma));
+            vec3 diffuse = intensity * lightColor;
+
+            // Factor in all weights
+            // FragColor = vec4(vignette * intensity * lightColor.r * color.r,
+            //                  vignette * intensity * lightColor.g * color.g,
+            //                  vignette * intensity * lightColor.b * color.b,
+            //                  1.0);
+            FragColor = vec4(vignette * intensity * color.r,
+                             vignette * intensity * color.g,
+                             vignette * intensity * color.b,
+                             1.0);
+        }
     )glsl";
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
