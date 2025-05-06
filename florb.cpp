@@ -76,6 +76,7 @@ Florb::Florb() :
     moteCount(0UL),
     moteRadii(),
     moteSpeeds(),
+    moteMaxStep(),
     moteCenters(),
     moteColor(3, 0.0f),
     
@@ -760,14 +761,14 @@ void Florb::initMotes(unsigned int count,
 
     moteRadii = vector<float>(moteCount, radius);
     moteSpeeds = vector<float>(moteCount, maxStep);
+    moteMaxStep = maxStep;
     moteColor = color;
 }
 
 void Florb::updateMotes() {
     // Update random walk for each dust mote
-    const auto k_MaxStep(0.01f);
     for (auto i = 0UL; i < (2 * moteCount); ++i) {
-      float step(k_MaxStep * dist(gen));
+      float step(moteMaxStep * dist(gen));
       auto &component(moteCenters[i]);
 
       // Update this component by the computed step

@@ -105,6 +105,7 @@ private:
     unsigned int moteCount;
     std::vector<float> moteRadii;
     std::vector<float> moteSpeeds;
+    float moteMaxStep;
     std::vector<float> moteCenters;
     std::vector<float> moteColor;
 
