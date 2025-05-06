@@ -55,6 +55,7 @@ private:
     void loadFlowers();
     void generateSphere(float radius, int sectorCount, int stackCount);
     void initShaders();
+    void updateMotes();
 
 public:
 

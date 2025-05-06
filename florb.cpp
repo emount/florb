@@ -294,6 +294,9 @@ void Florb::renderFrame() {
     GLuint timeLoc = glGetUniformLocation(shaderProgram, "time");
     glUniform1f(timeLoc, timeSeconds);
 
+    // Update physical effects
+    updateMotes();
+
     // Set a dark gray background color for the window
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -536,17 +539,23 @@ void Florb::initShaders() {
             // Sample texture color
             vec4 color = texture(currentTexture, uv);
 
-            // Generate dust motes
             float dust = 0.0;
             for (int i = 0; i < 32; ++i) {
-                // Orbit the mote position over time
-                float angle = time * moteSpeeds[i];
-                vec2 orbit = vec2(cos(angle), sin(angle)) * 0.01; // small orbit radius
-                vec2 motePos = moteCenters[i] + orbit;
+                float speed = moteSpeeds[i]; // pre-randomized per mote
+                float radius = moteRadii[i] / resolution.y;
+            
+                // Add per-mote phase offset for uniqueness
+                float phase = float(i) * 12.345;
+            
+                // Wobbling orbit using sin/cos with time and per-mote phase
+                float wobbleX = sin(time * speed + phase);
+                float wobbleY = cos(time * speed * 0.5 + phase * 1.7);  // offset freq
+            
+                vec2 orbitOffset = vec2(wobbleX, wobbleY) * 0.01;  // adjust strength
+                vec2 motePos = moteCenters[i] + orbitOffset;
             
                 float dist = distance(uv, motePos);
-                float radius = moteRadii[i] / resolution.y; // convert px to UV units
-                float alpha = smoothstep(radius, 0.0, dist);    // fade from edge to center
+                float alpha = smoothstep(radius, 0.0, dist);
                 dust += alpha;
             }
              
@@ -632,4 +641,20 @@ void Florb::initShaders() {
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+}
+
+void Florb::updateMotes() {
+    // Update random walk for each dust mote
+    const auto k_MaxStep(0.01f);
+    for (auto i = 0; i < (2 * k_MoteCount); ++i) {
+      float step(k_MaxStep * dist(gen));
+      auto &component(moteCenters[i]);
+
+      component += step;
+      if (component >= k_SphereRadius) {
+          component = -k_SphereRadius;
+      } else if (component <= -k_SphereRadius) {
+          component = k_SphereRadius;
+      }
+    }
 }
