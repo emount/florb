@@ -31,8 +31,6 @@ GLXContext context;
 int screenWidth = 800;
 int screenHeight = 600;
 
-constexpr float k_FrameRate(60.0f);
-constexpr float k_FrameTime(1000.0f / k_FrameRate);
 constexpr float k_SwitchInterval(5.0f);
 
 // Initialize OpenGL and X11 Window
@@ -215,6 +213,8 @@ int main() {
                 startTime = steady_clock::now();
             }
 
+	    // Fetch the configurable frame rate from the Florb
+	    const float k_FrameTime(1000.0f / florb.getVideoFrameRate());
 
 	    static steady_clock::time_point lastFrame = steady_clock::now();
 	    float frameElapsed = duration_cast<milliseconds>(steady_clock::now() - lastFrame).count();

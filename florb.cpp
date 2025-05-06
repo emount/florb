@@ -43,6 +43,10 @@ const string Florb::k_DefaultTitle("Florb v0.3");
 
 const string Florb::k_DefaultImagePath("images");
 
+const float Florb::k_MaxVideoFrameRate(120.0f);
+
+const float Florb::k_DefaultVideoFrameRate(60.0f);
+
 const float Florb::k_SphereRadius(0.8f);
 
 // Sphere rendering parameters for high-detail, production quality rendering
@@ -55,6 +59,10 @@ const int Florb::k_MaxMotes(128);
 
 // Florb class implementation
 Florb::Florb() :
+    imagePath(k_DefaultImagePath),
+
+    videoFrameRate(k_DefaultVideoFrameRate),
+    
     flowers(),
     flowerPaths(),
     currentFlower(0UL),
@@ -114,6 +122,16 @@ void Florb::loadConfigs() {
             imagePath = k_DefaultImagePath;
         }
 
+
+        // Video configs
+        if (config.contains("video") && config["video"].is_object()) {
+            const auto &video(config["video"]);
+            
+            if (video.contains("frame_rate") and video["frame_rate"].is_number()) {
+                setVideoFrameRate(video["frame_rate"]);
+            }
+	}
+	
         
         // Light configs
         if (config.contains("light") && config["light"].is_object()) {
@@ -234,6 +252,21 @@ void Florb::nextFlower() {
 void Florb::setTitle(const string &title) {
     lock_guard<mutex> lock(stateMutex);
     FlorbUtils::setWindowTitle(display, window, title);
+}
+
+float Florb::getVideoFrameRate() const {
+    lock_guard<mutex> lock(stateMutex);
+    return videoFrameRate;
+}
+
+void Florb::setVideoFrameRate(float r) {
+    lock_guard<mutex> lock(stateMutex);
+
+    if (videoFrameRate >= k_MaxVideoFrameRate) {
+        videoFrameRate = k_MaxVideoFrameRate;
+    } else {
+        videoFrameRate = r;
+    }
 }
 
 pair<float, float> Florb::getCenter() const {

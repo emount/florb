@@ -24,6 +24,9 @@ public:
 
     void setTitle(const std::string &title);
 
+    float getVideoFrameRate() const;
+    void setVideoFrameRate(float r);
+
     std::pair<float, float> getCenter() const;
     void setCenter(float x, float y);
   
@@ -77,6 +80,8 @@ private:
   
 private:
     std::string imagePath;
+
+    float videoFrameRate;
   
     std::vector<Flower> flowers;
     std::vector<std::string> flowerPaths;
@@ -110,6 +115,9 @@ private:
     int indexCount = 0;
   
     mutable std::mutex stateMutex;
+
+    static const float k_MaxVideoFrameRate;
+    static const float k_DefaultVideoFrameRate;
 
     static const float k_SphereRadius;
   

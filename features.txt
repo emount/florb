@@ -6,17 +6,12 @@ Specular reflections
 Sphere smoothness setting (clamped exponent for x/y segments)
 Pulsing lighting
 Orb shadow
-Motes
-    Number as clamped exponent
-    Size also clamped
-    Color as floating-point RGB
-    Movement maximum step
 Adjustable camera angle and zoom
 Hybrid AI flower generation
 Image transition modes:
-  Quick flip
-  Slow blend
-  Rotation of orb (new flower on back)
+  x Quick flip
+  * Slow blend
+    Rotation of orb (new flower on back)
 Screenshot / video and flower image save
 ASMR audio generation
 User audio input
@@ -36,3 +31,4 @@ Debug features
 --------------
 
 None pending
+Calculate and display average frame rate
