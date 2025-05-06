@@ -55,7 +55,10 @@ private:
     void loadFlowers();
     void generateSphere(float radius, int sectorCount, int stackCount);
     void initShaders();
-    void initMotes(unsigned int count, float radius, float maxStep);
+    void initMotes(unsigned int count,
+		   float radius,
+		   float maxStep,
+		   const std::vector<float> &color);
     void updateMotes();
 
 public:
@@ -91,9 +94,10 @@ private:
     float vignetteExponent = 0.0f;
 
     unsigned int moteCount;
-    std::vector<float> moteCenters;
     std::vector<float> moteRadii;
     std::vector<float> moteSpeeds;
+    std::vector<float> moteCenters;
+    std::vector<float> moteColor;
 
     RenderMode renderMode;
 

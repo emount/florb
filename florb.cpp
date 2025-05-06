@@ -55,9 +55,10 @@ Florb::Florb() :
     lightDirection(3, 0.0f),
     lightColor(3, 0.0f),
     moteCount(0UL),
-    moteCenters(),
     moteRadii(),
     moteSpeeds(),
+    moteCenters(),
+    moteColor(3, 0.0f),
     fallbackTextureID(FlorbUtils::createDebugTexture()),
     dist(0.0f, 1.0f) {
     loadConfigs();
@@ -161,7 +162,7 @@ void Florb::loadConfigs() {
 		color = vector<float>(motes["color"]);
             }
 	    
-	    initMotes(count, radius, maxStep);
+	    initMotes(count, radius, maxStep, color);
         }
 
 
@@ -416,13 +417,15 @@ void Florb::renderFrame() {
     
     // Dust mote uniforms
     GLuint moteCountLoc = glGetUniformLocation(shaderProgram, "moteCount");
-    GLuint moteCentersLoc = glGetUniformLocation(shaderProgram, "moteCenters");
     GLuint moteRadiiLoc = glGetUniformLocation(shaderProgram, "moteRadii");
     GLuint moteSpeedsLoc = glGetUniformLocation(shaderProgram, "moteSpeeds");
+    GLuint moteCentersLoc = glGetUniformLocation(shaderProgram, "moteCenters");
+    GLuint moteColorLoc = glGetUniformLocation(shaderProgram, "moteColor");
     glUniform1i(moteCountLoc, moteCount);
-    glUniform2fv(moteCentersLoc, moteCenters.size(), moteCenters.data());
     glUniform1fv(moteRadiiLoc, moteRadii.size(), moteRadii.data());
     glUniform1fv(moteSpeedsLoc, moteSpeeds.size(), moteSpeeds.data());
+    glUniform2fv(moteCentersLoc, moteCenters.size(), moteCenters.data());
+    glUniform3fv(moteColorLoc, moteColor.size(), moteColor.data());
 
     
     // Activate texture
@@ -541,6 +544,7 @@ void Florb::initShaders() {
         uniform float moteRadii[32];
         uniform float moteSpeeds[32];
         uniform vec2 moteCenters[32];
+        uniform vec3 moteColor;
         
         uniform float vignetteRadius;
         uniform float vignetteExponent;
@@ -674,7 +678,10 @@ void Florb::initShaders() {
     glDeleteShader(fragmentShader);
 }
 
-void Florb::initMotes(unsigned int count, float radius, float maxStep) {
+void Florb::initMotes(unsigned int count,
+		      float radius,
+		      float maxStep,
+		      const vector<float> &color) {
     // Randomize dust mote centers
     moteCount = count;
     moteCenters = vector<float>((2 * moteCount), 0.0f);
@@ -684,6 +691,7 @@ void Florb::initMotes(unsigned int count, float radius, float maxStep) {
 
     moteRadii = vector<float>(moteCount, radius);
     moteSpeeds = vector<float>(moteCount, maxStep);
+    moteColor = color;
 }
 
 void Florb::updateMotes() {
