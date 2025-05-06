@@ -425,7 +425,7 @@ void Florb::renderFrame() {
     glUniform1fv(moteRadiiLoc, moteRadii.size(), moteRadii.data());
     glUniform1fv(moteSpeedsLoc, moteSpeeds.size(), moteSpeeds.data());
     glUniform2fv(moteCentersLoc, moteCenters.size(), moteCenters.data());
-    glUniform3fv(moteColorLoc, moteColor.size(), moteColor.data());
+    glUniform3f(moteColorLoc, moteColor[0], moteColor[1], moteColor[2]);
 
     
     // Activate texture
@@ -541,9 +541,9 @@ void Florb::initShaders() {
         uniform int moteCount;
 
         uniform float time;
-        uniform float moteRadii[32];
-        uniform float moteSpeeds[32];
-        uniform vec2 moteCenters[32];
+        uniform float moteRadii[128];
+        uniform float moteSpeeds[128];
+        uniform vec2 moteCenters[128];
         uniform vec3 moteColor;
         
         uniform float vignetteRadius;
@@ -575,7 +575,7 @@ void Florb::initShaders() {
             vec4 color = texture(currentTexture, uv);
 
             float dust = 0.0;
-            for (int i = 0; i < 32; ++i) {
+            for (int i = 0; i < moteCount; ++i) {
                 float speed = moteSpeeds[i]; // pre-randomized per mote
                 float radius = moteRadii[i] / resolution.y;
             
@@ -594,9 +594,8 @@ void Florb::initShaders() {
                 dust += alpha;
             }
              
-            // Clamp and overlay white dust mote glow
-            color.rgb += vec3(clamp(dust, 0.0, 1.0));
-
+            // Clamp and overlay colored dust mote glow
+            color.rgb += clamp(dust, 0.0, 1.0) * moteColor;
 
             // Aspect-corrected center-relative coords
             vec2 screenUV = gl_FragCoord.xy / resolution;

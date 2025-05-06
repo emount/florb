@@ -11,9 +11,9 @@
 	"exponent" : 3.0
     },
     "motes" : {
-	"count" : 32,
+	"count" : 100,
 	"radius" : 5,
-	"color" : [0.500, 0.500, 0.500],
+	"color" : [0.800, 0.800, 0.800],
 	"max_step" : 0.01
     },
     "center" : [0.25, 0.00],
