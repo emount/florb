@@ -45,14 +45,18 @@ const float Florb::k_SphereRadius(0.8f);
 // Sphere rendering parameters for high-detail, production quality rendering
 const int Florb::k_SectorCount(144);
 const int Florb::k_StackCount(72);
-const int Florb::k_XSegments(64); // Smoother sphere - 128
-const int Florb::k_YSegments(64); // Smoother sphere - 128
+const int Florb::k_XSegments(128);
+const int Florb::k_YSegments(128);
 
+const int Florb::k_MoteCount(32);
 
 // Florb class implementation
 Florb::Florb() :
     lightDirection(3, 0.0f),
     lightColor(3, 0.0f),
+    moteCenters((2 * k_MoteCount), 0.0),
+    moteRadii(k_MoteCount, 5.0),
+    moteSpeeds(k_MoteCount, 2.0), // NEED TO RANDOMIZE PER CONFIG
     fallbackTextureID(FlorbUtils::createDebugTexture()),
     dist(0.0f, 1.0f) {
     loadConfigs();
@@ -62,6 +66,11 @@ Florb::Florb() :
 
     // Seed the Mersenne Twister
     gen.seed(rd());
+
+    // Randomize dust mote centers
+    for (auto i = 0; i < (2 * k_MoteCount); i++) {
+        moteCenters[i] = dist(gen);
+    }
 }
 
 Florb::~Florb() {
@@ -149,10 +158,10 @@ void Florb::loadConfigs() {
                 } else if(debug["render_mode"] == "line") {
                     setRenderMode(RenderMode::LINE);
                 } else {
-		  cerr << "Invalid render_mode config value \""
-		       << debug["render_mode"]
-		       << "\""
-		       << endl;
+                    cerr << "Invalid render_mode config value \""
+                         << debug["render_mode"]
+                         << "\""
+                         << endl;
                 }
             }
         }
@@ -168,7 +177,6 @@ void Florb::loadFlowers() {
         for (const auto& entry : fs::directory_iterator(imagePath)) {
             if (entry.is_regular_file()) {
                 flowers.emplace_back(entry.path().string());
-            flowers.back().loadImage();
             }
         }
     } else {
@@ -183,6 +191,27 @@ void Florb::nextFlower() {
 void Florb::setTitle(const string &title) {
     lock_guard<mutex> lock(stateMutex);
     FlorbUtils::setWindowTitle(display, window, title);
+}
+
+pair<float, float> Florb::getCenter() const {
+    lock_guard<mutex> lock(stateMutex);
+    return {offsetX, offsetY};
+}
+
+void Florb::setCenter(float x, float y) {
+    lock_guard<mutex> lock(stateMutex);
+    offsetX = x;
+    offsetY = y;
+}
+
+float Florb::getZoom() const {
+    lock_guard<mutex> lock(stateMutex);
+    return zoom;
+}
+
+void Florb::setZoom(float z) {
+    lock_guard<mutex> lock(stateMutex);
+    zoom = z;
 }
 
 const vector<float>& Florb::getLightDirection() const {
@@ -237,27 +266,6 @@ float Florb::getVignetteExponent() const {
 void Florb::setVignetteExponent(float r) {
     lock_guard<mutex> lock(stateMutex);
     vignetteExponent = r;
-}
-
-pair<float, float> Florb::getCenter() const {
-    lock_guard<mutex> lock(stateMutex);
-    return {offsetX, offsetY};
-}
-
-void Florb::setCenter(float x, float y) {
-    lock_guard<mutex> lock(stateMutex);
-    offsetX = x;
-    offsetY = y;
-}
-
-float Florb::getZoom() const {
-    lock_guard<mutex> lock(stateMutex);
-    return zoom;
-}
-
-void Florb::setZoom(float z) {
-    lock_guard<mutex> lock(stateMutex);
-    zoom = z;
 }
   
 const Florb::RenderMode& Florb::getRenderMode() const {
@@ -373,20 +381,11 @@ void Florb::renderFrame() {
 
     
     // Dust mote uniforms
-    const int moteCount(32);
     GLuint moteCountLoc = glGetUniformLocation(shaderProgram, "moteCount");
     GLuint moteCentersLoc = glGetUniformLocation(shaderProgram, "moteCenters");
     GLuint moteRadiiLoc = glGetUniformLocation(shaderProgram, "moteRadii");
     GLuint moteSpeedsLoc = glGetUniformLocation(shaderProgram, "moteSpeeds");
-    glUniform1i(moteCountLoc, moteCount);
-
-    // Randomize dust mote centers
-    vector<float> moteCenters((2 * moteCount), 0.0);
-    for (auto i = 0; i < (2 * moteCount); i++) {
-        moteCenters[i] = dist(gen);
-    }
-    vector<float> moteRadii(moteCount, 5.0);
-    vector<float> moteSpeeds(moteCount, 2.0); // NEED TO RANDOMIZE
+    glUniform1i(moteCountLoc, k_MoteCount);
     glUniform2fv(moteCentersLoc, moteCenters.size(), moteCenters.data());
     glUniform1fv(moteRadiiLoc, moteRadii.size(), moteRadii.data());
     glUniform1fv(moteSpeedsLoc, moteSpeeds.size(), moteSpeeds.data());

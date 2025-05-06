@@ -24,6 +24,12 @@ public:
 
     void setTitle(const std::string &title);
 
+    std::pair<float, float> getCenter() const;
+    void setCenter(float x, float y);
+  
+    float getZoom() const;
+    void setZoom(float z);
+
     const std::vector<float>& getLightDirection() const;
     void setLightDirection(float alpha, float beta, float phi);
 
@@ -38,12 +44,6 @@ public:
 
     float getVignetteExponent() const;
     void setVignetteExponent(float e);  
-
-    std::pair<float, float> getCenter() const;
-    void setCenter(float x, float y);
-  
-    float getZoom() const;
-    void setZoom(float z);
   
     const RenderMode& getRenderMode() const;
     void setRenderMode(const RenderMode &r);
@@ -77,6 +77,10 @@ private:
     std::vector<std::string> flowerPaths;
     unsigned int currentFlower = 0;
 
+    float zoom = 1.0f;
+    float offsetX = 0.0f;
+    float offsetY = 0.0f;
+
     std::vector<float> lightDirection;
     float lightIntensity;
     std::vector<float> lightColor;
@@ -84,9 +88,9 @@ private:
     float vignetteRadius = 0.0f;
     float vignetteExponent = 0.0f;
   
-    float zoom = 1.0f;
-    float offsetX = 0.0f;
-    float offsetY = 0.0f;
+    std::vector<float> moteCenters;
+    std::vector<float> moteRadii;
+    std::vector<float> moteSpeeds;
 
     RenderMode renderMode;
 
@@ -107,6 +111,8 @@ private:
 
     static const int k_XSegments;
     static const int k_YSegments;
+
+    static const int k_MoteCount;
 
     std::random_device rd;
     std::mt19937 gen;
