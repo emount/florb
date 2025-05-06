@@ -57,7 +57,6 @@ const int Florb::k_MaxMotes(128);
 Florb::Florb() :
     flowers(),
     flowerPaths(),
-    flowersLoaded(),
     currentFlower(0UL),
     
     lightDirection(3, 0.0f),
@@ -221,7 +220,6 @@ void Florb::loadFlowers() {
         for (const auto& entry : fs::directory_iterator(imagePath)) {
             if (entry.is_regular_file()) {
                 flowers.emplace_back(entry.path().string());
-                flowersLoaded.emplace_back(false);
             }
         }
     } else {
@@ -326,6 +324,7 @@ void Florb::setRenderMode(const Florb::RenderMode &r) {
 void Florb::renderFrame() {
     extern int screenWidth;
     extern int screenHeight;
+    static bool firstFrame(true);
     
     FlorbUtils::glCheck("renderFrame()");
 
@@ -359,15 +358,18 @@ void Florb::renderFrame() {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
+    // Load all flower images upon the first frame
+    if (firstFrame) {
+        for (auto &flower : flowers) {
+	  flower.loadImage();
+	}
+    }
+    
     GLuint textureID;
     if(flowers.empty()) {
         textureID = fallbackTextureID;
     } else {
         auto &flower = flowers[currentFlower];
-        if (flowersLoaded[currentFlower] == false) {
-            flower.loadImage();
-            flowersLoaded[currentFlower] = true;
-        }
         textureID = flower.getTextureID();
     }
     
@@ -459,6 +461,8 @@ void Florb::renderFrame() {
     
     glBindVertexArray(0);
     FlorbUtils::glCheck("glBindVertexArray(0) - A");
+
+    firstFrame = false;
 }
 
 void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {

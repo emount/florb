@@ -80,7 +80,6 @@ private:
   
     std::vector<Flower> flowers;
     std::vector<std::string> flowerPaths;
-    std::vector<bool> flowersLoaded;
     unsigned int currentFlower;
 
     float zoom = 1.0f;
