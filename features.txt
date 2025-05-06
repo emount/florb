@@ -10,13 +10,7 @@ Motes
     Number as clamped exponent
     Size also clamped
     Color as floating-point RGB
-    Movement
-        Speed
-	    Uniform
-	    Random
-        Trajectory
-	    Circular
-	    Spiral
+    Movement maximum step
 Adjustable camera angle and zoom
 Hybrid AI flower generation
 Image transition modes:

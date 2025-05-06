@@ -48,15 +48,16 @@ const int Florb::k_StackCount(72);
 const int Florb::k_XSegments(128);
 const int Florb::k_YSegments(128);
 
-const int Florb::k_MoteCount(32);
+const int Florb::k_MaxMotes(128);
 
 // Florb class implementation
 Florb::Florb() :
     lightDirection(3, 0.0f),
     lightColor(3, 0.0f),
-    moteCenters((2 * k_MoteCount), 0.0),
-    moteRadii(k_MoteCount, 5.0),
-    moteSpeeds(k_MoteCount, 2.0), // NEED TO RANDOMIZE PER CONFIG
+    moteCount(0UL),
+    moteCenters(),
+    moteRadii(),
+    moteSpeeds(),
     fallbackTextureID(FlorbUtils::createDebugTexture()),
     dist(0.0f, 1.0f) {
     loadConfigs();
@@ -66,11 +67,6 @@ Florb::Florb() :
 
     // Seed the Mersenne Twister
     gen.seed(rd());
-
-    // Randomize dust mote centers
-    for (auto i = 0; i < (2 * k_MoteCount); i++) {
-        moteCenters[i] = dist(gen);
-    }
 }
 
 Florb::~Florb() {
@@ -91,18 +87,22 @@ void Florb::loadConfigs() {
     try {
         file >> config;
 
+	// Title config
         if (config.contains("title") && config["title"].is_string()) {
             setTitle(config["title"]);
         } else {
             setTitle(k_DefaultTitle);
         }
-    
+
+	
+	// Image path config
         if (config.contains("image_path") && config["image_path"].is_string()) {
             imagePath = config["image_path"];
         } else {
             imagePath = k_DefaultImagePath;
         }
 
+	
         // Light configs
         if (config.contains("light") && config["light"].is_object()) {
             const auto &light(config["light"]);
@@ -120,9 +120,9 @@ void Florb::loadConfigs() {
                 const auto &color(light["color"]);
                 setLightColor(color[0], color[1], color[2]);
             }
-            
         }
 
+	
         // Vignette configs
         if (config.contains("vignette") && config["vignette"].is_object()) {
             const auto &vignette(config["vignette"]);
@@ -136,6 +136,35 @@ void Florb::loadConfigs() {
             }
         }
 
+
+        // Mote configs
+        if (config.contains("motes") && config["motes"].is_object()) {
+            const auto &motes(config["motes"]);
+
+	    unsigned int count;
+            if (motes.contains("count") and motes["count"].is_number_integer()) {
+	        count = motes["count"];
+            }
+            
+	    float radius;
+            if (motes.contains("radius") and motes["radius"].is_number()) {
+                radius = motes["radius"];
+            }
+
+	    float maxStep;
+            if (motes.contains("max_step") and motes["max_step"].is_number()) {
+                maxStep = motes["max_step"];
+            }
+
+	    vector<float> color(3, 0.0f);
+	    if (motes.contains("color") and motes["color"].is_array()) {
+		color = vector<float>(motes["color"]);
+            }
+	    
+	    initMotes(count, radius, maxStep);
+        }
+
+
         // Pan / tilt / zoom configs
         if (config.contains("center") && config["center"].is_array() && config["center"].size() == 2) {
             setCenter(config["center"][0], config["center"][1]);
@@ -143,11 +172,13 @@ void Florb::loadConfigs() {
 
         // TODO - Add tilt (center-axis rotation) config
 
+	
         if (config.contains("zoom") && config["zoom"].is_number()) {
             auto zoomFactor(1.0f / static_cast<float>(config["zoom"]));
             setZoom(zoomFactor);
         }
 
+	
         // Debug configs
         if (config.contains("debug") && config["debug"].is_object()) {
             const auto &debug(config["debug"]);
@@ -388,7 +419,7 @@ void Florb::renderFrame() {
     GLuint moteCentersLoc = glGetUniformLocation(shaderProgram, "moteCenters");
     GLuint moteRadiiLoc = glGetUniformLocation(shaderProgram, "moteRadii");
     GLuint moteSpeedsLoc = glGetUniformLocation(shaderProgram, "moteSpeeds");
-    glUniform1i(moteCountLoc, k_MoteCount);
+    glUniform1i(moteCountLoc, moteCount);
     glUniform2fv(moteCentersLoc, moteCenters.size(), moteCenters.data());
     glUniform1fv(moteRadiiLoc, moteRadii.size(), moteRadii.data());
     glUniform1fv(moteSpeedsLoc, moteSpeeds.size(), moteSpeeds.data());
@@ -507,9 +538,9 @@ void Florb::initShaders() {
         uniform int moteCount;
 
         uniform float time;
-        uniform float moteRadii[32];    // For individual radius control
-        uniform vec2 moteCenters[32];   // UV positions
-        uniform float moteSpeeds[32];   // Angular speeds
+        uniform float moteRadii[32];
+        uniform float moteSpeeds[32];
+        uniform vec2 moteCenters[32];
         
         uniform float vignetteRadius;
         uniform float vignetteExponent;
@@ -643,10 +674,22 @@ void Florb::initShaders() {
     glDeleteShader(fragmentShader);
 }
 
+void Florb::initMotes(unsigned int count, float radius, float maxStep) {
+    // Randomize dust mote centers
+    moteCount = count;
+    moteCenters = vector<float>((2 * moteCount), 0.0f);
+    for (auto i = 0UL; i < (2 * moteCount); i++) {
+        moteCenters[i] = dist(gen);
+    }
+
+    moteRadii = vector<float>(moteCount, radius);
+    moteSpeeds = vector<float>(moteCount, maxStep);
+}
+
 void Florb::updateMotes() {
     // Update random walk for each dust mote
     const auto k_MaxStep(0.01f);
-    for (auto i = 0; i < (2 * k_MoteCount); ++i) {
+    for (auto i = 0UL; i < (2 * moteCount); ++i) {
       float step(k_MaxStep * dist(gen));
       auto &component(moteCenters[i]);
 

@@ -55,6 +55,7 @@ private:
     void loadFlowers();
     void generateSphere(float radius, int sectorCount, int stackCount);
     void initShaders();
+    void initMotes(unsigned int count, float radius, float maxStep);
     void updateMotes();
 
 public:
@@ -88,7 +89,8 @@ private:
 
     float vignetteRadius = 0.0f;
     float vignetteExponent = 0.0f;
-  
+
+    unsigned int moteCount;
     std::vector<float> moteCenters;
     std::vector<float> moteRadii;
     std::vector<float> moteSpeeds;
@@ -113,7 +115,7 @@ private:
     static const int k_XSegments;
     static const int k_YSegments;
 
-    static const int k_MoteCount;
+    static const int k_MaxMotes;
 
     std::random_device rd;
     std::mt19937 gen;
