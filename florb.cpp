@@ -55,15 +55,24 @@ const int Florb::k_MaxMotes(128);
 
 // Florb class implementation
 Florb::Florb() :
+    flowers(),
+    flowerPaths(),
+    flowersLoaded(),
+    currentFlower(0UL),
+    
     lightDirection(3, 0.0f),
     lightColor(3, 0.0f),
+    
     moteCount(0UL),
     moteRadii(),
     moteSpeeds(),
     moteCenters(),
     moteColor(3, 0.0f),
+    
     fallbackTextureID(FlorbUtils::createDebugTexture()),
+    
     dist(0.0f, 1.0f) {
+  
     loadConfigs();
     loadFlowers();
     generateSphere(k_SphereRadius, k_SectorCount, k_StackCount);
@@ -91,22 +100,22 @@ void Florb::loadConfigs() {
     try {
         file >> config;
 
-	// Title config
+        // Title config
         if (config.contains("title") && config["title"].is_string()) {
             setTitle(config["title"]);
         } else {
             setTitle(k_DefaultTitle);
         }
 
-	
-	// Image path config
+        
+        // Image path config
         if (config.contains("image_path") && config["image_path"].is_string()) {
             imagePath = config["image_path"];
         } else {
             imagePath = k_DefaultImagePath;
         }
 
-	
+        
         // Light configs
         if (config.contains("light") && config["light"].is_object()) {
             const auto &light(config["light"]);
@@ -126,7 +135,7 @@ void Florb::loadConfigs() {
             }
         }
 
-	
+        
         // Vignette configs
         if (config.contains("vignette") && config["vignette"].is_object()) {
             const auto &vignette(config["vignette"]);
@@ -145,27 +154,27 @@ void Florb::loadConfigs() {
         if (config.contains("motes") && config["motes"].is_object()) {
             const auto &motes(config["motes"]);
 
-	    unsigned int count;
+            unsigned int count;
             if (motes.contains("count") and motes["count"].is_number_integer()) {
-	        count = motes["count"];
+                count = motes["count"];
             }
             
-	    float radius;
+            float radius;
             if (motes.contains("radius") and motes["radius"].is_number()) {
                 radius = motes["radius"];
             }
 
-	    float maxStep;
+            float maxStep;
             if (motes.contains("max_step") and motes["max_step"].is_number()) {
                 maxStep = motes["max_step"];
             }
 
-	    vector<float> color(3, 0.0f);
-	    if (motes.contains("color") and motes["color"].is_array()) {
-		color = vector<float>(motes["color"]);
+            vector<float> color(3, 0.0f);
+            if (motes.contains("color") and motes["color"].is_array()) {
+                color = vector<float>(motes["color"]);
             }
-	    
-	    initMotes(count, radius, maxStep, color);
+            
+            initMotes(count, radius, maxStep, color);
         }
 
 
@@ -176,13 +185,13 @@ void Florb::loadConfigs() {
 
         // TODO - Add tilt (center-axis rotation) config
 
-	
+        
         if (config.contains("zoom") && config["zoom"].is_number()) {
             auto zoomFactor(1.0f / static_cast<float>(config["zoom"]));
             setZoom(zoomFactor);
         }
 
-	
+        
         // Debug configs
         if (config.contains("debug") && config["debug"].is_object()) {
             const auto &debug(config["debug"]);
@@ -212,6 +221,7 @@ void Florb::loadFlowers() {
         for (const auto& entry : fs::directory_iterator(imagePath)) {
             if (entry.is_regular_file()) {
                 flowers.emplace_back(entry.path().string());
+                flowersLoaded.emplace_back(false);
             }
         }
     } else {
@@ -354,7 +364,10 @@ void Florb::renderFrame() {
         textureID = fallbackTextureID;
     } else {
         auto &flower = flowers[currentFlower];
-    flower.loadImage();
+        if (flowersLoaded[currentFlower] == false) {
+            flower.loadImage();
+            flowersLoaded[currentFlower] = true;
+        }
         textureID = flower.getTextureID();
     }
     
@@ -684,9 +697,9 @@ void Florb::initShaders() {
 }
 
 void Florb::initMotes(unsigned int count,
-		      float radius,
-		      float maxStep,
-		      const vector<float> &color) {
+                      float radius,
+                      float maxStep,
+                      const vector<float> &color) {
     // Randomize dust mote centers
     moteCount = count;
     moteCenters = vector<float>((2 * moteCount), 0.0f);
