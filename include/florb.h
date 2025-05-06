@@ -27,6 +27,9 @@ public:
     float getVideoFrameRate() const;
     void setVideoFrameRate(float r);
 
+    float getImageSwitch() const;
+    void setImageSwitch(float s);
+
     std::pair<float, float> getCenter() const;
     void setCenter(float x, float y);
   
@@ -82,6 +85,7 @@ private:
     std::string imagePath;
 
     float videoFrameRate;
+    float imageSwitch;
   
     std::vector<Flower> flowers;
     std::vector<std::string> flowerPaths;
@@ -118,6 +122,7 @@ private:
 
     static const float k_MaxVideoFrameRate;
     static const float k_DefaultVideoFrameRate;
+    static const float k_DefaultImageSwitch;
 
     static const float k_SphereRadius;
   

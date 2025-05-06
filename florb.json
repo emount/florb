@@ -2,7 +2,8 @@
     "title" : "Eldridge's Wildflowers",
     "image_path" : "images",
     "video" : {
-	"frame_rate" : 60.0
+	"frame_rate" : 60.0,
+	"image_switch" : 5.0
     },
     "light" : {
 	"direction" : [0.0, -0.5, -1.0],

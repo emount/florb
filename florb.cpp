@@ -47,6 +47,8 @@ const float Florb::k_MaxVideoFrameRate(120.0f);
 
 const float Florb::k_DefaultVideoFrameRate(60.0f);
 
+const float Florb::k_DefaultImageSwitch(5.0f);
+
 const float Florb::k_SphereRadius(0.8f);
 
 // Sphere rendering parameters for high-detail, production quality rendering
@@ -62,6 +64,7 @@ Florb::Florb() :
     imagePath(k_DefaultImagePath),
 
     videoFrameRate(k_DefaultVideoFrameRate),
+    imageSwitch(k_DefaultImageSwitch),
     
     flowers(),
     flowerPaths(),
@@ -129,6 +132,10 @@ void Florb::loadConfigs() {
             
             if (video.contains("frame_rate") and video["frame_rate"].is_number()) {
                 setVideoFrameRate(video["frame_rate"]);
+            }
+            
+            if (video.contains("image_switch") and video["image_switch"].is_number()) {
+                setImageSwitch(video["image_switch"]);
             }
 	}
 	
@@ -267,6 +274,17 @@ void Florb::setVideoFrameRate(float r) {
     } else {
         videoFrameRate = r;
     }
+}
+
+float Florb::getImageSwitch() const {
+    lock_guard<mutex> lock(stateMutex);
+    return imageSwitch;
+}
+
+void Florb::setImageSwitch(float s) {
+    lock_guard<mutex> lock(stateMutex);
+
+    imageSwitch = s;
 }
 
 pair<float, float> Florb::getCenter() const {

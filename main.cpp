@@ -31,8 +31,6 @@ GLXContext context;
 int screenWidth = 800;
 int screenHeight = 600;
 
-constexpr float k_SwitchInterval(5.0f);
-
 // Initialize OpenGL and X11 Window
 void initOpenGL() {
     display = XOpenDisplay(nullptr);
@@ -208,7 +206,7 @@ int main() {
             float timeMsec = duration_cast<milliseconds>(steady_clock::now() - startTime).count();
             float timeSeconds = (timeMsec / 1000.0f);
 
-            if (timeSeconds >= k_SwitchInterval) {
+            if (timeSeconds >= florb.getImageSwitch()) {
                 florb.nextFlower();
                 startTime = steady_clock::now();
             }
