@@ -13,6 +13,17 @@
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 4
 
+namespace chrono = std::chrono;
+
+using chrono::duration;
+using chrono::duration_cast;
+using chrono::milliseconds;
+using chrono::steady_clock;
+
+using std::cerr;
+using std::cout;
+using std::endl;
+
 Display *display;
 Window window;
 GLXContext context;
@@ -20,9 +31,9 @@ GLXContext context;
 int screenWidth = 800;
 int screenHeight = 600;
 
-using std::cerr;
-using std::cout;
-using std::endl;
+constexpr float k_FrameRate(60.0f);
+constexpr float k_FrameTime(1000.0f / k_FrameRate);
+constexpr float k_SwitchInterval(5.0f);
 
 // Initialize OpenGL and X11 Window
 void initOpenGL() {
@@ -122,6 +133,16 @@ void initOpenGL() {
 
     glXMakeCurrent(display, window, context);
 
+    
+    // Disable VSYNC, permitting arbitrary frame rates
+    typedef void (*glXSwapIntervalEXTProc)(Display*, GLXDrawable, int);
+    glXSwapIntervalEXTProc glXSwapIntervalEXT = 
+      (glXSwapIntervalEXTProc)glXGetProcAddressARB((const GLubyte*)"glXSwapIntervalEXT");
+    if (glXSwapIntervalEXT) {
+        glXSwapIntervalEXT(display, glXGetCurrentDrawable(), 0);
+    }
+
+
     GLint testTex = 0;
     glGenTextures(1, (GLuint*)&testTex);
 
@@ -148,16 +169,12 @@ void initOpenGL() {
 }
 
 int main() {
-    const int TARGET_FPS(60);
-    const int FRAME_DELAY_MS(1000 / TARGET_FPS);
-    auto switchInterval(5UL);
-    auto now(std::chrono::steady_clock::now());
 
     std::cout << "Florb v"
-	      << VERSION_MAJOR
-	      << "."
-	      << VERSION_MINOR
-	      << endl;
+              << VERSION_MAJOR
+              << "."
+              << VERSION_MINOR
+              << endl;
 
     try {
         initOpenGL();
@@ -165,7 +182,7 @@ int main() {
         glEnable(GL_DEPTH_TEST);
 
         Florb florb;
-	
+        
         bool running = true;
         while (running) {
             while (XPending(display)) {
@@ -175,7 +192,7 @@ int main() {
                 if (event.type == KeyPress) {
                     KeySym sym = XLookupKeysym(&event.xkey, 0);
                     if (sym == XK_Escape || sym == XK_space)
-		        running = false;
+                        running = false;
                 }
                 else if (event.type == ConfigureNotify) {
                     XConfigureEvent xce = event.xconfigure;
@@ -183,29 +200,42 @@ int main() {
                         screenWidth = xce.width;
                         screenHeight = xce.height;
                         glViewport(0, 0, screenWidth, screenHeight);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     }
                 }
             }
-	    
+            
             // Update timing for flower transition
-            static auto lastSwitch(std::chrono::steady_clock::now());
-	    now = std::chrono::steady_clock::now();
-            auto elapsed(std::chrono::duration_cast<std::chrono::seconds>(now - lastSwitch));
+            static steady_clock::time_point startTime = steady_clock::now();
+            float timeMsec = duration_cast<milliseconds>(steady_clock::now() - startTime).count();
+            float timeSeconds = (timeMsec / 1000.0f);
 
-            if (static_cast<unsigned long>(elapsed.count()) >= switchInterval) {
+            if (timeSeconds >= k_SwitchInterval) {
                 florb.nextFlower();
-                lastSwitch = now;
+                startTime = steady_clock::now();
             }
 
-	    // Render a flower frame
-            florb.renderFrame();
-            glXSwapBuffers(display, window);
-        
-            if (elapsed.count() < FRAME_DELAY_MS) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_DELAY_MS) - elapsed);
-            }
-        }
+
+	    static steady_clock::time_point lastFrame = steady_clock::now();
+	    float frameElapsed = duration_cast<milliseconds>(steady_clock::now() - lastFrame).count();
+
+	    if (frameElapsed < k_FrameTime) {
+	      // Busy-wait or sleep for the remaining time
+	      std::this_thread::sleep_for(milliseconds(static_cast<int>(k_FrameTime - frameElapsed)));
+	    }
+
+	    // Mark start of new frame
+	    lastFrame = steady_clock::now();
+ 
+            // Render a flower frame
+	    florb.renderFrame();
+	    glXSwapBuffers(display, window);
+
+
+	// cerr << "Frame start : "
+	// 	 << duration_cast<milliseconds>(frameElapsed).count() << " ms" << endl;
+	    
+        } // while (running)
 
         glXMakeCurrent(display, None, nullptr);
 

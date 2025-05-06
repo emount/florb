@@ -49,7 +49,7 @@ void Flower::loadImage() {
 
     glBindTexture(GL_TEXTURE_2D, textureID);
     FlorbUtils::glCheck("glBindTexture()");
-		    
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);

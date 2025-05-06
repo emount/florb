@@ -334,7 +334,6 @@ void Florb::renderFrame() {
 
     // Update the time uniform for physical effects
     static steady_clock::time_point startTime = steady_clock::now();
-
     float timeMsec = duration_cast<milliseconds>(steady_clock::now() - startTime).count();
     float timeSeconds = (timeMsec / 1000.0f);
 
@@ -361,8 +360,8 @@ void Florb::renderFrame() {
     // Load all flower images upon the first frame
     if (firstFrame) {
         for (auto &flower : flowers) {
-	  flower.loadImage();
-	}
+          flower.loadImage();
+        }
     }
     
     GLuint textureID;
@@ -602,12 +601,9 @@ void Florb::initShaders() {
                 float speed = moteSpeeds[i]; // pre-randomized per mote
                 float radius = moteRadii[i] / resolution.y;
             
-                // Add per-mote phase offset for uniqueness
-                float phase = float(i) * 12.345;
-            
-                // Wobbling orbit using sin/cos with time and per-mote phase
-                float wobbleX = sin(time * speed + phase);
-                float wobbleY = cos(time * speed * 0.5 + phase * 1.7);  // offset freq
+                // Wobbling orbit using sin/cos with time
+                float wobbleX = sin(time * speed);
+                float wobbleY = cos(time * speed * 0.5);
             
                 vec2 orbitOffset = vec2(wobbleX, wobbleY) * 0.01;  // adjust strength
                 vec2 motePos = moteCenters[i] + orbitOffset;
