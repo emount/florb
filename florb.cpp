@@ -706,11 +706,10 @@ void Florb::updateMotes() {
       float step(k_MaxStep * dist(gen));
       auto &component(moteCenters[i]);
 
+      // Update this component by the computed step
       component += step;
-      if (component >= k_SphereRadius) {
-          component = -k_SphereRadius;
-      } else if (component <= -k_SphereRadius) {
-          component = k_SphereRadius;
-      }
+
+      // Wrap the component to keep it on the sphere
+      moteCenters[i] = fmod(moteCenters[i], k_SphereRadius);
     }
 }

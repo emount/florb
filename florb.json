@@ -12,7 +12,7 @@
     },
     "motes" : {
 	"count" : 100,
-	"radius" : 5,
+	"radius" : 3,
 	"color" : [0.800, 0.800, 0.800],
 	"max_step" : 0.01
     },
