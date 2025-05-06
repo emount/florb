@@ -11,7 +11,12 @@
 #include "florbUtils.h"
 #include "nlohmann/json.hpp"
 
+namespace chrono = std::chrono;
 namespace fs = std::filesystem;
+
+using chrono::duration_cast;
+using chrono::milliseconds;
+using chrono::steady_clock;
 
 using std::cerr;
 using std::cos;
@@ -33,8 +38,6 @@ extern Display *display;
 extern Window window;
 
 using json = nlohmann::json_abi_v3_12_0::json;
-
-using namespace std::chrono;
 
 const string Florb::k_DefaultTitle("Florb v0.3");
 
@@ -322,7 +325,10 @@ void Florb::renderFrame() {
 
     // Update the time uniform for physical effects
     static steady_clock::time_point startTime = steady_clock::now();
-    float timeSeconds = duration<float>(steady_clock::now() - startTime).count();
+
+    float timeMsec = duration_cast<milliseconds>(steady_clock::now() - startTime).count();
+    float timeSeconds = (timeMsec / 1000.0f);
+
     GLuint timeLoc = glGetUniformLocation(shaderProgram, "time");
     glUniform1f(timeLoc, timeSeconds);
 
