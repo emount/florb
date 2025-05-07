@@ -69,6 +69,8 @@ private:
 
 public:
 
+    static const std::string k_DefaultImageIcon;
+
     static const std::string k_DefaultTitle;
   
     static const std::string k_DefaultImagePath;
@@ -118,8 +120,6 @@ private:
     GLuint fallbackTextureID = 0;
   
     int indexCount = 0;
-  
-    mutable std::mutex stateMutex;
 
     static const float k_MaxVideoFrameRate;
     static const float k_DefaultVideoFrameRate;
@@ -138,5 +138,7 @@ private:
     std::random_device rd;
     std::mt19937 gen;
     std::uniform_real_distribution<float> dist;
+  
+    mutable std::mutex stateMutex;
   
 };

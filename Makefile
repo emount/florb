@@ -1,12 +1,11 @@
 # Makefile for Florb
 
 CXX = g++
-# CXXFLAGS = -std=c++17 -Wall -O2
-CXXFLAGS = -std=c++17 -Wall -g
-LIBS = GL GLEW GLU X11
+CXXFLAGS = -std=c++17 -Wall -O2
+LIBS = GL GLEW GLU X11 png
 INC_DIRS = include
 
-SRC = main.cpp florb.cpp flower.cpp florbUtils.cpp
+SRC = main.cpp florb.cpp flower.cpp florbUtils.cpp imageIcon.cpp
 HEADERS = florb.h
 TARGET = florb
 

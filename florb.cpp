@@ -39,6 +39,8 @@ extern Window window;
 
 using json = nlohmann::json_abi_v3_12_0::json;
 
+const string Florb::k_DefaultImageIcon("icon/florbIcon.png");
+
 const string Florb::k_DefaultTitle("Florb v0.3");
 
 const string Florb::k_DefaultImagePath("images");
@@ -82,7 +84,9 @@ Florb::Florb() :
     
     fallbackTextureID(FlorbUtils::createDebugTexture()),
     
-    dist(0.0f, 1.0f) {
+    dist(0.0f, 1.0f),
+
+    stateMutex() {
   
     loadConfigs();
     loadFlowers();
@@ -117,6 +121,10 @@ void Florb::loadConfigs() {
         } else {
             setTitle(k_DefaultTitle);
         }
+
+
+	// TEMPORARY DEBUG
+	FlorbUtils::setImageIcon(display, window, k_DefaultImageIcon);
 
         
         // Image path config
@@ -179,17 +187,17 @@ void Florb::loadConfigs() {
         if (config.contains("motes") && config["motes"].is_object()) {
             const auto &motes(config["motes"]);
 
-            unsigned int count;
+            unsigned int count(0UL);
             if (motes.contains("count") and motes["count"].is_number_integer()) {
                 count = motes["count"];
             }
             
-            float radius;
+            float radius(1.0f);
             if (motes.contains("radius") and motes["radius"].is_number()) {
                 radius = motes["radius"];
             }
 
-            float maxStep;
+            float maxStep(1.0f);
             if (motes.contains("max_step") and motes["max_step"].is_number()) {
                 maxStep = motes["max_step"];
             }

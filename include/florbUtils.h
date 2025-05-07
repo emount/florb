@@ -19,6 +19,10 @@ namespace FlorbUtils {
 			Window window,
 			const std::string &title);
   
+    void setImageIcon(Display* display,
+		      Window window,
+		      const std::string &filename);
+
     void glCheck(const std::string &str);
 
 }

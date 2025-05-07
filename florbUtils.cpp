@@ -8,6 +8,7 @@
 #include <vector> 
 
 #include "florbUtils.h"
+#include "stb_image.h"
 
 namespace chrono = std::chrono;
 
@@ -72,6 +73,64 @@ void FlorbUtils::setWindowTitle(Display *display, Window window, const string &t
         XSetWMName(display, window, &windowName);
         XFree(windowName.value);
     }
+}
+
+void FlorbUtils::setImageIcon(Display* display, Window window, const string &filename) {
+    int width, height, channels;
+
+    // Force RGBA format
+    unsigned char* pixels = stbi_load(filename.c_str(), &width, &height, &channels, 4);
+
+    if (!pixels || width <= 0 || height <= 0) {
+        std::cerr << "[ERROR] Failed to load icon image: " << filename << std::endl;
+        return;
+    }
+
+    std::vector<unsigned long> iconData;
+    iconData.reserve(2 + width * height);
+    iconData.push_back(width);
+    iconData.push_back(height);
+
+    for (int i = 0; i < width * height; ++i) {
+        int r = pixels[4 * i + 0];
+        int g = pixels[4 * i + 1];
+        int b = pixels[4 * i + 2];
+        int a = pixels[4 * i + 3];
+
+        unsigned long pixel = ((unsigned long)a << 24) |
+                              ((unsigned long)r << 16) |
+                              ((unsigned long)g << 8)  |
+                              ((unsigned long)b);
+        iconData.push_back(pixel);
+    }
+
+    Atom netWmIcon = XInternAtom(display, "_NET_WM_ICON", False);
+    Atom cardinal = XInternAtom(display, "CARDINAL", False);
+
+    if (netWmIcon == None || cardinal == None) {
+        std::cerr << "[ERROR] Failed to get atoms for setting window icon." << std::endl;
+        stbi_image_free(pixels);
+        return;
+    }
+
+    XChangeProperty(
+        display,
+        window,
+        netWmIcon,
+        cardinal,
+        32,
+        PropModeReplace,
+        reinterpret_cast<unsigned char*>(iconData.data()),
+        iconData.size()
+    );
+
+    XFlush(display); // Ensure it's applied
+    stbi_image_free(pixels);
+    
+    cerr << "Set image icon to \""
+	 << filename
+	 << "\""
+	 << endl;
 }
 
 void FlorbUtils::glCheck(const string &str) {
