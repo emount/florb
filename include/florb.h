@@ -122,6 +122,7 @@ private:
     std::vector<float> moteSpeeds;
     float moteMaxStep;
     std::vector<float> moteCenters;
+    std::vector<float> moteDirections;
     std::vector<float> moteColor;
 
     RenderMode renderMode;

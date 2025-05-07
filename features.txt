@@ -1,6 +1,9 @@
 Florb feature wish list
 -----------------------
 
+Dust motes
+  Randomize direction in initMotes()
+  Wink in and out like fireflies
 Sphere smoothness setting (clamped exponent for x/y segments)
 Pulsing lighting
 Orb shadow

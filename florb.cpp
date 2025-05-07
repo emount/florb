@@ -82,6 +82,7 @@ Florb::Florb() :
     moteSpeeds(),
     moteMaxStep(),
     moteCenters(),
+    moteDirections(),
     moteColor(3, 0.0f),
 
     renderMode(RenderMode::FILL),
@@ -127,7 +128,7 @@ void Florb::loadConfigs() {
             setTitle(k_DefaultTitle);
         }
 
-	
+        
         // Image path config
         if (config.contains("image_path") && config["image_path"].is_string()) {
             imagePath = config["image_path"];
@@ -147,8 +148,8 @@ void Florb::loadConfigs() {
             if (video.contains("image_switch") and video["image_switch"].is_number()) {
                 setImageSwitch(video["image_switch"]);
             }
-	}
-	
+        }
+        
         
         // Camera configs
         if (config.contains("camera") && config["camera"].is_object()) {
@@ -158,7 +159,7 @@ void Florb::loadConfigs() {
                 const auto &view(camera["view"]);
                 setCameraView(view[0], view[1], view[2]);
             }
-	}	
+        }        
         
         // Light configs
         if (config.contains("light") && config["light"].is_object()) {
@@ -244,7 +245,7 @@ void Florb::loadConfigs() {
         if (config.contains("debug") && config["debug"].is_object()) {
             const auto &debug(config["debug"]);
 
-	    // Rendering mode - normal fill, or wiremesh lines
+            // Rendering mode - normal fill, or wiremesh lines
             if (debug.contains("render_mode") && debug["render_mode"].is_string()) {
                 if(debug["render_mode"] == "fill") {
                     setRenderMode(RenderMode::FILL);
@@ -258,7 +259,7 @@ void Florb::loadConfigs() {
                 }
             }
 
-	    // Specular mode - normal reflections, or debug spot
+            // Specular mode - normal reflections, or debug spot
             if (debug.contains("specular_mode") && debug["specular_mode"].is_string()) {
                 if(debug["specular_mode"] == "normal") {
                     setSpecularMode(SpecularMode::NORMAL);
@@ -548,10 +549,10 @@ void Florb::renderFrame() {
     GLuint specularDebugLoc = glGetUniformLocation(shaderProgram, "specularDebug");
 
     glUniform3f(viewPosLoc,
-		cameraView[0],
-		cameraView[1],
-		cameraView[2]);
-		
+                cameraView[0],
+                cameraView[1],
+                cameraView[2]);
+                
     glUniform1f(shininessLoc, shininess);
 
     int specularDebug;
@@ -872,6 +873,15 @@ void Florb::initMotes(unsigned int count,
     moteCenters = vector<float>((2 * moteCount), 0.0f);
     for (auto i = 0UL; i < (2 * moteCount); i++) {
         moteCenters[i] = dist(gen);
+
+	if ((i % 2) == 0) {
+            float bias(dist(gen));
+            if (bias > 0.5f) {
+                moteDirections.push_back(1.0f);
+            } else {
+	        moteDirections.push_back(-1.0f);
+            }
+	} else moteDirections.push_back(1.0f);
     }
 
     moteRadii = vector<float>(moteCount, radius);
@@ -883,11 +893,13 @@ void Florb::initMotes(unsigned int count,
 void Florb::updateMotes() {
     // Update random walk for each dust mote
     for (auto i = 0UL; i < (2 * moteCount); ++i) {
-      float step(moteMaxStep * dist(gen));
+      // float vecDir(2.0f * (dist(gen) - 0.5f));
+      float vecDir(dist(gen));
+      float step(moteMaxStep * vecDir);
       auto &component(moteCenters[i]);
 
       // Update this component by the computed step
-      component += step;
+      component += (step * moteDirections[i]);
 
       // Wrap the component to keep it on the sphere
       moteCenters[i] = fmod(moteCenters[i], k_SphereRadius);
