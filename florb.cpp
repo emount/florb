@@ -874,14 +874,14 @@ void Florb::initMotes(unsigned int count,
     for (auto i = 0UL; i < (2 * moteCount); i++) {
         moteCenters[i] = dist(gen);
 
-	if ((i % 2) == 0) {
+        if ((i % 2) == 0) {
             float bias(dist(gen));
             if (bias > 0.5f) {
                 moteDirections.push_back(1.0f);
             } else {
-	        moteDirections.push_back(-1.0f);
+                moteDirections.push_back(-1.0f);
             }
-	} else moteDirections.push_back(1.0f);
+        } else moteDirections.push_back(1.0f);
     }
 
     moteRadii = vector<float>(moteCount, radius);
@@ -893,15 +893,19 @@ void Florb::initMotes(unsigned int count,
 void Florb::updateMotes() {
     // Update random walk for each dust mote
     for (auto i = 0UL; i < (2 * moteCount); ++i) {
-      // float vecDir(2.0f * (dist(gen) - 0.5f));
-      float vecDir(dist(gen));
-      float step(moteMaxStep * vecDir);
-      auto &component(moteCenters[i]);
-
-      // Update this component by the computed step
-      component += (step * moteDirections[i]);
-
-      // Wrap the component to keep it on the sphere
-      moteCenters[i] = fmod(moteCenters[i], k_SphereRadius);
+        // float vecDir(2.0f * (dist(gen) - 0.5f));
+        float vecDir(dist(gen));
+        float step(moteMaxStep * vecDir);
+        auto &component(moteCenters[i]);
+        
+        // Update this component by the computed step
+	component += (step * moteDirections[i]);
+        
+        // Wrap the component to keep it on the sphere
+        if (moteCenters[i] >= k_SphereRadius) {
+            moteCenters[i] = 0.0f;
+        } else if (moteCenters[i] <= 0.0f) {
+            moteCenters[i] = k_SphereRadius;
+        }
     }
 }
