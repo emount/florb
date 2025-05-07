@@ -33,6 +33,9 @@ public:
     float getImageSwitch() const;
     void setImageSwitch(float s);
 
+    const std::vector<float>& getCameraView() const;
+    void setCameraView(float alpha, float beta, float phi);
+
     std::pair<float, float> getCenter() const;
     void setCenter(float x, float y);
   
@@ -95,6 +98,8 @@ private:
 
     float videoFrameRate;
     float imageSwitch;
+
+    std::vector<float> cameraView;
   
     std::vector<Flower> flowers;
     std::vector<std::string> flowerPaths;

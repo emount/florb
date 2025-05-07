@@ -65,6 +65,8 @@ Florb::Florb() :
 
     videoFrameRate(k_DefaultVideoFrameRate),
     imageSwitch(k_DefaultImageSwitch),
+
+    cameraView(3, 0.0f),
     
     flowers(),
     flowerPaths(),
@@ -147,6 +149,16 @@ void Florb::loadConfigs() {
             }
 	}
 	
+        
+        // Camera configs
+        if (config.contains("camera") && config["camera"].is_object()) {
+            const auto &camera(config["camera"]);
+            
+            if (camera.contains("view") and camera["view"].is_array()) {
+                const auto &view(camera["view"]);
+                setCameraView(view[0], view[1], view[2]);
+            }
+	}	
         
         // Light configs
         if (config.contains("light") && config["light"].is_object()) {
@@ -312,6 +324,18 @@ void Florb::setImageSwitch(float s) {
     lock_guard<mutex> lock(stateMutex);
 
     imageSwitch = s;
+}
+
+const vector<float>& Florb::getCameraView() const {
+    lock_guard<mutex> lock(stateMutex);
+    return cameraView;
+}
+
+void Florb::setCameraView(float alpha, float beta, float phi) {
+    lock_guard<mutex> lock(stateMutex);
+    cameraView[0] = alpha;
+    cameraView[1] = beta;
+    cameraView[2] = phi;
 }
 
 pair<float, float> Florb::getCenter() const {
@@ -522,7 +546,12 @@ void Florb::renderFrame() {
     GLuint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
     GLuint shininessLoc = glGetUniformLocation(shaderProgram, "shininess");
     GLuint specularDebugLoc = glGetUniformLocation(shaderProgram, "specularDebug");
-    glUniform3f(viewPosLoc, 0.0f, 0.0f, 3.0f); // assuming camera at (0, 0, 3)
+
+    glUniform3f(viewPosLoc,
+		cameraView[0],
+		cameraView[1],
+		cameraView[2]);
+		
     glUniform1f(shininessLoc, shininess);
 
     int specularDebug;
