@@ -5,7 +5,7 @@ CXXFLAGS = -std=c++17 -Wall -O2
 LIBS = GL GLEW GLU X11 png
 INC_DIRS = include
 
-SRC = main.cpp florb.cpp flower.cpp florbUtils.cpp imageIcon.cpp
+SRC = main.cpp florb.cpp flower.cpp florbUtils.cpp
 HEADERS = florb.h
 TARGET = florb
 

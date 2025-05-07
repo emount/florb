@@ -478,6 +478,14 @@ void Florb::renderFrame() {
                 lightDirection[0],
                 lightDirection[1],
                 lightDirection[2]);
+
+
+    // Set specular reflection uniforms
+    GLuint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
+    GLuint shininessLoc = glGetUniformLocation(shaderProgram, "shininess");
+    glUniform3f(viewPosLoc, 0.0f, 0.0f, 3.0f); // assuming camera at (0, 0, 3)
+    glUniform1f(shininessLoc, 64.0f); // adjust as desired
+
     
     // Weight light color with intensity
     vector<float> actualColor = {
@@ -638,11 +646,15 @@ void Florb::initShaders() {
         uniform vec3 lightDir;
         uniform vec3 lightColor;
 
+        uniform vec3 viewPos;        // Usually (0, 0, 3)
+        uniform float shininess;     // e.g., 32.0 or 64.0
+
         uniform sampler2D currentTexture;
         
         void main() {
             vec3 dir = normalize(fragPos);
-        
+
+            // Fragment location
             vec2 uv;
             uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
             uv.y = asin(dir.y) / 3.14159265 + 0.5;
@@ -653,9 +665,8 @@ void Florb::initShaders() {
             if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
                 discard;
 
-            // Sample texture color
-            vec4 color = texture(currentTexture, uv);
 
+            // Dust mote contributions
             float dust = 0.0;
             for (int i = 0; i < moteCount; ++i) {
                 float speed = moteSpeeds[i]; // pre-randomized per mote
@@ -672,9 +683,6 @@ void Florb::initShaders() {
                 float alpha = smoothstep(radius, 0.0, dist);
                 dust += alpha;
             }
-             
-            // Clamp and overlay colored dust mote glow
-            color.rgb += clamp(dust, 0.0, 1.0) * moteColor;
 
             // Aspect-corrected center-relative coords
             vec2 screenUV = gl_FragCoord.xy / resolution;
@@ -685,6 +693,11 @@ void Florb::initShaders() {
             // Diffuse lighting
             vec3 norm = normalize(fragNormal);
             vec3 light = normalize(-lightDir);
+
+
+            // Normalize lighting components
+            vec3 viewDir = normalize(viewPos - fragPos);
+            vec3 reflectDir = reflect(-light, norm);
 
 
             // Vignette effect
@@ -712,18 +725,29 @@ void Florb::initShaders() {
             }
 
 
-            // Exaggerated intensity
-            float intensity = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0) * 2.5;
-            float gamma = 2.2;
-            vec3 corrected = pow(vec3(intensity), vec3(1.0 / gamma));
-            float diffuse = max(dot(normalize(fragNormal), normalize(lightDir)), 0.0);
-            vec4 texColor = texture(currentTexture, fragUV);
+            // Sample texture color
+            vec4 texColor = texture(currentTexture, uv);
 
-            // Factor in all weights
-            FragColor = vec4(vignette * intensity * lightColor.r * color.r,
-                             vignette * intensity * lightColor.g * color.g,
-                             vignette * intensity * lightColor.b * color.b,
-                             1.0);
+
+            // Diffuse lighting
+            float diffuse = max(dot(fragNormal, lightDir), 0.0);
+
+
+            // Specular component
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+
+
+            // Final lighting contribution
+            vec3 lighting = (diffuse + spec) * lightColor;
+
+
+            vec3 finalColor = vignette * lighting * texColor.rgb;
+
+            // Clamp and overlay colored dust mote glow
+            finalColor += clamp(dust, 0.0, 1.0) * moteColor;
+            
+            FragColor = vec4(finalColor, 1.0);
+
         }
     )glsl";
     
