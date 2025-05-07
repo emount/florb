@@ -39,8 +39,6 @@ extern Window window;
 
 using json = nlohmann::json_abi_v3_12_0::json;
 
-const string Florb::k_DefaultImageIcon("icon/florbIcon.png");
-
 const string Florb::k_DefaultTitle("Florb v0.3");
 
 const string Florb::k_DefaultImagePath("images");
@@ -127,11 +125,7 @@ void Florb::loadConfigs() {
             setTitle(k_DefaultTitle);
         }
 
-
-	// TEMPORARY DEBUG
-	FlorbUtils::setImageIcon(display, window, k_DefaultImageIcon);
-
-        
+	
         // Image path config
         if (config.contains("image_path") && config["image_path"].is_string()) {
             imagePath = config["image_path"];
@@ -527,8 +521,17 @@ void Florb::renderFrame() {
     // Set specular reflection uniforms
     GLuint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
     GLuint shininessLoc = glGetUniformLocation(shaderProgram, "shininess");
+    GLuint specularDebugLoc = glGetUniformLocation(shaderProgram, "specularDebug");
     glUniform3f(viewPosLoc, 0.0f, 0.0f, 3.0f); // assuming camera at (0, 0, 3)
     glUniform1f(shininessLoc, shininess);
+
+    int specularDebug;
+    if (specularMode == SpecularMode::NORMAL) {
+        specularDebug = 0;
+    } else {
+        specularDebug = 1;
+    }
+    glUniform1i(specularDebugLoc, specularDebug);
 
     
     // Weight light color with intensity
@@ -690,8 +693,9 @@ void Florb::initShaders() {
         uniform vec3 lightDir;
         uniform vec3 lightColor;
 
-        uniform vec3 viewPos;        // Usually (0, 0, 3)
-        uniform float shininess;     // e.g., 32.0 or 64.0
+        uniform vec3 viewPos;
+        uniform float shininess;
+        uniform int specularDebug;
 
         uniform sampler2D currentTexture;
         
@@ -777,21 +781,27 @@ void Florb::initShaders() {
             float diffuse = max(dot(fragNormal, lightDir), 0.0);
 
 
-            // Specular component
-            
+            // Amplified specular component
             float specular = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
             specular *= 4.0;
+
 
             // Final lighting contribution
             vec3 lighting = clamp((diffuse + specular) * lightColor, 0.0, 1.0);
 
 
+            // Compute final color
             vec3 finalColor = vignette * lighting * texColor.rgb;
 
             // Clamp and overlay colored dust mote glow
             finalColor += clamp(dust, 0.0, 1.0) * moteColor;
 
-            FragColor = vec4(finalColor, 1.0);
+            // Assign final color, taking debug modes into account
+            if (specularDebug != 0) {
+               FragColor = vec4(vec3(specular), 1.0);
+            } else {
+                FragColor = vec4(finalColor, 1.0);
+            }
         }
     )glsl";
     

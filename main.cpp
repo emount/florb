@@ -67,9 +67,6 @@ void initOpenGL() {
     XMapWindow(display, window);
     XFlush(display);
 
-    // Set the image icon for Florb
-    FlorbUtils::setImageIcon(display, window, Florb::k_DefaultImageIcon);
-
 
     // Request FULLSCREEN from window manager
     Atom wmState = XInternAtom(display, "_NET_WM_STATE", False);

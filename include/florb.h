@@ -78,8 +78,6 @@ private:
 
 public:
 
-    static const std::string k_DefaultImageIcon;
-
     static const std::string k_DefaultTitle;
   
     static const std::string k_DefaultImagePath;
