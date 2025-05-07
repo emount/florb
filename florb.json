@@ -8,6 +8,7 @@
     "light" : {
 	"direction" : [0.0, -0.5, -1.0],
 	"intensity" : 0.60,
+	"shininess" : 64.0,
 	"color" : [1.000, 1.000, 1.000]
     },
     "vignette" : {
@@ -23,6 +24,7 @@
     "center" : [0.25, 0.00],
     "zoom" : 0.90,
     "debug" : {
-	"render_mode" : "fill"
+	"render_mode" : "fill",
+	"specular_mode" : "normal"
     }
 }

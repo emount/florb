@@ -16,6 +16,9 @@ public:
     // Enumerated type for render mode
     enum class RenderMode { FILL, LINE };
 
+    // Enumerated type for specular mode
+    enum class SpecularMode { NORMAL, DEBUG };
+
 public:
     Florb();
     ~Florb();
@@ -42,6 +45,9 @@ public:
     float getLightIntensity() const;
     void setLightIntensity(float i);
 
+    float getShininess() const;
+    void setShininess(float s);
+
     const std::vector<float>& getLightColor() const;
     void setLightColor(float r, float g, float b);
   
@@ -53,6 +59,9 @@ public:
   
     const RenderMode& getRenderMode() const;
     void setRenderMode(const RenderMode &r);
+  
+    const SpecularMode& getSpecularMode() const;
+    void setSpecularMode(const SpecularMode &s);
   
     void renderFrame();
 
@@ -99,6 +108,7 @@ private:
 
     std::vector<float> lightDirection;
     float lightIntensity;
+    float shininess;
     std::vector<float> lightColor;
 
     float vignetteRadius = 0.0f;
@@ -112,6 +122,7 @@ private:
     std::vector<float> moteColor;
 
     RenderMode renderMode;
+    SpecularMode specularMode;
 
     GLuint vao = 0;
     GLuint vbo = 0;

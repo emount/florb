@@ -73,6 +73,8 @@ Florb::Florb() :
     currentFlower(0UL),
     
     lightDirection(3, 0.0f),
+    lightIntensity(1.0f),
+    shininess(1.0f),
     lightColor(3, 0.0f),
     
     moteCount(0UL),
@@ -81,6 +83,9 @@ Florb::Florb() :
     moteMaxStep(),
     moteCenters(),
     moteColor(3, 0.0f),
+
+    renderMode(RenderMode::FILL),
+    specularMode(SpecularMode::NORMAL),
     
     fallbackTextureID(FlorbUtils::createDebugTexture()),
     
@@ -162,6 +167,10 @@ void Florb::loadConfigs() {
                 setLightIntensity(light["intensity"]);
             }
             
+            if (light.contains("shininess") and light["shininess"].is_number()) {
+                setShininess(light["shininess"]);
+            }
+            
             if (light.contains("color") and light["color"].is_array()) {
                 const auto &color(light["color"]);
                 setLightColor(color[0], color[1], color[2]);
@@ -229,6 +238,7 @@ void Florb::loadConfigs() {
         if (config.contains("debug") && config["debug"].is_object()) {
             const auto &debug(config["debug"]);
 
+	    // Rendering mode - normal fill, or wiremesh lines
             if (debug.contains("render_mode") && debug["render_mode"].is_string()) {
                 if(debug["render_mode"] == "fill") {
                     setRenderMode(RenderMode::FILL);
@@ -237,6 +247,20 @@ void Florb::loadConfigs() {
                 } else {
                     cerr << "Invalid render_mode config value \""
                          << debug["render_mode"]
+                         << "\""
+                         << endl;
+                }
+            }
+
+	    // Specular mode - normal reflections, or debug spot
+            if (debug.contains("specular_mode") && debug["specular_mode"].is_string()) {
+                if(debug["specular_mode"] == "normal") {
+                    setSpecularMode(SpecularMode::NORMAL);
+                } else if(debug["specular_mode"] == "debug") {
+                    setSpecularMode(SpecularMode::DEBUG);
+                } else {
+                    cerr << "Invalid specular_mode config value \""
+                         << debug["specular_mode"]
                          << "\""
                          << endl;
                 }
@@ -339,6 +363,16 @@ void Florb::setLightIntensity(float i) {
     lightIntensity = i;
 }
 
+float Florb::getShininess() const {
+    lock_guard<mutex> lock(stateMutex);
+    return shininess;
+}
+
+void Florb::setShininess(float s) {
+    lock_guard<mutex> lock(stateMutex);
+    shininess = s;
+}
+
 const vector<float>& Florb::getLightColor() const {
     lock_guard<mutex> lock(stateMutex);
     return lightColor;
@@ -370,7 +404,7 @@ void Florb::setVignetteExponent(float r) {
     lock_guard<mutex> lock(stateMutex);
     vignetteExponent = r;
 }
-  
+
 const Florb::RenderMode& Florb::getRenderMode() const {
     lock_guard<mutex> lock(stateMutex);
     return renderMode;
@@ -379,6 +413,16 @@ const Florb::RenderMode& Florb::getRenderMode() const {
 void Florb::setRenderMode(const Florb::RenderMode &r) {
     lock_guard<mutex> lock(stateMutex);
     renderMode = r;
+}
+
+const Florb::SpecularMode& Florb::getSpecularMode() const {
+    lock_guard<mutex> lock(stateMutex);
+    return specularMode;
+}
+
+void Florb::setSpecularMode(const Florb::SpecularMode &s) {
+    lock_guard<mutex> lock(stateMutex);
+    specularMode = s;
 }
 
 void Florb::renderFrame() {
@@ -484,7 +528,7 @@ void Florb::renderFrame() {
     GLuint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
     GLuint shininessLoc = glGetUniformLocation(shaderProgram, "shininess");
     glUniform3f(viewPosLoc, 0.0f, 0.0f, 3.0f); // assuming camera at (0, 0, 3)
-    glUniform1f(shininessLoc, 64.0f); // adjust as desired
+    glUniform1f(shininessLoc, shininess);
 
     
     // Weight light color with intensity
@@ -734,20 +778,20 @@ void Florb::initShaders() {
 
 
             // Specular component
-            float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-
+            
+            float specular = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+            specular *= 4.0;
 
             // Final lighting contribution
-            vec3 lighting = (diffuse + spec) * lightColor;
+            vec3 lighting = clamp((diffuse + specular) * lightColor, 0.0, 1.0);
 
 
             vec3 finalColor = vignette * lighting * texColor.rgb;
 
             // Clamp and overlay colored dust mote glow
             finalColor += clamp(dust, 0.0, 1.0) * moteColor;
-            
-            FragColor = vec4(finalColor, 1.0);
 
+            FragColor = vec4(finalColor, 1.0);
         }
     )glsl";
     
