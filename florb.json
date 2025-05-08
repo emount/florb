@@ -12,7 +12,8 @@
     },
     "effects" : {
 	"breathe" : {
-	    "enabled" : "true",
+	    "enabled" : true,
+	    "amplitude" : [0.6, 0.8],
 	    "rate" : 0.1
 	}
     },

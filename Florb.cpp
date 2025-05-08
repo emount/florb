@@ -80,6 +80,7 @@ Florb::Florb() :
     
     smoothness(7UL),
 
+    breatheEnabled(false),
     breatheRate(0.0f),
     
     lightDirection(3, 0.0f),
@@ -187,6 +188,10 @@ void Florb::loadConfigs() {
 	    if (effects.contains("breathe") && effects["breathe"].is_object()) {
 	        const auto &breathe(effects["breathe"]);
 
+		if (breathe.contains("enabled") and breathe["enabled"].is_boolean()) {
+		    setBreatheEnabled(breathe["enabled"]);
+		}
+		
 		if (breathe.contains("rate") and breathe["rate"].is_number()) {
 		    setBreatheRate(breathe["rate"]);
 		}
@@ -398,12 +403,11 @@ void Florb::setRadius(float r) {
     lock_guard<mutex> lock(stateMutex);
     baseRadius = radius = r;
 
-    // TODO - Convert enabled, amplitude, and frequency into configs
-    bool enabled(true);
+    // TODO - Convert amplitude range and frequency into configs
     float amplitude(baseRadius / 2);
     float frequency(0.1f);
     float phase(0.0f);
-    breather = make_shared<SinusoidalMotion>(enabled,
+    breather = make_shared<SinusoidalMotion>(breatheEnabled,
 					     amplitude,
                                              amplitude,
                                              frequency,
@@ -428,6 +432,26 @@ unsigned int Florb::getSmoothness() const {
 void Florb::setSmoothness(unsigned int s) {
     lock_guard<mutex> lock(stateMutex);
     smoothness = s;
+}
+
+bool Florb::getBreatheEnabled() const {
+    lock_guard<mutex> lock(stateMutex);
+    return breatheEnabled;
+}
+
+void Florb::setBreatheEnabled(bool e) {
+    lock_guard<mutex> lock(stateMutex);
+
+    // TODO - Convert amplitude range and frequency into configs
+    float amplitude(baseRadius / 2);
+    float frequency(0.1f);
+    float phase(0.0f);
+    breatheEnabled = e;
+    breather = make_shared<SinusoidalMotion>(breatheEnabled,
+					     amplitude,
+                                             amplitude,
+                                             frequency,
+                                             phase);
 }
 
 float Florb::getBreatheRate() const {
