@@ -9,7 +9,9 @@
 
 #include "Florb.h"
 #include "FlorbUtils.h"
+#include "SinusoidalMotion.h"
 #include "nlohmann/json.hpp"
+
 
 namespace chrono = std::chrono;
 namespace fs = std::filesystem;
@@ -25,6 +27,7 @@ using std::endl;
 using std::exception;
 using std::ifstream;
 using std::lock_guard;
+using std::make_shared;
 using std::mt19937;
 using std::mutex;
 using std::pair;
@@ -33,6 +36,7 @@ using std::sin;
 using std::string;
 using std::uniform_real_distribution;
 using std::vector;
+
 
 extern Display *display;
 extern Window window;
@@ -52,6 +56,7 @@ const float Florb::k_DefaultImageSwitch(5.0f);
 const float Florb::k_SphereRadius(0.8f);
 
 const int Florb::k_MaxMotes(128);
+
 
 // Florb class implementation
 Florb::Florb() :
@@ -83,6 +88,8 @@ Florb::Florb() :
     moteCenters(),
     moteDirections(),
     moteColor(3, 0.0f),
+
+    breather(make_shared<SinusoidalMotion>(1.0f, 0.1f, 0.0f)),
 
     renderMode(RenderMode::FILL),
     specularMode(SpecularMode::NORMAL),
@@ -475,18 +482,9 @@ void Florb::renderFrame() {
         cerr << "[renderFrame()] OpenGL context is not current" << endl;
     }
 
-    // Update the time uniform for physical effects
-    static steady_clock::time_point startTime = steady_clock::now();
-    float timeMsec = duration_cast<milliseconds>(steady_clock::now() - startTime).count();
-    float timeSeconds = (timeMsec / 1000.0f);
-
-    GLuint timeLoc = glGetUniformLocation(shaderProgram, "time");
-    glUniform1f(timeLoc, timeSeconds);
-
     // Update physical effects
-    updateMotes();
-    generateSphere(k_SphereRadius, smoothness, (smoothness / 2));
-
+    updatePhysicalEffects();
+    
     // Set a dark gray background color for the window
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -909,6 +907,30 @@ void Florb::initMotes(unsigned int count,
     moteSpeeds = vector<float>(moteCount, maxStep);
     moteMaxStep = maxStep;
     moteColor = color;
+}
+
+void Florb::updatePhysicalEffects() {
+    // Update the time uniform for physical effects
+    static steady_clock::time_point startTime = steady_clock::now();
+    float timeMsec = duration_cast<milliseconds>(steady_clock::now() - startTime).count();
+    float timeSeconds = (timeMsec / 1000.0f);
+
+    GLuint timeLoc = glGetUniformLocation(shaderProgram, "time");
+    glUniform1f(timeLoc, timeSeconds);
+
+
+    // Update the sphere
+    auto radius(breather->evaluate(timeSeconds));
+    setVignetteRadius(radius);
+
+    GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
+    glUniform1f(vignetteRadiusLoc, vignetteRadius);
+
+    generateSphere(radius, smoothness, (smoothness / 2));
+
+    
+    // Update dust motes
+    updateMotes();
 }
 
 void Florb::updateMotes() {

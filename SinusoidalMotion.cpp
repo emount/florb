@@ -1,6 +1,7 @@
-#include <cmath>
+#include <math.h>
 
 #include "SinusoidalMotion.h"
+
 
 // Implementation of class SinusoidalMotion
 
@@ -16,5 +17,5 @@ SinusoidalMotion::SinusoidalMotion(float amplitude,
 
 
 float SinusoidalMotion::evaluate(float time) const {
-    return (amplitude * sinf(frequency * time + phase));
+    return (amplitude * sinf(2.0f * M_PI * frequency * time + phase));
 }

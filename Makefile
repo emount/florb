@@ -29,7 +29,7 @@ VPATH = $(INC_DIRS)
 
 all: $(TARGET)
 
-$(TARGET): $(SRC) $(HEADERS)
+$(TARGET): $(SOURCES) $(HEADERS)
 	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -o $(TARGET) $(SOURCES) $(LIBS:%=-l%)
 
 clean:

@@ -2,12 +2,17 @@
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
 #include <random>
 
 #include "Flower.h"
+
+// Class forward references
+class MotionAlgorithm;
+
 
 // Florb class encapsulating the sphere state, geometry, textures, and behavior
 class Florb {
@@ -80,6 +85,8 @@ private:
 		   float radius,
 		   float maxStep,
 		   const std::vector<float> &color);
+
+    void updatePhysicalEffects();
     void updateMotes();
 
 public:
@@ -128,6 +135,8 @@ private:
     std::vector<float> moteCenters;
     std::vector<float> moteDirections;
     std::vector<float> moteColor;
+
+    std::shared_ptr<MotionAlgorithm> breather;
 
     RenderMode renderMode;
     SpecularMode specularMode;

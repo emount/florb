@@ -3,9 +3,7 @@
 class SinusoidalMotion : public MotionAlgorithm {
 public:
   
-    SinusoidalMotion(float amplitude,
-		     float frequency,
-		     float phase = 0.0f);
+    SinusoidalMotion(float amplitude, float frequency, float phase);
 
     float evaluate(float time) const override;
 
