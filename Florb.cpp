@@ -1042,6 +1042,14 @@ void Florb::initMotes(unsigned int count,
 }
 
 void Florb::createBouncer() {
+    float phase(0.0f);
+    bouncer = make_shared<SinusoidalMotion>(
+        bounceEnabled,
+        bounceAmplitude,
+        bounceAmplitude,
+        bounceFrequency,
+        phase
+    );
 }
 
 void Florb::createBreather() {
@@ -1099,6 +1107,6 @@ void Florb::updateMotes() {
         component += (step * moteDirections[i]);
         
         // Wrap the component to keep it on the sphere
-	moteCenters[i] = fmod(moteCenters[i] + 1.0f, 2.0f) - 1.0f;
+        moteCenters[i] = fmod(moteCenters[i] + 1.0f, 2.0f) - 1.0f;
     }
 }

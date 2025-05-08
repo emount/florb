@@ -189,6 +189,7 @@ private:
     std::vector<float> moteDirections;
     std::vector<float> moteColor;
 
+    std::shared_ptr<MotionAlgorithm> bouncer;
     std::shared_ptr<MotionAlgorithm> breather;
 
     RenderMode renderMode;
