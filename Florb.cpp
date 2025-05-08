@@ -7,8 +7,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "florb.h"
-#include "florbUtils.h"
+#include "Florb.h"
+#include "FlorbUtils.h"
 #include "nlohmann/json.hpp"
 
 namespace chrono = std::chrono;

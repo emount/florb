@@ -3,7 +3,9 @@ Florb feature wish list
 
 Dust motes
   Wink in and out like fireflies
-Pulsing lighting
+Lighting
+  Pulsing lighting
+  Rim lighting
 Orb shadow
 Adjustable camera angle and zoom
 Hybrid AI flower generation
@@ -23,6 +25,7 @@ Web interface
 Refactoring
 -----------
 
+Doxyfile for Doxygen documentation pages
 Convert integer types to uint32_t, etc.
 Generate shader code programatically
 

@@ -2,8 +2,8 @@
 #include <GL/glew.h>
 #include <iostream>
 
-#include "flower.h"
-#include "florbUtils.h"
+#include "Flower.h"
+#include "FlorbUtils.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"

@@ -7,7 +7,7 @@
 #include <vector>
 #include <random>
 
-#include "flower.h"
+#include "Flower.h"
 
 // Florb class encapsulating the sphere state, geometry, textures, and behavior
 class Florb {

@@ -7,8 +7,8 @@
 #include <iostream>
 #include <thread>
 
-#include "florb.h"
-#include "florbUtils.h"
+#include "Florb.h"
+#include "FlorbUtils.h"
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 4
