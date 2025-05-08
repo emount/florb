@@ -82,7 +82,7 @@ Florb::Florb() :
 
     breatheEnabled(false),
     breatheAmplitude(2, k_DefaultRadius),
-    breatheRate(0.0f),
+    breatheFrequency(0.0f),
     
     lightDirection(3, 0.0f),
     lightIntensity(1.0f),
@@ -198,8 +198,8 @@ void Florb::loadConfigs() {
                     setBreatheAmplitude(amplitude[0], amplitude[1]);
                 }
 		
-		if (breathe.contains("rate") and breathe["rate"].is_number()) {
-		    setBreatheRate(breathe["rate"]);
+		if (breathe.contains("frequency") and breathe["frequency"].is_number()) {
+		    setBreatheFrequency(breathe["frequency"]);
 		}
 	    }
 	}    
@@ -454,14 +454,15 @@ void Florb::setBreatheAmplitude(float min, float max) {
     createBreather();
 }
 
-float Florb::getBreatheRate() const {
+float Florb::getBreatheFrequency() const {
     lock_guard<mutex> lock(stateMutex);
-    return breatheRate;
+    return breatheFrequency;
 }
 
-void Florb::setBreatheRate(float r) {
+void Florb::setBreatheFrequency(float r) {
     lock_guard<mutex> lock(stateMutex);
-    breatheRate = r;
+    breatheFrequency = r;
+    createBreather();
 }
 
 const vector<float>& Florb::getLightDirection() const {
@@ -987,8 +988,6 @@ void Florb::initMotes(unsigned int count,
 }
 
 void Florb::createBreather() {
-    // TODO - Convert frequency into a config and phase to M_PI / 2
-    float frequency(0.1f);
     float phase(M_PI / 2);
     float minR = breatheAmplitude[0];
     float maxR = breatheAmplitude[1];
@@ -999,7 +998,7 @@ void Florb::createBreather() {
         breatheEnabled,
         bias,
         amplitude,
-        frequency,
+        breatheFrequency,
         phase
     );
 }

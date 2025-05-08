@@ -59,8 +59,8 @@ public:
     const std::vector<float>& getBreatheAmplitude() const;
     void setBreatheAmplitude(float min, float max);
 
-    float getBreatheRate() const;
-    void setBreatheRate(float r);
+    float getBreatheFrequency() const;
+    void setBreatheFrequency(float r);
 
     const std::vector<float>& getLightDirection() const;
     void setLightDirection(float alpha, float beta, float phi);
@@ -140,7 +140,7 @@ private:
 
     bool breatheEnabled;
     std::vector<float> breatheAmplitude;
-    float breatheRate;
+    float breatheFrequency;
 
     std::vector<float> lightDirection;
     float lightIntensity;

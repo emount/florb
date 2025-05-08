@@ -13,8 +13,8 @@
     "effects" : {
 	"breathe" : {
 	    "enabled" : true,
-	    "amplitude" : [0.6, 0.8],
-	    "rate" : 0.1
+	    "amplitude" : [0.75, 0.8],
+	    "frequency" : 0.4
 	}
     },
     "camera" : {
