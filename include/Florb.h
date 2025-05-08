@@ -53,6 +53,9 @@ public:
     unsigned int getSmoothness() const;
     void setSmoothness(unsigned int s);
 
+    float getBreatheRate() const;
+    void setBreatheRate(float r);
+
     const std::vector<float>& getLightDirection() const;
     void setLightDirection(float alpha, float beta, float phi);
 
@@ -120,11 +123,14 @@ private:
 
     float offsetX;
     float offsetY;
+    float baseRadius;
     float radius;
     
     float zoom; // MOVE TO CAMERA ATTRIBUTE SECTION
   
     unsigned int smoothness;
+
+    float breatheRate;
 
     std::vector<float> lightDirection;
     float lightIntensity;

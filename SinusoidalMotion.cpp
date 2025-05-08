@@ -12,11 +12,12 @@ using std::endl;
 
 SinusoidalMotion::SinusoidalMotion() { }
 
-SinusoidalMotion::SinusoidalMotion(float bias,
-				   float amplitude,
-				   float frequency,
-				   float phase) :
-    MotionAlgorithm(),
+SinusoidalMotion::SinusoidalMotion(bool enabled,
+                                   float bias,
+                                   float amplitude,
+                                   float frequency,
+                                   float phase) :
+    MotionAlgorithm(enabled),
     bias(bias),
     amplitude(amplitude),
     frequency(frequency),
@@ -24,7 +25,16 @@ SinusoidalMotion::SinusoidalMotion(float bias,
 
 
 float SinusoidalMotion::evaluate(float time) const {
-    float sinusoid(sinf(2.0f * M_PI * frequency * time + phase));
+    float evaluated;
+
+    if (get_enabled()) {
+        float sinusoid(sinf(2.0f * M_PI * frequency * time + phase));
+	evaluated = (bias + (amplitude * sinusoid));
+    } else {
+        evaluated = (bias + amplitude);
+    }
+
+    cerr << "evaluated = " << evaluated << endl;
     
-    return (bias + (amplitude * sinusoid));
+    return evaluated;
 }

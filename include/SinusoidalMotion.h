@@ -5,10 +5,11 @@ public:
 
     SinusoidalMotion();
   
-    SinusoidalMotion(float bias,
-		     float amplitude,
-		     float frequency,
-		     float phase);
+    SinusoidalMotion(bool enabled,
+                     float bias,
+                     float amplitude,
+                     float frequency,
+                     float phase);
 
     float evaluate(float time) const override;
 

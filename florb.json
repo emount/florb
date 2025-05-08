@@ -7,8 +7,14 @@
     },
     "geometry" : {
         "center" : [0.25, 0.00],
-	"radius" : 0.5,
+	"radius" : 1.0,
 	"smoothness" : 288
+    },
+    "effects" : {
+	"breathe" : {
+	    "enabled" : "true",
+	    "rate" : 0.1
+	}
     },
     "camera" : {
 	"view" : [0.0, 0.0, 3.0]

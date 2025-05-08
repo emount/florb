@@ -73,11 +73,14 @@ Florb::Florb() :
 
     offsetX(0.0f),
     offsetY(0.0f),
+    baseRadius(k_DefaultRadius),
     radius(k_DefaultRadius),
     
     zoom(1.0f), // MOVE TO CAMERA ATTRIBUTES
     
     smoothness(7UL),
+
+    breatheRate(0.0f),
     
     lightDirection(3, 0.0f),
     lightIntensity(1.0f),
@@ -175,7 +178,20 @@ void Florb::loadConfigs() {
                 setSmoothness(geometry["smoothness"]);
             }
         }        
-        
+
+
+        // Effects configs
+        if (config.contains("effects") && config["effects"].is_object()) {
+            const auto &effects(config["effects"]);
+
+	    if (effects.contains("breathe") && effects["breathe"].is_object()) {
+	        const auto &breathe(effects["breathe"]);
+
+		if (breathe.contains("rate") and breathe["rate"].is_number()) {
+		    setBreatheRate(breathe["rate"]);
+		}
+	    }
+	}    
         
         // Camera configs
         if (config.contains("camera") && config["camera"].is_object()) {
@@ -380,13 +396,15 @@ float Florb::getRadius() const {
 
 void Florb::setRadius(float r) {
     lock_guard<mutex> lock(stateMutex);
-    radius = r;
+    baseRadius = radius = r;
 
-    // TODO - Turn amplitude and frequency into configs
-    float amplitude(radius / 2);
+    // TODO - Convert enabled, amplitude, and frequency into configs
+    bool enabled(true);
+    float amplitude(baseRadius / 2);
     float frequency(0.1f);
     float phase(0.0f);
-    breather = make_shared<SinusoidalMotion>(amplitude,
+    breather = make_shared<SinusoidalMotion>(enabled,
+					     amplitude,
                                              amplitude,
                                              frequency,
                                              phase);
@@ -410,6 +428,16 @@ unsigned int Florb::getSmoothness() const {
 void Florb::setSmoothness(unsigned int s) {
     lock_guard<mutex> lock(stateMutex);
     smoothness = s;
+}
+
+float Florb::getBreatheRate() const {
+    lock_guard<mutex> lock(stateMutex);
+    return breatheRate;
+}
+
+void Florb::setBreatheRate(float r) {
+    lock_guard<mutex> lock(stateMutex);
+    breatheRate = r;
 }
 
 const vector<float>& Florb::getLightDirection() const {
@@ -966,6 +994,10 @@ void Florb::updatePhysicalEffects() {
 
     generateSphere(breatheRadius, smoothness, (smoothness / 2));
 
+    // Update current actual radius
+    radius = breatheRadius;
+    cerr << "Updated actual radius to " << radius << endl;
+
     
     // Update dust motes
     updateMotes();
@@ -983,6 +1015,6 @@ void Florb::updateMotes() {
         component += (step * moteDirections[i]);
         
         // Wrap the component to keep it on the sphere
-	moteCenters[i] = fmod(moteCenters[i] + radius, 2.0f * radius) - radius;
+	moteCenters[i] = fmod(moteCenters[i] + 1.0f, 2.0f) - 1.0f;
     }
 }

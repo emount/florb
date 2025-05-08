@@ -15,6 +15,7 @@ SOURCES  = main.cpp
 SOURCES += Florb.cpp
 SOURCES += Flower.cpp
 SOURCES += FlorbUtils.cpp
+SOURCES += MotionAlgorithm.cpp
 SOURCES += SinusoidalMotion.cpp
 
 HEADERS  = Florb.h
