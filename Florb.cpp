@@ -408,16 +408,7 @@ float Florb::getRadius() const {
 void Florb::setRadius(float r) {
     lock_guard<mutex> lock(stateMutex);
     baseRadius = radius = r;
-
-    // TODO - Convert amplitude range and frequency into configs
-    float amplitude(baseRadius / 2);
-    float frequency(0.1f);
-    float phase(0.0f);
-    breather = make_shared<SinusoidalMotion>(breatheEnabled,
-					     amplitude,
-                                             amplitude,
-                                             frequency,
-                                             phase);
+    createBreather();
 }
 
 float Florb::getZoom() const {
@@ -447,17 +438,8 @@ bool Florb::getBreatheEnabled() const {
 
 void Florb::setBreatheEnabled(bool e) {
     lock_guard<mutex> lock(stateMutex);
-
-    // TODO - Convert amplitude range and frequency into configs
-    float amplitude(baseRadius / 2);
-    float frequency(0.1f);
-    float phase(0.0f);
     breatheEnabled = e;
-    breather = make_shared<SinusoidalMotion>(breatheEnabled,
-					     amplitude,
-                                             amplitude,
-                                             frequency,
-                                             phase);
+    createBreather();
 }
 
 const vector<float>& Florb::getBreatheAmplitude() const {
@@ -469,6 +451,7 @@ void Florb::setBreatheAmplitude(float min, float max) {
     lock_guard<mutex> lock(stateMutex);
     breatheAmplitude[0] = min;
     breatheAmplitude[1] = max;
+    createBreather();
 }
 
 float Florb::getBreatheRate() const {
@@ -1001,6 +984,24 @@ void Florb::initMotes(unsigned int count,
     moteSpeeds = vector<float>(moteCount, maxStep);
     moteMaxStep = maxStep;
     moteColor = color;
+}
+
+void Florb::createBreather() {
+    // TODO - Convert frequency into a config and phase to M_PI / 2
+    float frequency(0.1f);
+    float phase(M_PI / 2);
+    float minR = breatheAmplitude[0];
+    float maxR = breatheAmplitude[1];
+    float bias = 0.5f * (minR + maxR);
+    float amplitude = 0.5f * (maxR - minR);
+
+    breather = make_shared<SinusoidalMotion>(
+        breatheEnabled,
+        bias,
+        amplitude,
+        frequency,
+        phase
+    );
 }
 
 void Florb::updatePhysicalEffects() {

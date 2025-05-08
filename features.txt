@@ -27,7 +27,8 @@ Web interface
 Refactoring
 -----------
 
-Move sphere center into geometry configs
+Create .o:.cpp implicit Makefile rule
+Generate .d dependency files
 Move zoom into camera configs
 Create method initPhysics() to create breather, call initMotes(), etc.
 Doxyfile for Doxygen documentation pages

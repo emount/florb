@@ -98,6 +98,8 @@ private:
 		   float maxStep,
 		   const std::vector<float> &color);
 
+    void createBreather();
+  
     void updatePhysicalEffects();
     void updateMotes();
 
