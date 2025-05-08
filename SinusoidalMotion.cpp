@@ -33,8 +33,6 @@ float SinusoidalMotion::evaluate(float time) const {
     } else {
         evaluated = (bias + amplitude);
     }
-
-    cerr << "evaluated = " << evaluated << endl;
     
     return evaluated;
 }

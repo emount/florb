@@ -7,7 +7,7 @@
     },
     "geometry" : {
         "center" : [0.25, 0.00],
-	"radius" : 1.0,
+	"radius" : 0.8,
 	"smoothness" : 288
     },
     "effects" : {

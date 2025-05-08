@@ -863,27 +863,14 @@ void Florb::initShaders() {
 
 
             // Vignette effect
-            float radius = length(centered);
+            float radial = length(centered);
             float fadeStart = 1.0 - vignetteRadius;
             float fadeEnd = 1.0;
-
-            float vignette;
-            if (radius > fadeStart && radius <= fadeEnd) {
-                // Zero to one in band
-                float t = (radius - fadeStart) / (fadeEnd - fadeStart);
-                float bands = floor(t * 10.0);
-
-                if (mod(bands, 2.0) < 1.0) {
-                    vignette = (1.0 - clamp(pow(10 * t, 2.0), 0.0, 1.0));
-                } else {
-                    // TEMPORARY
-                    // Background color, pass this in as a variable later on
-                    FragColor = vec4(0.1, 0.1, 0.1, 1.0);
-                    return;
-                }
-            } else {
-                // Center region gets unmodified image data
-                vignette = 1.0;
+            
+            float vignette = 1.0;
+            if (radial > fadeStart) {
+                float t = (radial - fadeStart) / (fadeEnd - fadeStart);
+                vignette = 1.0 - clamp(pow(t, vignetteExponent), 0.0, 1.0);
             }
 
 
@@ -996,7 +983,6 @@ void Florb::updatePhysicalEffects() {
 
     // Update current actual radius
     radius = breatheRadius;
-    cerr << "Updated actual radius to " << radius << endl;
 
     
     // Update dust motes
