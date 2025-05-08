@@ -53,7 +53,7 @@ const float Florb::k_DefaultVideoFrameRate(60.0f);
 
 const float Florb::k_DefaultImageSwitch(5.0f);
 
-const float Florb::k_SphereRadius(0.8f);
+const float Florb::k_DefaultRadius(0.8f);
 
 const int Florb::k_MaxMotes(128);
 
@@ -73,7 +73,10 @@ Florb::Florb() :
 
     offsetX(0.0f),
     offsetY(0.0f),
-    zoom(1.0f),
+    radius(k_DefaultRadius),
+    
+    zoom(1.0f), // MOVE TO CAMERA ATTRIBUTES
+    
     smoothness(7UL),
     
     lightDirection(3, 0.0f),
@@ -89,7 +92,7 @@ Florb::Florb() :
     moteDirections(),
     moteColor(3, 0.0f),
 
-    breather(make_shared<SinusoidalMotion>(1.0f, 0.1f, 0.0f)),
+    breather(make_shared<SinusoidalMotion>()),
 
     renderMode(RenderMode::FILL),
     specularMode(SpecularMode::NORMAL),
@@ -159,13 +162,19 @@ void Florb::loadConfigs() {
         // Geometry configs
         if (config.contains("geometry") && config["geometry"].is_object()) {
             const auto &geometry(config["geometry"]);
+
+            if (geometry.contains("center") && geometry["center"].is_array() && geometry["center"].size() == 2) {
+                setCenter(geometry["center"][0], geometry["center"][1]);
+            }
+
+            if (geometry.contains("radius") and geometry["radius"].is_number()) {
+                setRadius(geometry["radius"]);
+            }
             
             if (geometry.contains("smoothness") and geometry["smoothness"].is_number()) {
                 setSmoothness(geometry["smoothness"]);
             }
-
-	    // TODO - Move center and zoom into here
-	}        
+        }        
         
         
         // Camera configs
@@ -176,7 +185,9 @@ void Florb::loadConfigs() {
                 const auto &view(camera["view"]);
                 setCameraView(view[0], view[1], view[2]);
             }
-        }        
+
+            // TODO - Move zoom into here
+        }
         
         // Light configs
         if (config.contains("light") && config["light"].is_object()) {
@@ -244,14 +255,9 @@ void Florb::loadConfigs() {
         }
 
 
-        // Pan / tilt / zoom configs
-        if (config.contains("center") && config["center"].is_array() && config["center"].size() == 2) {
-            setCenter(config["center"][0], config["center"][1]);
-        }
-
         // TODO - Add tilt (center-axis rotation) config
 
-        
+        // TODO - Move into camera configs
         if (config.contains("zoom") && config["zoom"].is_number()) {
             auto zoomFactor(1.0f / static_cast<float>(config["zoom"]));
             setZoom(zoomFactor);
@@ -365,6 +371,25 @@ void Florb::setCenter(float x, float y) {
     lock_guard<mutex> lock(stateMutex);
     offsetX = x;
     offsetY = y;
+}
+
+float Florb::getRadius() const {
+    lock_guard<mutex> lock(stateMutex);
+    return radius;
+}
+
+void Florb::setRadius(float r) {
+    lock_guard<mutex> lock(stateMutex);
+    radius = r;
+
+    // TODO - Turn amplitude and frequency into configs
+    float amplitude(radius / 2);
+    float frequency(0.1f);
+    float phase(0.0f);
+    breather = make_shared<SinusoidalMotion>(amplitude,
+					     amplitude,
+					     frequency,
+					     phase);
 }
 
 float Florb::getZoom() const {
@@ -546,20 +571,33 @@ void Florb::renderFrame() {
     glUniform2f(resolutionLoc, screenWidth, screenHeight);
     
     
-    // Set offset and zoom uniforms
+    // Set offset and radius uniforms
     GLuint offsetLoc = glGetUniformLocation(shaderProgram, "offset");
-    GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
-    GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDir");
-    GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");    
-    glUniform1f(zoomLoc, zoom);
+    GLuint radiusLoc = glGetUniformLocation(shaderProgram, "radius");
     glUniform2f(offsetLoc, offsetX, offsetY);
+    glUniform1f(radiusLoc, radius);
+    
+
+    // TODO - Move zoom uniform to camera uniforms
+    GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
+    glUniform1f(zoomLoc, zoom);
 
 
     // Set light uniforms
+    GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDir");
+    GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");    
     glUniform3f(lightDirectionLoc,
                 lightDirection[0],
                 lightDirection[1],
                 lightDirection[2]);
+    
+    // Weight light color with intensity
+    vector<float> actualColor = {
+      (lightIntensity * lightColor[0]),
+      (lightIntensity * lightColor[1]),
+      (lightIntensity * lightColor[2])
+    };
+    glUniform3f(lightColorLoc, actualColor[0], actualColor[1], actualColor[2]);
 
 
     // Set specular reflection uniforms
@@ -582,14 +620,6 @@ void Florb::renderFrame() {
     }
     glUniform1i(specularDebugLoc, specularDebug);
 
-    
-    // Weight light color with intensity
-    vector<float> actualColor = {
-      (lightIntensity * lightColor[0]),
-      (lightIntensity * lightColor[1]),
-      (lightIntensity * lightColor[2])
-    };
-    glUniform3f(lightColorLoc, actualColor[0], actualColor[1], actualColor[2]);
 
 
     // Set vignette effect uniforms
@@ -634,8 +664,8 @@ void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
 
     for (int y = 0; y <= stackCount; ++y) {
         for (int x = 0; x <= sectorCount; ++x) {
-	    float xSegment = static_cast<float>(x) / sectorCount;
-	    float ySegment = static_cast<float>(y) / stackCount;
+            float xSegment = static_cast<float>(x) / sectorCount;
+            float ySegment = static_cast<float>(y) / stackCount;
             float xPos = radius * std::cos(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
             float yPos = radius * std::cos(ySegment * M_PI);
             float zPos = radius * std::sin(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
@@ -724,6 +754,8 @@ void Florb::initShaders() {
 
         out vec4 FragColor;
 
+        uniform float radius;
+
         uniform int moteCount;
 
         uniform float time;
@@ -758,8 +790,10 @@ void Florb::initShaders() {
         
             uv = (uv - 0.5) * zoom + 0.5 + offset;
             uv.y = 1.0 - uv.y;
-        
-            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+
+
+            // Discard any pixel locations beyond the radius of the sphere
+            if (length(fragPos) > radius)
                 discard;
 
 
@@ -920,13 +954,13 @@ void Florb::updatePhysicalEffects() {
 
 
     // Update the sphere
-    auto radius(breather->evaluate(timeSeconds));
-    setVignetteRadius(radius);
+    auto breatheRadius(breather->evaluate(timeSeconds));
+    setVignetteRadius(breatheRadius);
 
     GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
     glUniform1f(vignetteRadiusLoc, vignetteRadius);
 
-    generateSphere(radius, smoothness, (smoothness / 2));
+    generateSphere(breatheRadius, smoothness, (smoothness / 2));
 
     
     // Update dust motes
@@ -942,13 +976,13 @@ void Florb::updateMotes() {
         auto &component(moteCenters[i]);
         
         // Update this component by the computed step
-	component += (step * moteDirections[i]);
+        component += (step * moteDirections[i]);
         
         // Wrap the component to keep it on the sphere
-        if (moteCenters[i] >= k_SphereRadius) {
+        if (moteCenters[i] >= radius) {
             moteCenters[i] = 0.0f;
         } else if (moteCenters[i] <= 0.0f) {
-            moteCenters[i] = k_SphereRadius;
+            moteCenters[i] = radius;
         }
     }
 }

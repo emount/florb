@@ -44,6 +44,9 @@ public:
     std::pair<float, float> getCenter() const;
     void setCenter(float x, float y);
   
+    float getRadius() const;
+    void setRadius(float r);
+  
     float getZoom() const;
     void setZoom(float z);
 
@@ -117,7 +120,10 @@ private:
 
     float offsetX;
     float offsetY;
-    float zoom;
+    float radius;
+    
+    float zoom; // MOVE TO CAMERA ATTRIBUTE SECTION
+  
     unsigned int smoothness;
 
     std::vector<float> lightDirection;
@@ -153,7 +159,7 @@ private:
     static const float k_DefaultVideoFrameRate;
     static const float k_DefaultImageSwitch;
 
-    static const float k_SphereRadius;
+    static const float k_DefaultRadius;
   
     static const int k_MaxMotes;
 

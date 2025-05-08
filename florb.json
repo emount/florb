@@ -6,6 +6,8 @@
 	"image_switch" : 5.0
     },
     "geometry" : {
+        "center" : [0.25, 0.00],
+	"radius" : 0.5,
 	"smoothness" : 288
     },
     "camera" : {
@@ -27,7 +29,6 @@
 	"color" : [0.800, 0.800, 0.800],
 	"max_step" : 0.001
     },
-    "center" : [0.25, 0.00],
     "zoom" : 0.90,
     "debug" : {
 	"render_mode" : "fill",
