@@ -387,9 +387,9 @@ void Florb::setRadius(float r) {
     float frequency(0.1f);
     float phase(0.0f);
     breather = make_shared<SinusoidalMotion>(amplitude,
-					     amplitude,
-					     frequency,
-					     phase);
+                                             amplitude,
+                                             frequency,
+                                             phase);
 }
 
 float Florb::getZoom() const {
@@ -807,8 +807,11 @@ void Florb::initShaders() {
                 float wobbleX = sin(time * speed);
                 float wobbleY = cos(time * speed * 0.5);
             
-                vec2 orbitOffset = vec2(wobbleX, wobbleY) * 0.01;  // adjust strength
-                vec2 motePos = moteCenters[i] + orbitOffset;
+                vec2 orbitOffset = vec2(wobbleX, wobbleY) * 0.01;
+
+                // Map [-1,1] to [0,1]
+                vec2 motePos = (moteCenters[i] * 0.5 + 0.5);
+                motePos += orbitOffset;
             
                 float dist = distance(uv, motePos);
                 float alpha = smoothstep(radius, 0.0, dist);
@@ -923,10 +926,11 @@ void Florb::initMotes(unsigned int count,
                       const vector<float> &color) {
     // Randomize dust mote centers
     moteCount = count;
-    moteCenters = vector<float>((2 * moteCount), 0.0f);
+    moteCenters.resize(2 * moteCount);
     for (auto i = 0UL; i < (2 * moteCount); i++) {
-        moteCenters[i] = dist(gen);
-
+        // Sample in [-1.0, 1.0] to cover full UV space after offset/zoom
+        moteCenters[i] = ((2.0f * dist(gen)) - 1.0f);
+        
         if ((i % 2) == 0) {
             float bias(dist(gen));
             if (bias > 0.5f) {
@@ -979,10 +983,6 @@ void Florb::updateMotes() {
         component += (step * moteDirections[i]);
         
         // Wrap the component to keep it on the sphere
-        if (moteCenters[i] >= radius) {
-            moteCenters[i] = 0.0f;
-        } else if (moteCenters[i] <= 0.0f) {
-            moteCenters[i] = radius;
-        }
+	moteCenters[i] = fmod(moteCenters[i] + radius, 2.0f * radius) - radius;
     }
 }
