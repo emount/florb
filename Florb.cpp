@@ -80,6 +80,10 @@ Florb::Florb() :
     
     smoothness(7UL),
 
+    bounceEnabled(false),
+    bounceAmplitude(0.0f),
+    bounceFrequency(0.0f),
+
     breatheEnabled(false),
     breatheAmplitude(2, k_DefaultRadius),
     breatheFrequency(0.0f),
@@ -185,6 +189,23 @@ void Florb::loadConfigs() {
         // Effects configs
         if (config.contains("effects") && config["effects"].is_object()) {
             const auto &effects(config["effects"]);
+
+	    if (effects.contains("bounce") && effects["bounce"].is_object()) {
+	        const auto &bounce(effects["bounce"]);
+
+		if (bounce.contains("enabled") and bounce["enabled"].is_boolean()) {
+		    setBounceEnabled(bounce["enabled"]);
+		}
+
+                if (bounce.contains("amplitude") and bounce["amplitude"].is_number()) {
+                    const auto &amplitude(bounce["amplitude"]);
+                    setBounceAmplitude(amplitude);
+                }
+		
+		if (bounce.contains("frequency") and bounce["frequency"].is_number()) {
+		    setBounceFrequency(bounce["frequency"]);
+		}
+	    }
 
 	    if (effects.contains("breathe") && effects["breathe"].is_object()) {
 	        const auto &breathe(effects["breathe"]);
@@ -431,6 +452,39 @@ void Florb::setSmoothness(unsigned int s) {
     smoothness = s;
 }
 
+bool Florb::getBounceEnabled() const {
+    lock_guard<mutex> lock(stateMutex);
+    return bounceEnabled;
+}
+
+void Florb::setBounceEnabled(bool e) {
+    lock_guard<mutex> lock(stateMutex);
+    bounceEnabled = e;
+    createBouncer();
+}
+
+float Florb::getBounceAmplitude() const {
+    lock_guard<mutex> lock(stateMutex);
+    return bounceAmplitude;
+}
+
+void Florb::setBounceAmplitude(float a) {
+    lock_guard<mutex> lock(stateMutex);
+    bounceAmplitude = a;
+    createBouncer();
+}
+
+float Florb::getBounceFrequency() const {
+    lock_guard<mutex> lock(stateMutex);
+    return bounceFrequency;
+}
+
+void Florb::setBounceFrequency(float f) {
+    lock_guard<mutex> lock(stateMutex);
+    bounceFrequency = f;
+    createBouncer();
+}
+
 bool Florb::getBreatheEnabled() const {
     lock_guard<mutex> lock(stateMutex);
     return breatheEnabled;
@@ -459,9 +513,9 @@ float Florb::getBreatheFrequency() const {
     return breatheFrequency;
 }
 
-void Florb::setBreatheFrequency(float r) {
+void Florb::setBreatheFrequency(float f) {
     lock_guard<mutex> lock(stateMutex);
-    breatheFrequency = r;
+    breatheFrequency = f;
     createBreather();
 }
 
@@ -985,6 +1039,9 @@ void Florb::initMotes(unsigned int count,
     moteSpeeds = vector<float>(moteCount, maxStep);
     moteMaxStep = maxStep;
     moteColor = color;
+}
+
+void Florb::createBouncer() {
 }
 
 void Florb::createBreather() {

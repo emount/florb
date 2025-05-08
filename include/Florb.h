@@ -28,31 +28,51 @@ public:
     Florb();
     ~Florb();
 
+  
     void nextFlower();
 
+  
     void setTitle(const std::string &title);
 
+  
     float getVideoFrameRate() const;
     void setVideoFrameRate(float r);
 
+  
     float getImageSwitch() const;
     void setImageSwitch(float s);
 
+  
     const std::vector<float>& getCameraView() const;
     void setCameraView(float alpha, float beta, float phi);
 
+  
     std::pair<float, float> getCenter() const;
     void setCenter(float x, float y);
+
   
     float getRadius() const;
     void setRadius(float r);
+
   
     float getZoom() const;
     void setZoom(float z);
 
+  
     unsigned int getSmoothness() const;
     void setSmoothness(unsigned int s);
 
+  
+    bool getBounceEnabled() const;
+    void setBounceEnabled(bool e);
+
+    float getBounceAmplitude() const;
+    void setBounceAmplitude(float a);
+
+    float getBounceFrequency() const;
+    void setBounceFrequency(float f);
+
+  
     bool getBreatheEnabled() const;
     void setBreatheEnabled(bool e);
 
@@ -60,8 +80,9 @@ public:
     void setBreatheAmplitude(float min, float max);
 
     float getBreatheFrequency() const;
-    void setBreatheFrequency(float r);
+    void setBreatheFrequency(float f);
 
+  
     const std::vector<float>& getLightDirection() const;
     void setLightDirection(float alpha, float beta, float phi);
 
@@ -73,31 +94,37 @@ public:
 
     const std::vector<float>& getLightColor() const;
     void setLightColor(float r, float g, float b);
+
   
     float getVignetteRadius() const;
     void setVignetteRadius(float r);  
 
     float getVignetteExponent() const;
     void setVignetteExponent(float e);  
+
   
     const RenderMode& getRenderMode() const;
     void setRenderMode(const RenderMode &r);
   
     const SpecularMode& getSpecularMode() const;
     void setSpecularMode(const SpecularMode &s);
+
   
     void renderFrame();
 
 private:
     void loadConfigs();
     void loadFlowers();
+  
     void generateSphere(float radius, int sectorCount, int stackCount);
+  
     void initShaders();
     void initMotes(unsigned int count,
 		   float radius,
 		   float maxStep,
 		   const std::vector<float> &color);
 
+    void createBouncer();
     void createBreather();
   
     void updatePhysicalEffects();
@@ -137,6 +164,10 @@ private:
     float zoom; // MOVE TO CAMERA ATTRIBUTE SECTION
   
     unsigned int smoothness;
+
+    bool bounceEnabled;
+    float bounceAmplitude;
+    float bounceFrequency;
 
     bool breatheEnabled;
     std::vector<float> breatheAmplitude;
