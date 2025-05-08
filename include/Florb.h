@@ -56,6 +56,9 @@ public:
     bool getBreatheEnabled() const;
     void setBreatheEnabled(bool e);
 
+    const std::vector<float>& getBreatheAmplitude() const;
+    void setBreatheAmplitude(float min, float max);
+
     float getBreatheRate() const;
     void setBreatheRate(float r);
 
@@ -134,6 +137,7 @@ private:
     unsigned int smoothness;
 
     bool breatheEnabled;
+    std::vector<float> breatheAmplitude;
     float breatheRate;
 
     std::vector<float> lightDirection;

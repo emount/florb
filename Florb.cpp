@@ -81,6 +81,7 @@ Florb::Florb() :
     smoothness(7UL),
 
     breatheEnabled(false),
+    breatheAmplitude(2, k_DefaultRadius),
     breatheRate(0.0f),
     
     lightDirection(3, 0.0f),
@@ -191,6 +192,11 @@ void Florb::loadConfigs() {
 		if (breathe.contains("enabled") and breathe["enabled"].is_boolean()) {
 		    setBreatheEnabled(breathe["enabled"]);
 		}
+
+                if (breathe.contains("amplitude") and breathe["amplitude"].is_array()) {
+                    const auto &amplitude(breathe["amplitude"]);
+                    setBreatheAmplitude(amplitude[0], amplitude[1]);
+                }
 		
 		if (breathe.contains("rate") and breathe["rate"].is_number()) {
 		    setBreatheRate(breathe["rate"]);
@@ -452,6 +458,17 @@ void Florb::setBreatheEnabled(bool e) {
                                              amplitude,
                                              frequency,
                                              phase);
+}
+
+const vector<float>& Florb::getBreatheAmplitude() const {
+    lock_guard<mutex> lock(stateMutex);
+    return breatheAmplitude;
+}
+
+void Florb::setBreatheAmplitude(float min, float max) {
+    lock_guard<mutex> lock(stateMutex);
+    breatheAmplitude[0] = min;
+    breatheAmplitude[1] = max;
 }
 
 float Florb::getBreatheRate() const {
