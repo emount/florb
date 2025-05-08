@@ -51,12 +51,6 @@ const float Florb::k_DefaultImageSwitch(5.0f);
 
 const float Florb::k_SphereRadius(0.8f);
 
-// Sphere rendering parameters for high-detail, production quality rendering
-const int Florb::k_SectorCount(144);
-const int Florb::k_StackCount(72);
-const int Florb::k_XSegments(128);
-const int Florb::k_YSegments(128);
-
 const int Florb::k_MaxMotes(128);
 
 // Florb class implementation
@@ -71,6 +65,11 @@ Florb::Florb() :
     flowers(),
     flowerPaths(),
     currentFlower(0UL),
+
+    offsetX(0.0f),
+    offsetY(0.0f),
+    zoom(1.0f),
+    smoothness(7UL),
     
     lightDirection(3, 0.0f),
     lightIntensity(1.0f),
@@ -96,7 +95,6 @@ Florb::Florb() :
   
     loadConfigs();
     loadFlowers();
-    generateSphere(k_SphereRadius, k_SectorCount, k_StackCount);
     initShaders();
 
     // Seed the Mersenne Twister
@@ -149,6 +147,18 @@ void Florb::loadConfigs() {
                 setImageSwitch(video["image_switch"]);
             }
         }
+
+
+        // Geometry configs
+        if (config.contains("geometry") && config["geometry"].is_object()) {
+            const auto &geometry(config["geometry"]);
+            
+            if (geometry.contains("smoothness") and geometry["smoothness"].is_number()) {
+                setSmoothness(geometry["smoothness"]);
+            }
+
+	    // TODO - Move center and zoom into here
+	}        
         
         
         // Camera configs
@@ -360,6 +370,16 @@ void Florb::setZoom(float z) {
     zoom = z;
 }
 
+unsigned int Florb::getSmoothness() const {
+    lock_guard<mutex> lock(stateMutex);
+    return smoothness;
+}
+
+void Florb::setSmoothness(unsigned int s) {
+    lock_guard<mutex> lock(stateMutex);
+    smoothness = s;
+}
+
 const vector<float>& Florb::getLightDirection() const {
     lock_guard<mutex> lock(stateMutex);
     return lightDirection;
@@ -465,6 +485,7 @@ void Florb::renderFrame() {
 
     // Update physical effects
     updateMotes();
+    generateSphere(k_SphereRadius, smoothness, (smoothness / 2));
 
     // Set a dark gray background color for the window
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -609,14 +630,14 @@ void Florb::renderFrame() {
     firstFrame = false;
 }
 
-void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
+void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
     std::vector<Vertex> vertices;
     vector<unsigned int> indices;
 
-    for (int y = 0; y <= Y_SEGMENTS; ++y) {
-        for (int x = 0; x <= X_SEGMENTS; ++x) {
-            float xSegment = (float)x / X_SEGMENTS;
-            float ySegment = (float)y / Y_SEGMENTS;
+    for (int y = 0; y <= stackCount; ++y) {
+        for (int x = 0; x <= sectorCount; ++x) {
+	    float xSegment = static_cast<float>(x) / sectorCount;
+	    float ySegment = static_cast<float>(y) / stackCount;
             float xPos = radius * std::cos(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
             float yPos = radius * std::cos(ySegment * M_PI);
             float zPos = radius * std::sin(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
@@ -629,10 +650,10 @@ void Florb::generateSphere(float radius, int X_SEGMENTS, int Y_SEGMENTS) {
     }
 
     // Generate indices
-    for (int y = 0; y < Y_SEGMENTS; ++y) {
-        for (int x = 0; x <= X_SEGMENTS; ++x) {
-            indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-            indices.push_back(y * (X_SEGMENTS + 1) + x);
+    for (int y = 0; y < stackCount; ++y) {
+        for (int x = 0; x <= sectorCount; ++x) {
+            indices.push_back((y + 1) * (sectorCount + 1) + x);
+            indices.push_back(y * (sectorCount + 1) + x);
         }
     }
 

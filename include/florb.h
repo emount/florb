@@ -42,6 +42,9 @@ public:
     float getZoom() const;
     void setZoom(float z);
 
+    unsigned int getSmoothness() const;
+    void setSmoothness(unsigned int s);
+
     const std::vector<float>& getLightDirection() const;
     void setLightDirection(float alpha, float beta, float phi);
 
@@ -105,9 +108,10 @@ private:
     std::vector<std::string> flowerPaths;
     unsigned int currentFlower;
 
-    float zoom = 1.0f;
-    float offsetX = 0.0f;
-    float offsetY = 0.0f;
+    float offsetX;
+    float offsetY;
+    float zoom;
+    unsigned int smoothness;
 
     std::vector<float> lightDirection;
     float lightIntensity;
@@ -142,12 +146,6 @@ private:
 
     static const float k_SphereRadius;
   
-    static const int k_SectorCount;
-    static const int k_StackCount;
-
-    static const int k_XSegments;
-    static const int k_YSegments;
-
     static const int k_MaxMotes;
 
     std::random_device rd;

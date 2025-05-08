@@ -6,7 +6,7 @@
 	"image_switch" : 5.0
     },
     "geometry" : {
-	"smoothness" : 6
+	"smoothness" : 288
     },
     "camera" : {
 	"view" : [0.0, 0.0, 3.0]
