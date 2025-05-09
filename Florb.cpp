@@ -91,9 +91,11 @@ Florb::Florb() :
     lightIntensity(1.0f),
     shininess(1.0f),
     lightColor(3, 0.0f),
+    baseRimStrength(0.0f),
     rimStrength(0.0f),
     rimExponent(0.0f),
     rimColor(3, 0.0f),
+    rimFrequency(0.0f),
     
     moteCount(0UL),
     moteRadii(),
@@ -107,6 +109,7 @@ Florb::Florb() :
     bouncer(make_shared<SinusoidalMotion>()),
     bounceOffset(0.0f),
     breather(make_shared<SinusoidalMotion>()),
+    rimPulser(make_shared<SinusoidalMotion>()),
 
     renderMode(RenderMode::FILL),
     specularMode(SpecularMode::NORMAL),
@@ -283,6 +286,10 @@ void Florb::loadConfigs() {
 		    const auto &color(rim["color"]);
 		    setRimColor(color[0], color[1], color[2]);
 		}
+                
+                if (rim.contains("frequency") and rim["frequency"].is_number()) {
+                    setRimFrequency(rim["frequency"]);
+                }
             }
         }
 
@@ -609,12 +616,12 @@ void Florb::setLightColor(float r, float g, float b) {
 
 float Florb::getRimStrength() const {
     lock_guard<mutex> lock(stateMutex);
-    return rimStrength;
+    return baseRimStrength;
 }
 
 void Florb::setRimStrength(float s) {
     lock_guard<mutex> lock(stateMutex);
-    rimStrength = s;
+    baseRimStrength = s;
 }
 
 float Florb::getRimExponent() const {
@@ -637,6 +644,17 @@ void Florb::setRimColor(float r, float g, float b) {
     rimColor[0] = r;
     rimColor[1] = g;
     rimColor[2] = b;
+}
+
+float Florb::getRimFrequency() const {
+    lock_guard<mutex> lock(stateMutex);
+    return rimFrequency;
+}
+
+void Florb::setRimFrequency(float f) {
+    lock_guard<mutex> lock(stateMutex);
+    rimFrequency = f;
+    createRimPulser();
 }
 
 
@@ -1195,6 +1213,22 @@ void Florb::createBreather() {
     );
 }
 
+void Florb::createRimPulser() {
+    bool enabled(true);
+    float phase(0.0f);
+
+    rimPulser = make_shared<SinusoidalMotion>(
+        enabled,
+        baseRimStrength,
+        baseRimStrength,
+        rimFrequency,
+        phase
+    );
+}
+
+
+// Update physical effects method
+
 void Florb::updatePhysicalEffects() {
     // Update the time uniform for physical effects
     static steady_clock::time_point startTime = steady_clock::now();
@@ -1218,6 +1252,8 @@ void Florb::updatePhysicalEffects() {
     // Update current actual radius
     radius = breatheRadius;
 
+    // Update rim light pulsing
+    rimStrength = rimPulser->evaluate(timeSeconds);
     
     // Update dust motes
     updateMotes();

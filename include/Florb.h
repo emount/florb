@@ -102,6 +102,9 @@ public:
     const std::vector<float>& getRimColor() const;
     void setRimColor(float r, float g, float b);
 
+    float getRimFrequency() const;
+    void setRimFrequency(float f);
+
   
     float getVignetteRadius() const;
     void setVignetteRadius(float r);  
@@ -133,6 +136,7 @@ private:
 
     void createBouncer();
     void createBreather();
+    void createRimPulser();
   
     void updatePhysicalEffects();
     void updateMotes();
@@ -183,9 +187,11 @@ private:
     float lightIntensity;
     float shininess;
     std::vector<float> lightColor;
+    float baseRimStrength;
     float rimStrength;
     float rimExponent;
     std::vector<float> rimColor;
+    float rimFrequency;
 
     float vignetteRadius = 0.0f;
     float vignetteExponent = 0.0f;
@@ -201,6 +207,7 @@ private:
     std::shared_ptr<MotionAlgorithm> bouncer;
     float bounceOffset;
     std::shared_ptr<MotionAlgorithm> breather;
+    std::shared_ptr<MotionAlgorithm> rimPulser;
 
     RenderMode renderMode;
     SpecularMode specularMode;

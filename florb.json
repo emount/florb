@@ -34,8 +34,9 @@
 	
 	"rim" : {
 	    "strength" : 0.40,
-	    "exponent" : 3.5,
-	    "color" : [0.250, 0.000, 0.800]
+	    "exponent" : 3.0,
+	    "color" : [0.000, 0.000, 1.000],
+	    "frequency" : 0.20
 	}
     },
     "vignette" : {
