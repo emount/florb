@@ -96,6 +96,8 @@ Florb::Florb() :
     rimExponent(0.0f),
     rimColor(3, 0.0f),
     rimFrequency(0.0f),
+    rimAnimate(false),
+    animatedRimColor(0.0f, 0.0f, 0.0f),
     
     moteCount(0UL),
     moteRadii(),
@@ -289,6 +291,10 @@ void Florb::loadConfigs() {
                 
                 if (rim.contains("frequency") and rim["frequency"].is_number()) {
                     setRimFrequency(rim["frequency"]);
+                }
+                
+                if (rim.contains("animate") and rim["animate"].is_boolean()) {
+                    setRimAnimate(rim["animate"]);
                 }
             }
         }
@@ -657,6 +663,16 @@ void Florb::setRimFrequency(float f) {
     createRimPulser();
 }
 
+bool Florb::getRimAnimate() const {
+    lock_guard<mutex> lock(stateMutex);
+    return rimAnimate;
+}
+
+void Florb::setRimAnimate(bool a) {
+    lock_guard<mutex> lock(stateMutex);
+    rimAnimate = a;
+}
+
 
 // Vignette accessors / mutators
 
@@ -835,7 +851,10 @@ void Florb::renderFrame() {
     GLuint rimColorLoc = glGetUniformLocation(shaderProgram, "rimColor");
     GLuint rimExponentLoc = glGetUniformLocation(shaderProgram, "rimExponent");
     GLuint rimStrengthLoc = glGetUniformLocation(shaderProgram, "rimStrength");
-    glUniform3f(rimColorLoc, rimColor[0], rimColor[1], rimColor[2]);
+    glUniform3f(rimColorLoc,
+                animatedRimColor[0],
+                animatedRimColor[1],
+                animatedRimColor[2]);
     glUniform1f(rimExponentLoc, rimExponent);
     glUniform1f(rimStrengthLoc, rimStrength);
 
@@ -1252,8 +1271,19 @@ void Florb::updatePhysicalEffects() {
     // Update current actual radius
     radius = breatheRadius;
 
-    // Update rim light pulsing
+    
+    // Update rim light pulsing and color
     rimStrength = rimPulser->evaluate(timeSeconds);
+
+    animatedRimColor = glm::make_vec3(rimColor.data());
+    if (rimAnimate) {
+        float t = fmod(timeSeconds * 0.1f, 1.0f);  // full cycle every 10 seconds
+        float r = 0.5f + 0.5f * sinf(2.0f * M_PI * t);
+        float g = 0.5f + 0.5f * sinf(2.0f * M_PI * (t + 0.33f));
+        float b = 0.5f + 0.5f * sinf(2.0f * M_PI * (t + 0.66f));
+        animatedRimColor = glm::vec3(r, g, b);
+    }
+    
     
     // Update dust motes
     updateMotes();

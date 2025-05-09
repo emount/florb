@@ -36,7 +36,8 @@
 	    "strength" : 0.40,
 	    "exponent" : 3.0,
 	    "color" : [0.000, 0.000, 1.000],
-	    "frequency" : 0.20
+	    "frequency" : 0.20,
+            "animate" : true
 	}
     },
     "vignette" : {
