@@ -33,9 +33,9 @@
 	"color" : [1.000, 1.000, 1.000],
 	
 	"rim" : {
-	    "strength" : 0.4,
-	    "exponent" : 3.0,
-	    "color" : [0.0, 0.0, 1.0]
+	    "strength" : 0.40,
+	    "exponent" : 3.5,
+	    "color" : [0.250, 0.000, 0.800]
 	}
     },
     "vignette" : {
