@@ -101,6 +101,9 @@ Florb::Florb() :
     moteDirections(),
     moteColor(3, 0.0f),
 
+
+    bouncer(make_shared<SinusoidalMotion>()),
+    bounceOffset(0.0f),
     breather(make_shared<SinusoidalMotion>()),
 
     renderMode(RenderMode::FILL),
@@ -748,6 +751,11 @@ void Florb::renderFrame() {
     glUniform2fv(moteCentersLoc, moteCenters.size(), moteCenters.data());
     glUniform3f(moteColorLoc, moteColor[0], moteColor[1], moteColor[2]);
 
+
+    // Bounce offset uniform
+    GLuint bounceOffsetLoc = glGetUniformLocation(shaderProgram, "bounceOffset");
+    glUniform1f(bounceOffsetLoc, bounceOffset);
+
     
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
@@ -832,12 +840,16 @@ void Florb::initShaders() {
         out vec3 fragPos;
         out vec3 fragNormal;
 
+        uniform float bounceOffset;
+
         uniform vec2 resolution;
 
         void main()
         {
+            // Bounce offset addition
+            vec3 pos = aPos + vec3(0.0, bounceOffset, 0.0);
+        
             // Aspect ratio correction
-            vec3 pos = aPos;
             pos.x *= resolution.y / resolution.x;
 
             // Assign fragment position and normal
@@ -1079,6 +1091,7 @@ void Florb::updatePhysicalEffects() {
 
 
     // Update the sphere
+    // bounceOffset = bouncer->evaluate(timeSeconds);
     auto breatheRadius(breather->evaluate(timeSeconds));
     setVignetteRadius(breatheRadius);
 
