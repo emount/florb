@@ -45,18 +45,16 @@ public:
   
     const std::vector<float>& getCameraView() const;
     void setCameraView(float alpha, float beta, float phi);
+  
+    float getZoom() const;
+    void setZoom(float z);
 
   
     std::pair<float, float> getCenter() const;
     void setCenter(float x, float y);
-
   
     float getRadius() const;
     void setRadius(float r);
-
-  
-    float getZoom() const;
-    void setZoom(float z);
 
   
     unsigned int getSmoothness() const;
@@ -94,6 +92,15 @@ public:
 
     const std::vector<float>& getLightColor() const;
     void setLightColor(float r, float g, float b);
+
+    float getRimStrength() const;
+    void setRimStrength(float s);
+
+    float getRimExponent() const;
+    void setRimExponent(float e);
+
+    const std::vector<float>& getRimColor() const;
+    void setRimColor(float r, float g, float b);
 
   
     float getVignetteRadius() const;
@@ -176,6 +183,9 @@ private:
     float lightIntensity;
     float shininess;
     std::vector<float> lightColor;
+    float rimStrength;
+    float rimExponent;
+    std::vector<float> rimColor;
 
     float vignetteRadius = 0.0f;
     float vignetteExponent = 0.0f;

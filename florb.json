@@ -30,7 +30,13 @@
 	"direction" : [0.0, -0.5, -1.0],
 	"intensity" : 0.60,
 	"shininess" : 64.0,
-	"color" : [1.000, 1.000, 1.000]
+	"color" : [1.000, 1.000, 1.000],
+	
+	"rim" : {
+	    "strength" : 0.4,
+	    "exponent" : 3.0,
+	    "color" : [0.0, 0.0, 1.0]
+	}
     },
     "vignette" : {
 	"radius" : 0.70,
