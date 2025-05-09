@@ -98,6 +98,7 @@ Florb::Florb() :
     rimFrequency(0.0f),
     rimAnimate(false),
     animatedRimColor(0.0f, 0.0f, 0.0f),
+    rimAnimateFrequency(0.0f),
     
     moteCount(0UL),
     moteRadii(),
@@ -295,6 +296,10 @@ void Florb::loadConfigs() {
                 
                 if (rim.contains("animate") and rim["animate"].is_boolean()) {
                     setRimAnimate(rim["animate"]);
+                }
+                
+                if (rim.contains("animate_frequency") and rim["animate_frequency"].is_number()) {
+                    setRimAnimateFrequency(rim["animate_frequency"]);
                 }
             }
         }
@@ -671,6 +676,16 @@ bool Florb::getRimAnimate() const {
 void Florb::setRimAnimate(bool a) {
     lock_guard<mutex> lock(stateMutex);
     rimAnimate = a;
+}
+
+float Florb::getRimAnimateFrequency() const {
+    lock_guard<mutex> lock(stateMutex);
+    return rimAnimateFrequency;
+}
+
+void Florb::setRimAnimateFrequency(float f) {
+    lock_guard<mutex> lock(stateMutex);
+    rimAnimateFrequency = f;
 }
 
 
@@ -1277,7 +1292,7 @@ void Florb::updatePhysicalEffects() {
 
     animatedRimColor = glm::make_vec3(rimColor.data());
     if (rimAnimate) {
-        float t = fmod(timeSeconds * 0.1f, 1.0f);  // full cycle every 10 seconds
+        float t = fmod(timeSeconds / rimAnimateFrequency, 1.0f);
         float r = 0.5f + 0.5f * sinf(2.0f * M_PI * t);
         float g = 0.5f + 0.5f * sinf(2.0f * M_PI * (t + 0.33f));
         float b = 0.5f + 0.5f * sinf(2.0f * M_PI * (t + 0.66f));

@@ -108,6 +108,9 @@ public:
     bool getRimAnimate() const;
     void setRimAnimate(bool a);
 
+    float getRimAnimateFrequency() const;
+    void setRimAnimateFrequency(float f);
+
   
     float getVignetteRadius() const;
     void setVignetteRadius(float r);  
@@ -197,6 +200,7 @@ private:
     float rimFrequency;
     bool rimAnimate;
     glm::vec3 animatedRimColor;
+    float rimAnimateFrequency;
 
     float vignetteRadius = 0.0f;
     float vignetteExponent = 0.0f;
