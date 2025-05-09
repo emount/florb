@@ -12,12 +12,12 @@
     },
     "effects" : {
 	"bounce" : {
-	    "enabled" : false,
+	    "enabled" : true,
 	    "amplitude" : 0.1,
 	    "frequency" : 0.2
 	},
 	"breathe" : {
-	    "enabled" : false,
+	    "enabled" : true,
 	    "amplitude" : [0.75, 0.8],
 	    "frequency" : 0.4
 	}
