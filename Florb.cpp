@@ -96,7 +96,7 @@ Florb::Florb() :
     rimExponent(0.0f),
     rimColor(3, 0.0f),
     rimFrequency(0.0f),
-    rimAnimate(false),
+    rimAnimateEnabled(false),
     animatedRimColor(0.0f, 0.0f, 0.0f),
     rimAnimateFrequency(0.0f),
     
@@ -294,15 +294,19 @@ void Florb::loadConfigs() {
                     setRimFrequency(rim["frequency"]);
                 }
                 
-                if (rim.contains("animate") and rim["animate"].is_boolean()) {
-                    setRimAnimate(rim["animate"]);
-                }
-                
-                if (rim.contains("animate_frequency") and rim["animate_frequency"].is_number()) {
-                    setRimAnimateFrequency(rim["animate_frequency"]);
-                }
-            }
-        }
+                if (rim.contains("animate") and rim["animate"].is_object()) {
+                    const auto &animate(rim["animate"]);
+
+                    if (animate.contains("enabled") and animate["enabled"].is_boolean()) {
+                        setRimAnimateEnabled(animate["enabled"]);
+                    }
+                    
+                    if (animate.contains("frequency") and animate["frequency"].is_number()) {
+                        setRimAnimateFrequency(animate["frequency"]);
+                    }
+                } // animate configs
+            } // rim configs
+        } // light configs
 
         
         // Vignette configs
@@ -668,14 +672,14 @@ void Florb::setRimFrequency(float f) {
     createRimPulser();
 }
 
-bool Florb::getRimAnimate() const {
+bool Florb::getRimAnimateEnabled() const {
     lock_guard<mutex> lock(stateMutex);
-    return rimAnimate;
+    return rimAnimateEnabled;
 }
 
-void Florb::setRimAnimate(bool a) {
+void Florb::setRimAnimateEnabled(bool a) {
     lock_guard<mutex> lock(stateMutex);
-    rimAnimate = a;
+    rimAnimateEnabled = a;
 }
 
 float Florb::getRimAnimateFrequency() const {
@@ -1291,7 +1295,7 @@ void Florb::updatePhysicalEffects() {
     rimStrength = rimPulser->evaluate(timeSeconds);
 
     animatedRimColor = glm::make_vec3(rimColor.data());
-    if (rimAnimate) {
+    if (rimAnimateEnabled) {
         float t = fmod(timeSeconds / rimAnimateFrequency, 1.0f);
         float r = 0.5f + 0.5f * sinf(2.0f * M_PI * t);
         float g = 0.5f + 0.5f * sinf(2.0f * M_PI * (t + 0.33f));

@@ -105,8 +105,8 @@ public:
     float getRimFrequency() const;
     void setRimFrequency(float f);
 
-    bool getRimAnimate() const;
-    void setRimAnimate(bool a);
+    bool getRimAnimateEnabled() const;
+    void setRimAnimateEnabled(bool a);
 
     float getRimAnimateFrequency() const;
     void setRimAnimateFrequency(float f);
@@ -198,7 +198,7 @@ private:
     float rimExponent;
     std::vector<float> rimColor;
     float rimFrequency;
-    bool rimAnimate;
+    bool rimAnimateEnabled;
     glm::vec3 animatedRimColor;
     float rimAnimateFrequency;
 
