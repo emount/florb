@@ -1055,10 +1055,13 @@ void Florb::initMotes(unsigned int count,
 
 void Florb::createBouncer() {
     float phase(0.0f);
+
+    float bias = bounceEnabled ? bounceAmplitude : 0.0f;
+    float amplitude = bounceEnabled ? bounceAmplitude : 0.0f;
     bouncer = make_shared<SinusoidalMotion>(
         bounceEnabled,
-        bounceAmplitude,
-        bounceAmplitude,
+        bias,
+        amplitude,
         bounceFrequency,
         phase
     );
@@ -1091,7 +1094,7 @@ void Florb::updatePhysicalEffects() {
 
 
     // Update the sphere
-    // bounceOffset = bouncer->evaluate(timeSeconds);
+    bounceOffset = bouncer->evaluate(timeSeconds);
     auto breatheRadius(breather->evaluate(timeSeconds));
     setVignetteRadius(breatheRadius);
 
