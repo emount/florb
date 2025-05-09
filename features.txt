@@ -4,8 +4,8 @@ Florb feature wish list
 Dust motes
   Wink in and out like fireflies
 Lighting
-  Pulsing lighting
-  Rim lighting
+  Orbiting light sources
+  Pulsing rim lighting
 Orb shadow
 Hybrid AI flower generation
 Image transition modes:

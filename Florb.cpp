@@ -727,6 +727,20 @@ void Florb::renderFrame() {
     glUniform1i(specularDebugLoc, specularDebug);
 
 
+    // Set rim lighting uniforms
+    GLuint rimColorLoc = glGetUniformLocation(shaderProgram, "rimColor");
+    GLuint rimExponentLoc = glGetUniformLocation(shaderProgram, "rimExponent");
+    GLuint rimStrengthLoc = glGetUniformLocation(shaderProgram, "rimStrength");
+
+    // TEMPORARY - Load from configs instead
+    vector<float> rimColor{0.0f, 0.0f, 1.0f};
+    float rimExponent = 3.0f;
+    float rimStrength = 0.4f;
+
+    glUniform3f(rimColorLoc, rimColor[0], rimColor[1], rimColor[2]);
+    glUniform1f(rimExponentLoc, rimExponent);
+    glUniform1f(rimStrengthLoc, rimStrength);
+
 
     // Set vignette effect uniforms
     GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
@@ -878,6 +892,10 @@ void Florb::initShaders() {
         uniform float moteSpeeds[128];
         uniform vec2 moteCenters[128];
         uniform vec3 moteColor;
+
+        uniform vec3 rimColor;
+        uniform float rimExponent;
+        uniform float rimStrength;
         
         uniform float vignetteRadius;
         uniform float vignetteExponent;
@@ -949,6 +967,11 @@ void Florb::initShaders() {
             vec3 reflectDir = reflect(-light, norm);
 
 
+            // Calculate rim lighting
+            float rim = pow(1.0 - max(dot(viewDir, normalize(fragNormal)), 0.0), rimExponent);
+            vec3 rimLight = rimStrength * rim * rimColor;
+
+
             // Vignette effect
             float radial = length(centered);
             float fadeStart = 1.0 - vignetteRadius;
@@ -980,6 +1003,7 @@ void Florb::initShaders() {
 
             // Compute final color
             vec3 finalColor = vignette * lighting * texColor.rgb;
+            finalColor += rimLight;
 
             // Clamp and overlay colored dust mote glow
             finalColor += clamp(dust, 0.0, 1.0) * moteColor;
