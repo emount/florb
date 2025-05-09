@@ -7,7 +7,7 @@ CXX = g++
 
 CXXFLAGS = -std=c++17 -Wall -O2
 
-LIBS = GL GLEW GLU X11 png
+LIBS = GL GLEW GLU X11
 
 INC_DIRS = include
 
