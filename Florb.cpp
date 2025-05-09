@@ -66,6 +66,7 @@ Florb::Florb() :
     imageSwitch(k_DefaultImageSwitch),
 
     cameraView(3, 0.0f),
+    zoom(1.0f),
     
     flowers(),
     flowerPaths(),
@@ -75,8 +76,6 @@ Florb::Florb() :
     offsetY(0.0f),
     baseRadius(k_DefaultRadius),
     radius(k_DefaultRadius),
-    
-    zoom(1.0f), // MOVE TO CAMERA ATTRIBUTES
     
     smoothness(7UL),
 
@@ -237,7 +236,10 @@ void Florb::loadConfigs() {
                 setCameraView(view[0], view[1], view[2]);
             }
 
-            // TODO - Move zoom into here
+            if (camera.contains("zoom") && camera["zoom"].is_number()) {
+                auto zoomFactor(1.0f / static_cast<float>(camera["zoom"]));
+                setZoom(zoomFactor);
+            }
         }
         
         // Light configs
@@ -307,12 +309,6 @@ void Florb::loadConfigs() {
 
 
         // TODO - Add tilt (center-axis rotation) config
-
-        // TODO - Move into camera configs
-        if (config.contains("zoom") && config["zoom"].is_number()) {
-            auto zoomFactor(1.0f / static_cast<float>(config["zoom"]));
-            setZoom(zoomFactor);
-        }
 
         
         // Debug configs

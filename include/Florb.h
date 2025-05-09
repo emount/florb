@@ -151,6 +151,7 @@ private:
     float imageSwitch;
 
     std::vector<float> cameraView;
+    float zoom;
   
     std::vector<Flower> flowers;
     std::vector<std::string> flowerPaths;
@@ -161,8 +162,6 @@ private:
     float baseRadius;
     float radius;
     
-    float zoom; // MOVE TO CAMERA ATTRIBUTE SECTION
-  
     unsigned int smoothness;
 
     bool bounceEnabled;
