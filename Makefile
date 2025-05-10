@@ -21,8 +21,10 @@ SOURCES += Light.cpp
 SOURCES += MotionAlgorithm.cpp
 SOURCES += SinusoidalMotion.cpp
 
+OBJS = $(SOURCES:%.cpp=%.o)
+
 HEADERS  = Camera.h
-HEADERS  = Florb.h
+HEADERS += Florb.h
 HEADERS += FlorbConfigs.h
 HEADERS += FlorbUtils.h
 HEADERS += Flower.h
@@ -32,14 +34,19 @@ HEADERS += SinusoidalMotion.h
 
 MAKEFILE = Makefile
 
+MAKEFLAGS += -r
+
 TARGET = florb
 
 VPATH = $(INC_DIRS)
 
 all: $(TARGET)
 
-$(TARGET): $(SOURCES) $(HEADERS) $(MAKEFILE)
+%o: %cpp
+	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -c -o $@ $<
+
+$(TARGET): $(OBJS) $(MAKEFILE)
 	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -o $(TARGET) $(SOURCES) $(LIBS:%=-l%)
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(OBJS)
