@@ -23,23 +23,21 @@ public:
     const std::string& getTitle() const;
     void setTitle(const std::string& t);
 
+  
     const std::string& getImagePath() const;
     void setImagePath(const std::string& p);
 
+  
     const std::vector<std::shared_ptr<Camera>>& getCameras() const;
 
+  
     float getVideoFrameRate() const;
     void setVideoFrameRate(float r);
 
     float getImageSwitch() const;
     void setImageSwitch(float s);
 
-    const std::vector<float>& getCameraView() const;
-    void setCameraView(float alpha, float beta, float phi);
-
-    float getZoom() const;
-    void setZoom(float z);
-
+  
     std::pair<float, float> getCenter() const;
     void setCenter(float x, float y);
 
@@ -49,6 +47,7 @@ public:
     unsigned int getSmoothness() const;
     void setSmoothness(unsigned int s);
 
+  
     bool getBounceEnabled() const;
     void setBounceEnabled(bool e);
 
@@ -58,6 +57,7 @@ public:
     float getBounceFrequency() const;
     void setBounceFrequency(float f);
 
+  
     bool getBreatheEnabled() const;
     void setBreatheEnabled(bool e);
 
@@ -67,6 +67,7 @@ public:
     float getBreatheFrequency() const;
     void setBreatheFrequency(float f);
 
+  
     const std::vector<float>& getLightDirection() const;
     void setLightDirection(float alpha, float beta, float phi);
 
@@ -79,6 +80,7 @@ public:
     const std::vector<float>& getLightColor() const;
     void setLightColor(float r, float g, float b);
 
+  
     float getRimStrength() const;
     void setRimStrength(float s);
 
@@ -97,12 +99,14 @@ public:
     float getRimAnimateFrequency() const;
     void setRimAnimateFrequency(float f);
 
+  
     float getVignetteRadius() const;
     void setVignetteRadius(float r);
 
     float getVignetteExponent() const;
     void setVignetteExponent(float e);
 
+  
     unsigned int getMoteCount() const;
     void setMoteCount(unsigned int c);
     
@@ -115,6 +119,7 @@ public:
     const std::vector<float>& getMoteColor() const;
     void setMoteColor(float r, float g, float b);
 
+  
     RenderMode getRenderMode() const;
     void setRenderMode(RenderMode r);
 
@@ -137,10 +142,6 @@ private:
     float imageSwitch;
   
     std::vector<std::shared_ptr<Camera>> cameras;
-
-    // TODO - Encapsulate within camera instances
-    std::vector<float> cameraView;
-    float zoom;
 
     float offsetX;
     float offsetY;

@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <iostream>
 
+#include "Camera.h"
 #include "Florb.h"
 #include "FlorbConfigs.h"
 #include "FlorbUtils.h"
@@ -199,9 +200,17 @@ void Florb::renderFrame() {
     glUniform1f(radiusLoc, configs->getRadius());
     
 
-    // TODO - Move zoom uniform to camera uniforms
+    // Camera uniforms
+    GLuint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
     GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
-    glUniform1f(zoomLoc, configs->getZoom());
+    
+    const auto &cameraView(cameras[0]->getView());
+    glUniform3f(viewPosLoc,
+                cameraView[0],
+                cameraView[1],
+                cameraView[2]);
+
+    glUniform1f(zoomLoc, cameras[0]->getZoom());
 
 
     // Set light uniforms
@@ -226,15 +235,8 @@ void Florb::renderFrame() {
 
 
     // Set specular reflection uniforms
-    GLuint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
     GLuint shininessLoc = glGetUniformLocation(shaderProgram, "shininess");
     GLuint specularDebugLoc = glGetUniformLocation(shaderProgram, "specularDebug");
-
-    const auto &cameraView(configs->getCameraView());
-    glUniform3f(viewPosLoc,
-                cameraView[0],
-                cameraView[1],
-                cameraView[2]);
                 
     glUniform1f(shininessLoc, configs->getShininess());
 

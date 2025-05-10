@@ -54,10 +54,6 @@ FlorbConfigs::FlorbConfigs() :
 
     cameras(),
     
-    // TODO - deprecated
-    cameraView(3, 0.0f),
-    zoom(1.0f),
-    
     offsetX(0.0f),
     offsetY(0.0f),
     radius(k_DefaultRadius),
@@ -149,16 +145,37 @@ void FlorbConfigs::load() {
         
             unsigned int cameraNum(0UL);
             for (const auto &camera : cameras) {
+                string name;
+                vector<float> view(3, 0.0f);
+                float zoom(0.0f);
+              
                 if (camera.contains("name") && camera["name"].is_array()) {
-                    auto name(camera["name"]);
-                    this->cameras.push_back(make_shared<Camera>(name, shared_from_this()));
+                    name = camera["name"];
                 } else {
                     cerr << "Camera ["
                          << cameraNum
-                         << " is missing property \"name\""
+                         << " is missing string property \"name\""
                          << endl;
                 }
-               
+                
+                if (camera.contains("view") and camera["view"].is_array()) {
+                    const auto &viewRef(camera["view"]);
+                    view = {viewRef[0], viewRef[1], viewRef[2]};
+                } else {
+                    cerr << "Camera ["
+                         << cameraNum
+                         << "] is missing array property \"view\""
+                         << endl;
+                }
+
+                if (camera.contains("zoom") && camera["zoom"].is_number()) {
+                    auto zoomFactor(1.0f / static_cast<float>(camera["zoom"]));
+                    zoom = zoomFactor;
+                }
+
+                // Create the new camera and push it onto our collection
+                this->cameras.push_back(make_shared<Camera>(name, view, zoom));
+                    
                 cameraNum++;
             }
         }
@@ -220,21 +237,6 @@ void FlorbConfigs::load() {
                 }
             }
         }    
-        
-        // Camera configs
-        if (config.contains("camera") && config["camera"].is_object()) {
-            const auto &camera(config["camera"]);
-            
-            if (camera.contains("view") and camera["view"].is_array()) {
-                const auto &view(camera["view"]);
-                setCameraView(view[0], view[1], view[2]);
-            }
-
-            if (camera.contains("zoom") && camera["zoom"].is_number()) {
-                auto zoomFactor(1.0f / static_cast<float>(camera["zoom"]));
-                setZoom(zoomFactor);
-            }
-        }
         
         // Light configs
         if (config.contains("light") && config["light"].is_object()) {
@@ -434,31 +436,6 @@ void FlorbConfigs::setImageSwitch(float s) {
     lock_guard<mutex> lock(stateMutex);
 
     imageSwitch = s;
-}
-
-
-// Camera accessors / mutators
-
-const vector<float>& FlorbConfigs::getCameraView() const {
-    lock_guard<mutex> lock(stateMutex);
-    return cameraView;
-}
-
-void FlorbConfigs::setCameraView(float alpha, float beta, float phi) {
-    lock_guard<mutex> lock(stateMutex);
-    cameraView[0] = alpha;
-    cameraView[1] = beta;
-    cameraView[2] = phi;
-}
-
-float FlorbConfigs::getZoom() const {
-    lock_guard<mutex> lock(stateMutex);
-    return zoom;
-}
-
-void FlorbConfigs::setZoom(float z) {
-    lock_guard<mutex> lock(stateMutex);
-    zoom = z;
 }
 
 

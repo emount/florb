@@ -1,10 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 #include <string>
-
-
-class FlorbConfigs;
+#include <vector>
 
 class Camera {
 
@@ -12,12 +11,25 @@ public:
 
     // Constructor
     Camera(const std::string &name,
-           std::shared_ptr<FlorbConfigs> configs);
+           const std::vector<float> &view,
+           float zoom);
 
+public:
+
+    const std::vector<float>& getView() const;
+    void setView(float alpha, float beta, float phi);
+
+    float getZoom() const;
+    void setZoom(float z);
+    
 private:
 
     const std::string name;
 
-    std::shared_ptr<FlorbConfigs> configs;
+    std::vector<float> view;
     
+    float zoom;
+      
+    mutable std::mutex stateMutex;
+
 };
