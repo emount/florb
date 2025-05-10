@@ -5,6 +5,11 @@
 	"frame_rate" : 60.0,
 	"image_switch" : 5.0
     },
+    "cameras" : [
+        {
+            "name" : "Camera 0"
+        }
+    ],
     "geometry" : {
         "center" : [0.25, 0.00],
 	"radius" : 0.8,
@@ -23,6 +28,7 @@
 	}
     },
     "camera" : {
+        "deprecated" : true,
 	"view" : [0.0, 0.0, 3.0],
         "zoom" : 0.90
     },

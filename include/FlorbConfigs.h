@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 
-class FlorbConfigs {
+class FlorbConfigs : public std::enable_shared_from_this<FlorbConfigs> {
 
 public:
   
@@ -25,6 +25,8 @@ public:
 
     const std::string& getImagePath() const;
     void setImagePath(const std::string& p);
+
+    const std::vector<std::shared_ptr<Camera>>& getCameras() const;
 
     float getVideoFrameRate() const;
     void setVideoFrameRate(float r);
@@ -133,7 +135,10 @@ private:
   
     float videoFrameRate;
     float imageSwitch;
+  
+    std::vector<std::shared_ptr<Camera>> cameras;
 
+    // TODO - Encapsulate within camera instances
     std::vector<float> cameraView;
     float zoom;
 

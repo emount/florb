@@ -10,6 +10,7 @@
 #include "Flower.h"
 
 // Class forward references
+class Camera;
 class FlorbConfigs;
 class MotionAlgorithm;
 
@@ -59,6 +60,8 @@ private:
     std::vector<Flower> flowers;
     std::vector<std::string> flowerPaths;
     unsigned int currentFlower;
+
+    std::vector<std::shared_ptr<Camera>> cameras;
 
     float baseRadius;
 

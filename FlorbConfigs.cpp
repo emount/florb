@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "Camera.h"
 #include "FlorbConfigs.h"
 #include "FlorbUtils.h"
 #include "nlohmann/json.hpp"
@@ -14,8 +15,10 @@ using std::endl;
 using std::exception;
 using std::ifstream;
 using std::lock_guard;
+using std::make_shared;
 using std::mutex;
 using std::pair;
+using std::shared_ptr;
 using std::string;
 using std::vector;
 
@@ -49,6 +52,9 @@ FlorbConfigs::FlorbConfigs() :
     videoFrameRate(k_DefaultVideoFrameRate),
     imageSwitch(k_DefaultImageSwitch),
 
+    cameras(),
+    
+    // TODO - deprecated
     cameraView(3, 0.0f),
     zoom(1.0f),
     
@@ -136,6 +142,27 @@ void FlorbConfigs::load() {
             }
         }
 
+
+        // Cameras
+        if (config.contains("cameras") && config["cameras"].is_array()) {
+            const auto &cameras(config["cameras"]);
+        
+            unsigned int cameraNum(0UL);
+            for (const auto &camera : cameras) {
+                if (camera.contains("name") && camera["name"].is_array()) {
+                    auto name(camera["name"]);
+                    this->cameras.push_back(make_shared<Camera>(name, shared_from_this()));
+                } else {
+                    cerr << "Camera ["
+                         << cameraNum
+                         << " is missing property \"name\""
+                         << endl;
+                }
+               
+                cameraNum++;
+            }
+        }
+        
 
         // Geometry configs
         if (config.contains("geometry") && config["geometry"].is_object()) {
@@ -370,6 +397,14 @@ const string& FlorbConfigs::getImagePath() const {
 void FlorbConfigs::setImagePath(const string &p) {
     lock_guard<mutex> lock(stateMutex);
     imagePath = p;
+}
+
+
+// Cameras accessor
+
+const vector<shared_ptr<Camera>>& FlorbConfigs::getCameras() const {
+    lock_guard<mutex> lock(stateMutex);
+    return cameras;
 }
 
 

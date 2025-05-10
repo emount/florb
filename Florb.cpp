@@ -43,6 +43,8 @@ Florb::Florb() :
     flowerPaths(),
     currentFlower(0UL),
 
+    cameras(),
+
     baseRadius(FlorbConfigs::k_DefaultRadius),
     
     baseRimStrength(0.0f),
@@ -70,6 +72,8 @@ Florb::Florb() :
 
     // Load configs and initialize dependent elements
     configs->load();
+
+    cameras = configs->getCameras();
 
     createBouncer();
     
