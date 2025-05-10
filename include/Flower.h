@@ -17,8 +17,10 @@ public:
     GLint getChannels() const { return channels; }
     GLenum getFormat() const { return format; }
 
+    Flower& operator=(const Flower& other);
+
 private:
-    const std::string filename;
+    std::string filename;
   
     GLuint textureID = 0;
     GLint width = 0;

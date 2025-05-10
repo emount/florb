@@ -57,7 +57,7 @@ private:
   
 private:
   
-    std::vector<Flower> flowers;
+    std::vector<std::shared_ptr<Flower>> flowers;
     std::vector<std::string> flowerPaths;
     unsigned int currentFlower;
 

@@ -2,6 +2,7 @@
 #include <GL/glx.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <iostream>
@@ -30,6 +31,7 @@ using std::pair;
 using std::random_device;
 using std::shared_ptr;
 using std::sin;
+using std::sort;
 using std::string;
 using std::uniform_real_distribution;
 using std::vector;
@@ -147,7 +149,7 @@ void Florb::renderFrame() {
     // Load all flower images upon the first frame
     if (firstFrame) {
         for (auto &flower : flowers) {
-          flower.loadImage();
+            flower->loadImage();
         }
     }
     
@@ -155,8 +157,8 @@ void Florb::renderFrame() {
     if(flowers.empty()) {
         textureID = fallbackTextureID;
     } else {
-        auto &flower = flowers[currentFlower];
-        textureID = flower.getTextureID();
+        auto flower = flowers[currentFlower];
+        textureID = flower->getTextureID();
     }
     
     if (!glIsTexture(textureID))
@@ -311,27 +313,35 @@ void Florb::loadFlowers() {
     fs::path filepath(imagePath);
     
     if(fs::is_directory(filepath)) {
+        // Iterate over the filenames, constructing Flowers
         for (const auto& entry : fs::directory_iterator(imagePath)) {
             if (entry.is_regular_file()) {
-                flowers.emplace_back(entry.path().string());
+                flowers.push_back(make_shared<Flower>(entry.path().string()));
             }
         }
+
+        // Sort the collection of Flowers by filename
+        sort(flowers.begin(),
+             flowers.end(),
+             [](const shared_ptr<Flower>& a, const shared_ptr<Flower>& b) {
+                 return a->getFilename() < b->getFilename();
+             });
     } else {
         cerr << "Image path \"" << imagePath << "\" does not exist" << endl;
     }
 }
 
 void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
-    std::vector<Vertex> vertices;
+    vector<Vertex> vertices;
     vector<unsigned int> indices;
 
     for (int y = 0; y <= stackCount; ++y) {
         for (int x = 0; x <= sectorCount; ++x) {
             float xSegment = static_cast<float>(x) / sectorCount;
             float ySegment = static_cast<float>(y) / stackCount;
-            float xPos = radius * std::cos(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
-            float yPos = radius * std::cos(ySegment * M_PI);
-            float zPos = radius * std::sin(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
+            float xPos = radius * cos(xSegment * 2.0f * M_PI) * sin(ySegment * M_PI);
+            float yPos = radius * cos(ySegment * M_PI);
+            float zPos = radius * sin(xSegment * 2.0f * M_PI) * sin(ySegment * M_PI);
 
             Vertex v;
             v.position = glm::vec3(xPos, yPos, zPos); // Position

@@ -74,3 +74,26 @@ void Flower::loadImage() {
 const string& Flower::getFilename() const {
     return filename;
 }
+
+Flower& Flower::operator=(const Flower& other) {
+    if (this != &other) {
+        filename = other.filename;
+
+        // If there's an existing texture, delete it
+        if (textureID != 0) {
+            glDeleteTextures(1, &textureID);
+            textureID = 0;
+
+            // Re-load texture from filename if available
+            if (!filename.empty()) {
+                try {
+                    loadImage();  // this sets textureID
+                } catch (const std::exception& e) {
+                    std::cerr << "Failed to assign Flower: " << e.what() << std::endl;
+                }
+            }
+        }
+    }
+
+    return *this;
+}
