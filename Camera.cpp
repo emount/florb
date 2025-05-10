@@ -1,11 +1,9 @@
 #include "Camera.h"
 
-
 // Namespace using directives
 
 using std::lock_guard;
 using std::mutex;
-using std::shared_ptr;
 using std::string;
 using std::vector;
 
@@ -15,7 +13,7 @@ using std::vector;
 // Constructor
 
 Camera::Camera(const string &name,
-               const std::vector<float> &view,
+               const vector<float> &view,
                float zoom) :
     name(name),
     view(view),
