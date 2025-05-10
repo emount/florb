@@ -4,13 +4,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <cmath>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 
 #include "Florb.h"
+#include "FlorbConfigs.h"
 #include "FlorbUtils.h"
 #include "SinusoidalMotion.h"
-#include "nlohmann/json.hpp"
 
 
 namespace chrono = std::chrono;
@@ -24,81 +23,31 @@ using std::cerr;
 using std::cos;
 using std::cout;
 using std::endl;
-using std::exception;
-using std::ifstream;
-using std::lock_guard;
 using std::make_shared;
 using std::mt19937;
-using std::mutex;
 using std::pair;
 using std::random_device;
+using std::shared_ptr;
 using std::sin;
 using std::string;
 using std::uniform_real_distribution;
 using std::vector;
 
 
-extern Display *display;
-extern Window window;
-
-using json = nlohmann::json_abi_v3_12_0::json;
-
-const string Florb::k_DefaultTitle("Florb v0.3");
-
-const string Florb::k_DefaultImagePath("images");
-
-const float Florb::k_MaxVideoFrameRate(120.0f);
-
-const float Florb::k_DefaultVideoFrameRate(60.0f);
-
-const float Florb::k_DefaultImageSwitch(5.0f);
-
-const float Florb::k_DefaultRadius(0.8f);
-
-const int Florb::k_MaxMotes(128);
-
-
 // Florb class implementation
+
+// Constructor
+
 Florb::Florb() :
-    imagePath(k_DefaultImagePath),
-
-    videoFrameRate(k_DefaultVideoFrameRate),
-    imageSwitch(k_DefaultImageSwitch),
-
-    cameraView(3, 0.0f),
-    zoom(1.0f),
-    
     flowers(),
     flowerPaths(),
     currentFlower(0UL),
 
-    offsetX(0.0f),
-    offsetY(0.0f),
-    baseRadius(k_DefaultRadius),
-    radius(k_DefaultRadius),
+    baseRadius(FlorbConfigs::k_DefaultRadius),
     
-    smoothness(7UL),
-
-    bounceEnabled(false),
-    bounceAmplitude(0.0f),
-    bounceFrequency(0.0f),
-
-    breatheEnabled(false),
-    breatheAmplitude(2, k_DefaultRadius),
-    breatheFrequency(0.0f),
-    
-    lightDirection(3, 0.0f),
-    lightIntensity(1.0f),
-    shininess(1.0f),
-    lightColor(3, 0.0f),
     baseRimStrength(0.0f),
-    rimStrength(0.0f),
-    rimExponent(0.0f),
-    rimColor(3, 0.0f),
-    rimFrequency(0.0f),
-    rimAnimateEnabled(false),
+    
     animatedRimColor(0.0f, 0.0f, 0.0f),
-    rimAnimateFrequency(0.0f),
     
     moteCount(0UL),
     moteRadii(),
@@ -108,22 +57,35 @@ Florb::Florb() :
     moteDirections(),
     moteColor(3, 0.0f),
 
+    configs(make_shared<FlorbConfigs>()),
 
     bouncer(make_shared<SinusoidalMotion>()),
     bounceOffset(0.0f),
     breather(make_shared<SinusoidalMotion>()),
     rimPulser(make_shared<SinusoidalMotion>()),
-
-    renderMode(RenderMode::FILL),
-    specularMode(SpecularMode::NORMAL),
     
     fallbackTextureID(FlorbUtils::createDebugTexture()),
     
-    dist(0.0f, 1.0f),
+    dist(0.0f, 1.0f) {
 
-    stateMutex() {
-  
-    loadConfigs();
+    // Load configs and initialize dependent elements
+    configs->load();
+
+    createBouncer();
+    
+    baseRadius = configs->getRadius();
+
+    baseRimStrength = configs->getRimStrength();
+    
+    createBreather();
+
+    createRimPulser();
+    
+    initMotes(configs->getMoteCount(),
+              configs->getMoteRadius(),
+              configs->getMoteMaxStep(),
+              configs->getMoteColor());
+
     loadFlowers();
     initShaders();
 
@@ -138,604 +100,12 @@ Florb::~Florb() {
     glDeleteProgram(shaderProgram);
 }
 
-void Florb::loadConfigs() {
-    ifstream file("florb.json");
-    if (!file.is_open()) {
-        cerr << "[WARN] Could not open florb.json for configuration" << endl;
-        return;
-    }
-
-    json config;
-    try {
-        file >> config;
-
-        // Title config
-        if (config.contains("title") && config["title"].is_string()) {
-            setTitle(config["title"]);
-        } else {
-            setTitle(k_DefaultTitle);
-        }
-
-        
-        // Image path config
-        if (config.contains("image_path") && config["image_path"].is_string()) {
-            imagePath = config["image_path"];
-        } else {
-            imagePath = k_DefaultImagePath;
-        }
-
-
-        // Video configs
-        if (config.contains("video") && config["video"].is_object()) {
-            const auto &video(config["video"]);
-            
-            if (video.contains("frame_rate") and video["frame_rate"].is_number()) {
-                setVideoFrameRate(video["frame_rate"]);
-            }
-            
-            if (video.contains("image_switch") and video["image_switch"].is_number()) {
-                setImageSwitch(video["image_switch"]);
-            }
-        }
-
-
-        // Geometry configs
-        if (config.contains("geometry") && config["geometry"].is_object()) {
-            const auto &geometry(config["geometry"]);
-
-            if (geometry.contains("center") && geometry["center"].is_array() && geometry["center"].size() == 2) {
-                setCenter(geometry["center"][0], geometry["center"][1]);
-            }
-
-            if (geometry.contains("radius") and geometry["radius"].is_number()) {
-                setRadius(geometry["radius"]);
-            }
-            
-            if (geometry.contains("smoothness") and geometry["smoothness"].is_number()) {
-                setSmoothness(geometry["smoothness"]);
-            }
-        }        
-
-
-        // Effects configs
-        if (config.contains("effects") && config["effects"].is_object()) {
-            const auto &effects(config["effects"]);
-
-            if (effects.contains("bounce") && effects["bounce"].is_object()) {
-                const auto &bounce(effects["bounce"]);
-
-                if (bounce.contains("enabled") and bounce["enabled"].is_boolean()) {
-                    setBounceEnabled(bounce["enabled"]);
-                }
-
-                if (bounce.contains("amplitude") and bounce["amplitude"].is_number()) {
-                    const auto &amplitude(bounce["amplitude"]);
-                    setBounceAmplitude(amplitude);
-                }
-                
-                if (bounce.contains("frequency") and bounce["frequency"].is_number()) {
-                    setBounceFrequency(bounce["frequency"]);
-                }
-            }
-
-            if (effects.contains("breathe") && effects["breathe"].is_object()) {
-                const auto &breathe(effects["breathe"]);
-
-                if (breathe.contains("enabled") and breathe["enabled"].is_boolean()) {
-                    setBreatheEnabled(breathe["enabled"]);
-                }
-
-                if (breathe.contains("amplitude") and breathe["amplitude"].is_array()) {
-                    const auto &amplitude(breathe["amplitude"]);
-                    setBreatheAmplitude(amplitude[0], amplitude[1]);
-                }
-                
-                if (breathe.contains("frequency") and breathe["frequency"].is_number()) {
-                    setBreatheFrequency(breathe["frequency"]);
-                }
-            }
-        }    
-        
-        // Camera configs
-        if (config.contains("camera") && config["camera"].is_object()) {
-            const auto &camera(config["camera"]);
-            
-            if (camera.contains("view") and camera["view"].is_array()) {
-                const auto &view(camera["view"]);
-                setCameraView(view[0], view[1], view[2]);
-            }
-
-            if (camera.contains("zoom") && camera["zoom"].is_number()) {
-                auto zoomFactor(1.0f / static_cast<float>(camera["zoom"]));
-                setZoom(zoomFactor);
-            }
-        }
-        
-        // Light configs
-        if (config.contains("light") && config["light"].is_object()) {
-            const auto &light(config["light"]);
-            
-            if (light.contains("direction") and light["direction"].is_array()) {
-                const auto &direction(light["direction"]);
-                setLightDirection(direction[0], direction[1], direction[2]);
-            }
-            
-            if (light.contains("intensity") and light["intensity"].is_number()) {
-                setLightIntensity(light["intensity"]);
-            }
-            
-            if (light.contains("shininess") and light["shininess"].is_number()) {
-                setShininess(light["shininess"]);
-            }
-            
-            if (light.contains("color") and light["color"].is_array()) {
-                const auto &color(light["color"]);
-                setLightColor(color[0], color[1], color[2]);
-            }
-
-            // Rim lighting
-            if (light.contains("rim") && light["rim"].is_object()) {
-                const auto &rim(light["rim"]);
-
-                if (rim.contains("strength") and rim["strength"].is_number()) {
-                    setRimStrength(rim["strength"]);
-                }
-                
-                if (rim.contains("exponent") and rim["exponent"].is_number()) {
-                    setRimExponent(rim["exponent"]);
-                }
-            
-		if (rim.contains("color") and rim["color"].is_array()) {
-		    const auto &color(rim["color"]);
-		    setRimColor(color[0], color[1], color[2]);
-		}
-                
-                if (rim.contains("frequency") and rim["frequency"].is_number()) {
-                    setRimFrequency(rim["frequency"]);
-                }
-                
-                if (rim.contains("animate") and rim["animate"].is_object()) {
-                    const auto &animate(rim["animate"]);
-
-                    if (animate.contains("enabled") and animate["enabled"].is_boolean()) {
-                        setRimAnimateEnabled(animate["enabled"]);
-                    }
-                    
-                    if (animate.contains("frequency") and animate["frequency"].is_number()) {
-                        setRimAnimateFrequency(animate["frequency"]);
-                    }
-                } // animate configs
-            } // rim configs
-        } // light configs
-
-        
-        // Vignette configs
-        if (config.contains("vignette") && config["vignette"].is_object()) {
-            const auto &vignette(config["vignette"]);
-            
-            if (vignette.contains("radius") and vignette["radius"].is_number()) {
-                setVignetteRadius(vignette["radius"]);
-            }
-            
-            if (vignette.contains("exponent") and vignette["exponent"].is_number()) {
-                setVignetteExponent(vignette["exponent"]);
-            }
-        }
-
-
-        // Mote configs
-        if (config.contains("motes") && config["motes"].is_object()) {
-            const auto &motes(config["motes"]);
-
-            unsigned int count(0UL);
-            if (motes.contains("count") and motes["count"].is_number_integer()) {
-                count = motes["count"];
-            }
-            
-            float radius(1.0f);
-            if (motes.contains("radius") and motes["radius"].is_number()) {
-                radius = motes["radius"];
-            }
-
-            float maxStep(1.0f);
-            if (motes.contains("max_step") and motes["max_step"].is_number()) {
-                maxStep = motes["max_step"];
-            }
-
-            vector<float> color(3, 0.0f);
-            if (motes.contains("color") and motes["color"].is_array()) {
-                color = vector<float>(motes["color"]);
-            }
-            
-            initMotes(count, radius, maxStep, color);
-        }
-
-
-        // TODO - Add tilt (center-axis rotation) config
-
-        
-        // Debug configs
-        if (config.contains("debug") && config["debug"].is_object()) {
-            const auto &debug(config["debug"]);
-
-            // Rendering mode - normal fill, or wiremesh lines
-            if (debug.contains("render_mode") && debug["render_mode"].is_string()) {
-                if(debug["render_mode"] == "fill") {
-                    setRenderMode(RenderMode::FILL);
-                } else if(debug["render_mode"] == "line") {
-                    setRenderMode(RenderMode::LINE);
-                } else {
-                    cerr << "Invalid render_mode config value \""
-                         << debug["render_mode"]
-                         << "\""
-                         << endl;
-                }
-            }
-
-            // Specular mode - normal reflections, or debug spot
-            if (debug.contains("specular_mode") && debug["specular_mode"].is_string()) {
-                if(debug["specular_mode"] == "normal") {
-                    setSpecularMode(SpecularMode::NORMAL);
-                } else if(debug["specular_mode"] == "debug") {
-                    setSpecularMode(SpecularMode::DEBUG);
-                } else {
-                    cerr << "Invalid specular_mode config value \""
-                         << debug["specular_mode"]
-                         << "\""
-                         << endl;
-                }
-            }
-        }
-
-    } catch (const exception& exc) {
-        cerr << "[ERROR] Failed to parse \"florb.json\" : " << exc.what() << endl;
-    }
-}
-
-void Florb::loadFlowers() {
-    fs::path filepath(imagePath);
-    if(fs::is_directory(filepath)) {
-        for (const auto& entry : fs::directory_iterator(imagePath)) {
-            if (entry.is_regular_file()) {
-                flowers.emplace_back(entry.path().string());
-            }
-        }
-    } else {
-        cerr << "Image path \"" << imagePath << "\" does not exist" << endl;
-    }
+shared_ptr<FlorbConfigs> Florb::getConfigs() const {
+    return configs;
 }
 
 void Florb::nextFlower() {
     if(++currentFlower >= flowers.size()) currentFlower = 0;
-}
-
-
-// Title mutator
-
-void Florb::setTitle(const string &title) {
-    lock_guard<mutex> lock(stateMutex);
-    FlorbUtils::setWindowTitle(display, window, title);
-}
-
-
-// Video accessors / mutators
-
-float Florb::getVideoFrameRate() const {
-    lock_guard<mutex> lock(stateMutex);
-    return videoFrameRate;
-}
-
-void Florb::setVideoFrameRate(float r) {
-    lock_guard<mutex> lock(stateMutex);
-
-    if (videoFrameRate >= k_MaxVideoFrameRate) {
-        videoFrameRate = k_MaxVideoFrameRate;
-    } else {
-        videoFrameRate = r;
-    }
-}
-
-float Florb::getImageSwitch() const {
-    lock_guard<mutex> lock(stateMutex);
-    return imageSwitch;
-}
-
-void Florb::setImageSwitch(float s) {
-    lock_guard<mutex> lock(stateMutex);
-
-    imageSwitch = s;
-}
-
-
-// Camera accessors / mutators
-
-const vector<float>& Florb::getCameraView() const {
-    lock_guard<mutex> lock(stateMutex);
-    return cameraView;
-}
-
-void Florb::setCameraView(float alpha, float beta, float phi) {
-    lock_guard<mutex> lock(stateMutex);
-    cameraView[0] = alpha;
-    cameraView[1] = beta;
-    cameraView[2] = phi;
-}
-
-float Florb::getZoom() const {
-    lock_guard<mutex> lock(stateMutex);
-    return zoom;
-}
-
-void Florb::setZoom(float z) {
-    lock_guard<mutex> lock(stateMutex);
-    zoom = z;
-}
-
-
-// Geometry accessors / mutators
-
-pair<float, float> Florb::getCenter() const {
-    lock_guard<mutex> lock(stateMutex);
-    return {offsetX, offsetY};
-}
-
-void Florb::setCenter(float x, float y) {
-    lock_guard<mutex> lock(stateMutex);
-    offsetX = x;
-    offsetY = y;
-}
-
-float Florb::getRadius() const {
-    lock_guard<mutex> lock(stateMutex);
-    return radius;
-}
-
-void Florb::setRadius(float r) {
-    lock_guard<mutex> lock(stateMutex);
-    baseRadius = radius = r;
-    createBreather();
-}
-
-unsigned int Florb::getSmoothness() const {
-    lock_guard<mutex> lock(stateMutex);
-    return smoothness;
-}
-
-void Florb::setSmoothness(unsigned int s) {
-    lock_guard<mutex> lock(stateMutex);
-    smoothness = s;
-}
-
-
-// Bounce accessors / mutators
-
-bool Florb::getBounceEnabled() const {
-    lock_guard<mutex> lock(stateMutex);
-    return bounceEnabled;
-}
-
-void Florb::setBounceEnabled(bool e) {
-    lock_guard<mutex> lock(stateMutex);
-    bounceEnabled = e;
-    createBouncer();
-}
-
-float Florb::getBounceAmplitude() const {
-    lock_guard<mutex> lock(stateMutex);
-    return bounceAmplitude;
-}
-
-void Florb::setBounceAmplitude(float a) {
-    lock_guard<mutex> lock(stateMutex);
-    bounceAmplitude = a;
-    createBouncer();
-}
-
-float Florb::getBounceFrequency() const {
-    lock_guard<mutex> lock(stateMutex);
-    return bounceFrequency;
-}
-
-void Florb::setBounceFrequency(float f) {
-    lock_guard<mutex> lock(stateMutex);
-    bounceFrequency = f;
-    createBouncer();
-}
-
-
-// Breathe accessors / mutators
-
-bool Florb::getBreatheEnabled() const {
-    lock_guard<mutex> lock(stateMutex);
-    return breatheEnabled;
-}
-
-void Florb::setBreatheEnabled(bool e) {
-    lock_guard<mutex> lock(stateMutex);
-    breatheEnabled = e;
-    createBreather();
-}
-
-const vector<float>& Florb::getBreatheAmplitude() const {
-    lock_guard<mutex> lock(stateMutex);
-    return breatheAmplitude;
-}
-
-void Florb::setBreatheAmplitude(float min, float max) {
-    lock_guard<mutex> lock(stateMutex);
-    breatheAmplitude[0] = min;
-    breatheAmplitude[1] = max;
-    createBreather();
-}
-
-float Florb::getBreatheFrequency() const {
-    lock_guard<mutex> lock(stateMutex);
-    return breatheFrequency;
-}
-
-void Florb::setBreatheFrequency(float f) {
-    lock_guard<mutex> lock(stateMutex);
-    breatheFrequency = f;
-    createBreather();
-}
-
-
-// Light accessors / mutators
-
-const vector<float>& Florb::getLightDirection() const {
-    lock_guard<mutex> lock(stateMutex);
-    return lightDirection;
-}
-
-void Florb::setLightDirection(float alpha, float beta, float phi) {
-    lock_guard<mutex> lock(stateMutex);
-    lightDirection[0] = alpha;
-    lightDirection[1] = beta;
-    lightDirection[2] = phi;
-}
-
-float Florb::getLightIntensity() const {
-    lock_guard<mutex> lock(stateMutex);
-    return lightIntensity;
-}
-
-void Florb::setLightIntensity(float i) {
-    lock_guard<mutex> lock(stateMutex);
-    lightIntensity = i;
-}
-
-float Florb::getShininess() const {
-    lock_guard<mutex> lock(stateMutex);
-    return shininess;
-}
-
-void Florb::setShininess(float s) {
-    lock_guard<mutex> lock(stateMutex);
-    shininess = s;
-}
-
-const vector<float>& Florb::getLightColor() const {
-    lock_guard<mutex> lock(stateMutex);
-    return lightColor;
-}
-
-void Florb::setLightColor(float r, float g, float b) {
-    lock_guard<mutex> lock(stateMutex);
-    lightColor[0] = r;
-    lightColor[1] = g;
-    lightColor[2] = b;
-}
-
-
-// Rim light accessors / mutators
-
-float Florb::getRimStrength() const {
-    lock_guard<mutex> lock(stateMutex);
-    return baseRimStrength;
-}
-
-void Florb::setRimStrength(float s) {
-    lock_guard<mutex> lock(stateMutex);
-    baseRimStrength = s;
-}
-
-float Florb::getRimExponent() const {
-    lock_guard<mutex> lock(stateMutex);
-    return rimExponent;
-}
-
-void Florb::setRimExponent(float s) {
-    lock_guard<mutex> lock(stateMutex);
-    rimExponent = s;
-}
-
-const vector<float>& Florb::getRimColor() const {
-    lock_guard<mutex> lock(stateMutex);
-    return rimColor;
-}
-
-void Florb::setRimColor(float r, float g, float b) {
-    lock_guard<mutex> lock(stateMutex);
-    rimColor[0] = r;
-    rimColor[1] = g;
-    rimColor[2] = b;
-}
-
-float Florb::getRimFrequency() const {
-    lock_guard<mutex> lock(stateMutex);
-    return rimFrequency;
-}
-
-void Florb::setRimFrequency(float f) {
-    lock_guard<mutex> lock(stateMutex);
-    rimFrequency = f;
-    createRimPulser();
-}
-
-bool Florb::getRimAnimateEnabled() const {
-    lock_guard<mutex> lock(stateMutex);
-    return rimAnimateEnabled;
-}
-
-void Florb::setRimAnimateEnabled(bool a) {
-    lock_guard<mutex> lock(stateMutex);
-    rimAnimateEnabled = a;
-}
-
-float Florb::getRimAnimateFrequency() const {
-    lock_guard<mutex> lock(stateMutex);
-    return rimAnimateFrequency;
-}
-
-void Florb::setRimAnimateFrequency(float f) {
-    lock_guard<mutex> lock(stateMutex);
-    rimAnimateFrequency = f;
-}
-
-
-// Vignette accessors / mutators
-
-float Florb::getVignetteRadius() const {
-    lock_guard<mutex> lock(stateMutex);
-    return vignetteRadius;
-}
-
-void Florb::setVignetteRadius(float r) {
-    lock_guard<mutex> lock(stateMutex);
-    vignetteRadius = r;
-}
-
-float Florb::getVignetteExponent() const {
-    lock_guard<mutex> lock(stateMutex);
-    return vignetteExponent;
-}
-
-void Florb::setVignetteExponent(float r) {
-    lock_guard<mutex> lock(stateMutex);
-    vignetteExponent = r;
-}
-
-
-// Debug accessors / mutators
-
-const Florb::RenderMode& Florb::getRenderMode() const {
-    lock_guard<mutex> lock(stateMutex);
-    return renderMode;
-}
-
-void Florb::setRenderMode(const Florb::RenderMode &r) {
-    lock_guard<mutex> lock(stateMutex);
-    renderMode = r;
-}
-
-const Florb::SpecularMode& Florb::getSpecularMode() const {
-    lock_guard<mutex> lock(stateMutex);
-    return specularMode;
-}
-
-void Florb::setSpecularMode(const Florb::SpecularMode &s) {
-    lock_guard<mutex> lock(stateMutex);
-    specularMode = s;
 }
 
 
@@ -763,7 +133,7 @@ void Florb::renderFrame() {
     glDisable(GL_CULL_FACE);
 
     // Set either line or fill rendering
-    if (renderMode == RenderMode::LINE) {
+    if (configs->getRenderMode() == FlorbConfigs::RenderMode::LINE) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -819,24 +189,30 @@ void Florb::renderFrame() {
     // Set offset and radius uniforms
     GLuint offsetLoc = glGetUniformLocation(shaderProgram, "offset");
     GLuint radiusLoc = glGetUniformLocation(shaderProgram, "radius");
-    glUniform2f(offsetLoc, offsetX, offsetY);
-    glUniform1f(radiusLoc, radius);
+
+    auto center(configs->getCenter());
+    glUniform2f(offsetLoc, center.first, center.second);
+    glUniform1f(radiusLoc, configs->getRadius());
     
 
     // TODO - Move zoom uniform to camera uniforms
     GLuint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
-    glUniform1f(zoomLoc, zoom);
+    glUniform1f(zoomLoc, configs->getZoom());
 
 
     // Set light uniforms
     GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDir");
-    GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");    
+    GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
+
+    const auto &lightDirection(configs->getLightDirection());
     glUniform3f(lightDirectionLoc,
                 lightDirection[0],
                 lightDirection[1],
                 lightDirection[2]);
     
     // Weight light color with intensity
+    auto lightIntensity(configs->getLightIntensity());
+    const auto &lightColor(configs->getLightColor());
     vector<float> actualColor = {
       (lightIntensity * lightColor[0]),
       (lightIntensity * lightColor[1]),
@@ -850,15 +226,17 @@ void Florb::renderFrame() {
     GLuint shininessLoc = glGetUniformLocation(shaderProgram, "shininess");
     GLuint specularDebugLoc = glGetUniformLocation(shaderProgram, "specularDebug");
 
+    const auto &cameraView(configs->getCameraView());
     glUniform3f(viewPosLoc,
                 cameraView[0],
                 cameraView[1],
                 cameraView[2]);
                 
-    glUniform1f(shininessLoc, shininess);
+    glUniform1f(shininessLoc, configs->getShininess());
 
+    // Render either normally or in specular debug mode
     int specularDebug;
-    if (specularMode == SpecularMode::NORMAL) {
+    if (configs->getSpecularMode() == FlorbConfigs::SpecularMode::NORMAL) {
         specularDebug = 0;
     } else {
         specularDebug = 1;
@@ -874,15 +252,15 @@ void Florb::renderFrame() {
                 animatedRimColor[0],
                 animatedRimColor[1],
                 animatedRimColor[2]);
-    glUniform1f(rimExponentLoc, rimExponent);
-    glUniform1f(rimStrengthLoc, rimStrength);
+    glUniform1f(rimExponentLoc, configs->getRimExponent());
+    glUniform1f(rimStrengthLoc, configs->getRimStrength());
 
 
     // Set vignette effect uniforms
     GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
     GLuint vignetteExponentLoc = glGetUniformLocation(shaderProgram, "vignetteExponent");
-    glUniform1f(vignetteRadiusLoc, vignetteRadius);
-    glUniform1f(vignetteExponentLoc, vignetteExponent);
+    glUniform1f(vignetteRadiusLoc, configs->getVignetteRadius());
+    glUniform1f(vignetteExponentLoc, configs->getVignetteExponent());
 
     
     // Dust mote uniforms
@@ -920,7 +298,22 @@ void Florb::renderFrame() {
 }
 
 
-// Sphere generation method
+// Private methods
+
+void Florb::loadFlowers() {
+    const auto &imagePath(configs->getImagePath());
+    fs::path filepath(imagePath);
+    
+    if(fs::is_directory(filepath)) {
+        for (const auto& entry : fs::directory_iterator(imagePath)) {
+            if (entry.is_regular_file()) {
+                flowers.emplace_back(entry.path().string());
+            }
+        }
+    } else {
+        cerr << "Image path \"" << imagePath << "\" does not exist" << endl;
+    }
+}
 
 void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
     std::vector<Vertex> vertices;
@@ -1224,29 +617,32 @@ void Florb::initMotes(unsigned int count,
 void Florb::createBouncer() {
     float phase(0.0f);
 
-    float bias = bounceEnabled ? bounceAmplitude : 0.0f;
-    float amplitude = bounceEnabled ? bounceAmplitude : 0.0f;
+    bool enabled(configs->getBounceEnabled());
+    float bias(enabled ? configs->getBounceAmplitude() : 0.0f);
+    float amplitude(bias);
     bouncer = make_shared<SinusoidalMotion>(
-        bounceEnabled,
+        enabled,
         bias,
         amplitude,
-        bounceFrequency,
+        configs->getBounceFrequency(),
         phase
     );
 }
 
 void Florb::createBreather() {
     float phase(M_PI / 2);
+
+    const auto &breatheAmplitude(configs->getBreatheAmplitude());
     float minR = breatheAmplitude[0];
     float maxR = breatheAmplitude[1];
     float bias = 0.5f * (minR + maxR);
     float amplitude = 0.5f * (maxR - minR);
 
     breather = make_shared<SinusoidalMotion>(
-        breatheEnabled,
+        configs->getBreatheEnabled(),
         bias,
         amplitude,
-        breatheFrequency,
+        configs->getBreatheFrequency(),
         phase
     );
 }
@@ -1259,7 +655,7 @@ void Florb::createRimPulser() {
         enabled,
         baseRimStrength,
         baseRimStrength,
-        rimFrequency,
+        configs->getRimFrequency(),
         phase
     );
 }
@@ -1280,23 +676,24 @@ void Florb::updatePhysicalEffects() {
     // Update the sphere
     bounceOffset = bouncer->evaluate(timeSeconds);
     auto breatheRadius(breather->evaluate(timeSeconds));
-    setVignetteRadius(breatheRadius);
+    configs->setVignetteRadius(breatheRadius);
 
     GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
     glUniform1f(vignetteRadiusLoc, vignetteRadius);
 
+    auto smoothness(configs->getSmoothness());
     generateSphere(breatheRadius, smoothness, (smoothness / 2));
 
     // Update current actual radius
-    radius = breatheRadius;
+    configs->setRadius(breatheRadius);
 
     
     // Update rim light pulsing and color
-    rimStrength = rimPulser->evaluate(timeSeconds);
+    configs->setRimStrength(rimPulser->evaluate(timeSeconds));
 
-    animatedRimColor = glm::make_vec3(rimColor.data());
-    if (rimAnimateEnabled) {
-        float t = fmod(timeSeconds / rimAnimateFrequency, 1.0f);
+    animatedRimColor = glm::make_vec3(configs->getRimColor().data());
+    if (configs->getRimAnimateEnabled()) {
+        float t = fmod(timeSeconds / configs->getRimAnimateFrequency(), 1.0f);
         float r = 0.5f + 0.5f * sinf(2.0f * M_PI * t);
         float g = 0.5f + 0.5f * sinf(2.0f * M_PI * (t + 0.33f));
         float b = 0.5f + 0.5f * sinf(2.0f * M_PI * (t + 0.66f));

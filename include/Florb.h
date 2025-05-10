@@ -3,7 +3,6 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 #include <random>
@@ -11,125 +10,25 @@
 #include "Flower.h"
 
 // Class forward references
+class FlorbConfigs;
 class MotionAlgorithm;
 
 
 // Florb class encapsulating the sphere state, geometry, textures, and behavior
 class Florb {
-public:
-  
-    // Enumerated type for render mode
-    enum class RenderMode { FILL, LINE };
-
-    // Enumerated type for specular mode
-    enum class SpecularMode { NORMAL, DEBUG };
 
 public:
     Florb();
     ~Florb();
 
-  
+    std::shared_ptr<FlorbConfigs> getConfigs() const;
+
     void nextFlower();
-
-  
-    void setTitle(const std::string &title);
-
-  
-    float getVideoFrameRate() const;
-    void setVideoFrameRate(float r);
-
-  
-    float getImageSwitch() const;
-    void setImageSwitch(float s);
-
-  
-    const std::vector<float>& getCameraView() const;
-    void setCameraView(float alpha, float beta, float phi);
-  
-    float getZoom() const;
-    void setZoom(float z);
-
-  
-    std::pair<float, float> getCenter() const;
-    void setCenter(float x, float y);
-  
-    float getRadius() const;
-    void setRadius(float r);
-
-  
-    unsigned int getSmoothness() const;
-    void setSmoothness(unsigned int s);
-
-  
-    bool getBounceEnabled() const;
-    void setBounceEnabled(bool e);
-
-    float getBounceAmplitude() const;
-    void setBounceAmplitude(float a);
-
-    float getBounceFrequency() const;
-    void setBounceFrequency(float f);
-
-  
-    bool getBreatheEnabled() const;
-    void setBreatheEnabled(bool e);
-
-    const std::vector<float>& getBreatheAmplitude() const;
-    void setBreatheAmplitude(float min, float max);
-
-    float getBreatheFrequency() const;
-    void setBreatheFrequency(float f);
-
-  
-    const std::vector<float>& getLightDirection() const;
-    void setLightDirection(float alpha, float beta, float phi);
-
-    float getLightIntensity() const;
-    void setLightIntensity(float i);
-
-    float getShininess() const;
-    void setShininess(float s);
-
-    const std::vector<float>& getLightColor() const;
-    void setLightColor(float r, float g, float b);
-
-    float getRimStrength() const;
-    void setRimStrength(float s);
-
-    float getRimExponent() const;
-    void setRimExponent(float e);
-
-    const std::vector<float>& getRimColor() const;
-    void setRimColor(float r, float g, float b);
-
-    float getRimFrequency() const;
-    void setRimFrequency(float f);
-
-    bool getRimAnimateEnabled() const;
-    void setRimAnimateEnabled(bool a);
-
-    float getRimAnimateFrequency() const;
-    void setRimAnimateFrequency(float f);
-
-  
-    float getVignetteRadius() const;
-    void setVignetteRadius(float r);  
-
-    float getVignetteExponent() const;
-    void setVignetteExponent(float e);  
-
-  
-    const RenderMode& getRenderMode() const;
-    void setRenderMode(const RenderMode &r);
-  
-    const SpecularMode& getSpecularMode() const;
-    void setSpecularMode(const SpecularMode &s);
-
   
     void renderFrame();
 
 private:
-    void loadConfigs();
+  
     void loadFlowers();
   
     void generateSphere(float radius, int sectorCount, int stackCount);
@@ -147,12 +46,6 @@ private:
     void updatePhysicalEffects();
     void updateMotes();
 
-public:
-
-    static const std::string k_DefaultTitle;
-  
-    static const std::string k_DefaultImagePath;
-
 private:
 
     // Structure for passing vertices to the vertex shader
@@ -162,45 +55,16 @@ private:
     };
   
 private:
-    std::string imagePath;
-
-    float videoFrameRate;
-    float imageSwitch;
-
-    std::vector<float> cameraView;
-    float zoom;
   
     std::vector<Flower> flowers;
     std::vector<std::string> flowerPaths;
     unsigned int currentFlower;
 
-    float offsetX;
-    float offsetY;
     float baseRadius;
-    float radius;
-    
-    unsigned int smoothness;
 
-    bool bounceEnabled;
-    float bounceAmplitude;
-    float bounceFrequency;
-
-    bool breatheEnabled;
-    std::vector<float> breatheAmplitude;
-    float breatheFrequency;
-
-    std::vector<float> lightDirection;
-    float lightIntensity;
-    float shininess;
-    std::vector<float> lightColor;
     float baseRimStrength;
-    float rimStrength;
-    float rimExponent;
-    std::vector<float> rimColor;
-    float rimFrequency;
-    bool rimAnimateEnabled;
+
     glm::vec3 animatedRimColor;
-    float rimAnimateFrequency;
 
     float vignetteRadius = 0.0f;
     float vignetteExponent = 0.0f;
@@ -213,13 +77,12 @@ private:
     std::vector<float> moteDirections;
     std::vector<float> moteColor;
 
+    std::shared_ptr<FlorbConfigs> configs;
+
     std::shared_ptr<MotionAlgorithm> bouncer;
     float bounceOffset;
     std::shared_ptr<MotionAlgorithm> breather;
     std::shared_ptr<MotionAlgorithm> rimPulser;
-
-    RenderMode renderMode;
-    SpecularMode specularMode;
 
     GLuint vao = 0;
     GLuint vbo = 0;
@@ -229,18 +92,8 @@ private:
   
     int indexCount = 0;
 
-    static const float k_MaxVideoFrameRate;
-    static const float k_DefaultVideoFrameRate;
-    static const float k_DefaultImageSwitch;
-
-    static const float k_DefaultRadius;
-  
-    static const int k_MaxMotes;
-
     std::random_device rd;
     std::mt19937 gen;
     std::uniform_real_distribution<float> dist;
-  
-    mutable std::mutex stateMutex;
   
 };

@@ -13,12 +13,14 @@ INC_DIRS = include
 
 SOURCES  = main.cpp
 SOURCES += Florb.cpp
+SOURCES += FlorbConfigs.cpp
 SOURCES += Flower.cpp
 SOURCES += FlorbUtils.cpp
 SOURCES += MotionAlgorithm.cpp
 SOURCES += SinusoidalMotion.cpp
 
 HEADERS  = Florb.h
+HEADERS += FlorbConfigs.h
 HEADERS += FlorbUtils.h
 HEADERS += Flower.h
 HEADERS += MotionAlgorithm.h

@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "Florb.h"
+#include "FlorbConfigs.h"
 #include "FlorbUtils.h"
 
 #define VERSION_MAJOR 0
@@ -202,19 +203,22 @@ int main() {
                     }
                 }
             }
+
+            // Get a pointer to the Florb configs
+            auto florbConfigs(florb.getConfigs());
             
             // Update timing for flower transition
             static steady_clock::time_point startTime = steady_clock::now();
             float timeMsec = duration_cast<milliseconds>(steady_clock::now() - startTime).count();
             float timeSeconds = (timeMsec / 1000.0f);
 
-            if (timeSeconds >= florb.getImageSwitch()) {
+            if (timeSeconds >= florbConfigs->getImageSwitch()) {
                 florb.nextFlower();
                 startTime = steady_clock::now();
             }
 
 	    // Fetch the configurable frame rate from the Florb
-	    const float k_FrameTime(1000.0f / florb.getVideoFrameRate());
+	    const float k_FrameTime(1000.0f / florbConfigs->getVideoFrameRate());
 
 	    static steady_clock::time_point lastFrame = steady_clock::now();
 	    float frameElapsed = duration_cast<milliseconds>(steady_clock::now() - lastFrame).count();
