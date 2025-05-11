@@ -220,7 +220,7 @@ void FlorbConfigs::load() {
                     vector<float> color(3, 0.0f);
 
                     // Limit the number of spotlights to a maximum
-                    if (numSpotlights >= k_MaxSpotlights) {
+                    if (spotlightNum >= k_MaxSpotlights) {
                         cerr << "Number of spotlights exceeds maximum of ("
                              << k_MaxSpotlights
                              << ")"

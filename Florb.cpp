@@ -27,6 +27,7 @@ using std::cos;
 using std::cout;
 using std::endl;
 using std::make_shared;
+using std::min;
 using std::mt19937;
 using std::pair;
 using std::random_device;
@@ -34,6 +35,7 @@ using std::shared_ptr;
 using std::sin;
 using std::sort;
 using std::string;
+using std::to_string;
 using std::uniform_real_distribution;
 using std::vector;
 
@@ -218,21 +220,52 @@ void Florb::renderFrame() {
     glUniform1f(zoomLoc, cameras[0]->getZoom());
 
 
-    // Set light uniforms
-    GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDir");
 
-    const auto &lightDirection(spotlights[0]->getDirection());
-    glUniform3f(lightDirectionLoc,
-                lightDirection[0],
-                lightDirection[1],
-                lightDirection[2]);
     
-    GLuint lightIntensityLoc = glGetUniformLocation(shaderProgram, "lightIntensity");
-    glUniform1f(lightIntensityLoc, spotlights[0]->getIntensity());
+    // Set light uniforms
+    int lightCount(spotlights.size());
+    glUniform1i(glGetUniformLocation(shaderProgram, "lightCount"), lightCount);
+
+    // Iterate through all spotlights
+    for (int i = 0; i < lightCount; ++i) {
+        const auto& light = spotlights[i];
     
-    GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
-    const auto &lightColor(spotlights[0]->getColor());
-    glUniform3f(lightColorLoc, lightColor[0], lightColor[1], lightColor[2]);
+        string base = "spotlights[" + to_string(i) + "].";
+        
+        glUniform3f(glGetUniformLocation(shaderProgram, (base + "direction").c_str()),
+                    light->getDirection()[0],
+                    light->getDirection()[1],
+                    light->getDirection()[2]);
+        glUniform3f(glGetUniformLocation(shaderProgram, (base + "color").c_str()),
+                    light->getColor()[0],
+                    light->getColor()[1],
+                    light->getColor()[2]);
+        glUniform1f(glGetUniformLocation(shaderProgram, (base + "intensity").c_str()),
+                    light->getIntensity());
+    }
+
+
+
+    
+    // GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDir");
+    // 
+    // const auto &lightDirection(spotlights[0]->getDirection());
+    // glUniform3f(lightDirectionLoc,
+    //             lightDirection[0],
+    //             lightDirection[1],
+    //             lightDirection[2]);
+    // 
+    // GLuint lightIntensityLoc = glGetUniformLocation(shaderProgram, "lightIntensity");
+    // glUniform1f(lightIntensityLoc, spotlights[0]->getIntensity());
+    // 
+    // GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
+    // const auto &lightColor(spotlights[0]->getColor());
+    // glUniform3f(lightColorLoc, lightColor[0], lightColor[1], lightColor[2]);
+
+
+
+
+    
 
 
     // Set specular reflection uniforms
@@ -454,9 +487,16 @@ void Florb::initShaders() {
         uniform vec2 offset;
         uniform vec2 resolution;
 
-        uniform vec3 lightDir;
-        uniform float lightIntensity;
-        uniform vec3 lightColor;
+        #define MAX_LIGHTS 4
+        
+        struct Spotlight {
+            vec3 direction;
+            vec3 color;
+            float intensity;
+        };
+        
+        uniform Spotlight spotlights[MAX_LIGHTS];
+        uniform int lightCount;
 
         uniform vec3 viewPos;
         uniform float shininess;
@@ -510,12 +550,25 @@ void Florb::initShaders() {
 
             // Diffuse lighting
             vec3 norm = normalize(fragNormal);
-            vec3 light = normalize(-lightDir);
 
 
-            // Normalize lighting components
+            // Spotlighting
+            vec3 totalLighting = vec3(0.0);
             vec3 viewDir = normalize(viewPos - fragPos);
-            vec3 reflectDir = reflect(-light, norm);
+            float totalSpecular = 0.0;
+            for (int i = 0; i < lightCount; ++i) {
+                vec3 lightDir = normalize(-spotlights[i].direction);
+                vec3 reflectDir = reflect(-lightDir, norm);
+            
+                float diff = max(dot(norm, lightDir), 0.0);
+                float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+                totalSpecular += spec;
+            
+                vec3 lightColor = spotlights[i].color * spotlights[i].intensity;
+                vec3 lighting = (diff + spec) * lightColor;
+            
+                totalLighting += lighting;
+            }
 
 
             // Calculate rim lighting
@@ -538,22 +591,8 @@ void Florb::initShaders() {
             // Sample texture color
             vec4 texColor = texture(currentTexture, uv);
 
-
-            // Diffuse lighting
-            float diffuse = max(dot(fragNormal, lightDir), 0.0);
-
-
-            // Amplified specular component
-            float specular = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-            specular *= 4.0;
-
-
-            // Final lighting contribution
-            vec3 lighting = clamp(((diffuse + specular) * lightColor * lightIntensity), 0.0, 1.0);
-
-
             // Compute final color
-            vec3 finalColor = vignette * lighting * texColor.rgb;
+            vec3 finalColor = vignette * totalLighting * texColor.rgb;
             finalColor += rimLight;
 
             // Clamp and overlay colored dust mote glow
@@ -561,7 +600,7 @@ void Florb::initShaders() {
 
             // Assign final color, taking debug modes into account
             if (specularDebug != 0) {
-               FragColor = vec4(vec3(specular), 1.0);
+               FragColor = vec4(vec3(totalSpecular), 1.0);
             } else {
                 FragColor = vec4(finalColor, 1.0);
             }

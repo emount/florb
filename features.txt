@@ -4,7 +4,10 @@ Florb feature wish list
 Dust motes
   Wink in and out like fireflies
 Lighting
-  Orbiting light sources
+  Spotlights
+    Orbiting spotlights
+    Distance with attenuation
+    Cosine cutoff (all the math)
   Pulsing rim lighting
 Orb shadow
 Hybrid AI flower generation
