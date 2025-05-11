@@ -237,11 +237,11 @@ void Florb::renderFrame() {
 
     // Set specular reflection uniforms
     GLuint shininessLoc = glGetUniformLocation(shaderProgram, "shininess");
-    GLuint specularDebugLoc = glGetUniformLocation(shaderProgram, "specularDebug");
-                
     glUniform1f(shininessLoc, configs->getShininess());
 
     // Render either normally or in specular debug mode
+    GLuint specularDebugLoc = glGetUniformLocation(shaderProgram, "specularDebug");
+    
     int specularDebug;
     if (configs->getSpecularMode() == FlorbConfigs::SpecularMode::NORMAL) {
         specularDebug = 0;

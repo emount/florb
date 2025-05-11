@@ -61,6 +61,7 @@ FlorbConfigs::FlorbConfigs() :
     radius(k_DefaultRadius),
     smoothness(7UL),
 
+    shininess(1.0f),
     spotlights(),
 
     bounceEnabled(false),
@@ -71,8 +72,6 @@ FlorbConfigs::FlorbConfigs() :
     breatheAmplitude(2, k_DefaultRadius),
     breatheFrequency(0.0f),
     
-    shininess(1.0f),
-
     rimStrength(0.0f),
     rimExponent(0.0f),
     rimColor(3, 0.0f),
@@ -204,6 +203,10 @@ void FlorbConfigs::load() {
         if (config.contains("light") && config["light"].is_object()) {
             const auto &light(config["light"]);
 
+            if (light.contains("shininess") && light["shininess"].is_number()) {
+                setShininess(light["shininess"]);
+            }
+
             if (light.contains("spotlights") && light["spotlights"].is_array()) {
                 const auto &spotlights(light["spotlights"]);
             
@@ -322,7 +325,7 @@ void FlorbConfigs::load() {
                     setBreatheFrequency(breathe["frequency"]);
                 }
             }
-        }    
+        }
 
         
         // Vignette configs

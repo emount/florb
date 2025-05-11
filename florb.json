@@ -14,10 +14,11 @@
     ],
     "geometry" : {
         "center" : [0.25, 0.00],
-	"radius" : 0.8,
+	"radius" : 0.80,
 	"smoothness" : 288
     },
     "light" : {
+        "shininess" : 4.00,
         "spotlights" : [
             {
                 "name" : "Spotlight 0",
@@ -27,7 +28,7 @@
             }
         ],
 	"rim" : {
-	    "strength" : 0.00,
+	    "strength" : 0.40,
 	    "exponent" : 3.0,
 	    "color" : [0.000, 0.000, 1.000],
 	    "frequency" : 0.20,
@@ -39,12 +40,12 @@
     },
     "effects" : {
 	"bounce" : {
-	    "enabled" : false,
+	    "enabled" : true,
 	    "amplitude" : 0.1,
 	    "frequency" : 0.2
 	},
 	"breathe" : {
-	    "enabled" : false,
+	    "enabled" : true,
 	    "amplitude" : [0.75, 0.8],
 	    "frequency" : 0.4
 	}

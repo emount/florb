@@ -53,6 +53,9 @@ public:
     void setSmoothness(unsigned int s);
 
   
+    float getShininess() const;
+    void setShininess(float s);
+  
     const std::vector<std::shared_ptr<Spotlight>>& getSpotlights() const;
 
   
@@ -74,10 +77,6 @@ public:
 
     float getBreatheFrequency() const;
     void setBreatheFrequency(float f);
-
-  
-    float getShininess() const;
-    void setShininess(float s);
 
   
     float getRimStrength() const;
@@ -147,6 +146,7 @@ private:
     float radius;
     unsigned int smoothness;
 
+    float shininess;
     std::vector<std::shared_ptr<Spotlight>> spotlights;
 
     bool bounceEnabled;
@@ -157,8 +157,6 @@ private:
     std::vector<float> breatheAmplitude;
     float breatheFrequency;
 
-    float shininess;
-    
     float rimStrength;
     float rimExponent;
     std::vector<float> rimColor;
