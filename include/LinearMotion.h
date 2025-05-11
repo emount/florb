@@ -1,16 +1,18 @@
-#include "MotionAlgorithm.h"
+#include "MultiMotion.h"
 
-class LinearMotion : public MotionAlgorithm {
+class LinearMotion : public MultiMotion {
 public:
-
-    LinearMotion();
   
     LinearMotion(bool enabled, float offset, float speed);
 
-    float evaluate(float time) const override;
+    LinearMotion(bool enabled,
+                 const std::vector<float> &offsets,
+                 const std::vector<float> &speeds);
+
+    virtual std::vector<float> vectorEvaluate(float time) const override;
 
 private:
-    float offset;
-    float speed;
+    std::vector<float> offsets;
+    std::vector<float> speeds;
   
 };

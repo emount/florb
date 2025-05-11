@@ -1,3 +1,5 @@
+#pragma once
+
 class MotionAlgorithm {
 public:
     MotionAlgorithm();

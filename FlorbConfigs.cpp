@@ -769,19 +769,20 @@ void FlorbConfigs::parseSpotlights(const json &light) {
                     
                     // TODO - Convert to a PluggableFactories pattern perhaps
                     if (type == "linear") {
-                        float offset(0.0f);
-                        vector<float> speed(3, 0.0f);
+                        vector<float> offsets(3, 0.0f);
+                        vector<float> speeds(3, 0.0f);
 
-                        if (motion.contains("offset") and motion["offset"].is_number()) {
-                            offset = motion["offset"];
+                        if (motion.contains("offsets") and motion["offsets"].is_array()) {
+                            const auto &offsetsRef(motion["offsets"]);
+                            offsets = {offsetsRef[0], offsetsRef[1], offsetsRef[2]};
                         }
                         
-                        if (motion.contains("speed") and motion["speed"].is_array()) {
-                            const auto &speedRef(motion["speed"]);
-                            speed = {speedRef[0], speedRef[1], speedRef[2]};
+                        if (motion.contains("speeds") and motion["speeds"].is_array()) {
+                            const auto &speedsRef(motion["speeds"]);
+                            speeds = {speedsRef[0], speedsRef[1], speedsRef[2]};
                         }
 
-                        // motionPtr = make_shared<LinearMotion>(true, offset, speed);
+                        motionPtr = make_shared<LinearMotion>(true, offsets, speeds);
                     } else {
                         cerr << "Unrecognized \"motion\" type \"" << type << "\"" << endl;
                     }

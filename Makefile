@@ -19,6 +19,7 @@ SOURCES += Flower.cpp
 SOURCES += FlorbUtils.cpp
 SOURCES += LinearMotion.cpp
 SOURCES += MotionAlgorithm.cpp
+SOURCES += MultiMotion.cpp
 SOURCES += SinusoidalMotion.cpp
 SOURCES += Spotlight.cpp
 
@@ -31,6 +32,7 @@ HEADERS += FlorbUtils.h
 HEADERS += Flower.h
 HEADERS += LinearMotion.h
 HEADERS += MotionAlgorithm.h
+HEADERS += MultiMotion.h
 HEADERS += SinusoidalMotion.h
 HEADERS += Spotlight.h
 
