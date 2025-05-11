@@ -78,6 +78,8 @@ Florb::Florb() :
 
     cameras = configs->getCameras();
 
+    spotlights = configs->getSpotlights();
+
     createBouncer();
     
     baseRadius = configs->getRadius();

@@ -13,6 +13,7 @@
 class Camera;
 class FlorbConfigs;
 class MotionAlgorithm;
+class Spotlight;
 
 
 // Florb class encapsulating the sphere state, geometry, textures, and behavior
@@ -62,6 +63,8 @@ private:
     unsigned int currentFlower;
 
     std::vector<std::shared_ptr<Camera>> cameras;
+
+    std::vector<std::shared_ptr<Spotlight>> spotlights;  
 
     float baseRadius;
 

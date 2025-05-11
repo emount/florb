@@ -33,14 +33,14 @@ public:
     void setImagePath(const std::string& p);
 
   
-    const std::vector<std::shared_ptr<Camera>>& getCameras() const;
-
-  
     float getVideoFrameRate() const;
     void setVideoFrameRate(float r);
 
     float getImageSwitch() const;
     void setImageSwitch(float s);
+
+  
+    const std::vector<std::shared_ptr<Camera>>& getCameras() const;
 
   
     std::pair<float, float> getCenter() const;
@@ -51,6 +51,9 @@ public:
 
     unsigned int getSmoothness() const;
     void setSmoothness(unsigned int s);
+
+  
+    const std::vector<std::shared_ptr<Spotlight>>& getSpotlights() const;
 
   
     bool getBounceEnabled() const;

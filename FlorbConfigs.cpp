@@ -207,16 +207,16 @@ void FlorbConfigs::load() {
         if (config.contains("light") && config["light"].is_object()) {
             const auto &light(config["light"]);
 
-            if (config.contains("spotlights") && config["spotlights"].is_array()) {
-                const auto &spotlights(config["spotlights"]);
+            if (light.contains("spotlights") && light["spotlights"].is_array()) {
+                const auto &spotlights(light["spotlights"]);
             
                 unsigned int spotlightNum(0UL);
                 for (const auto &spotlight : spotlights) {
                     string name;
-                    vector<float> position(3, 0.0f);
+                    vector<float> direction(3, 0.0f);
                     float intensity(0.0f);
                     vector<float> color(3, 0.0f);
-                  
+
                     if (spotlight.contains("name") && spotlight["name"].is_string()) {
                         name = spotlight["name"];
                     } else {
@@ -226,13 +226,13 @@ void FlorbConfigs::load() {
                              << endl;
                     }
                     
-                    if (spotlight.contains("position") and spotlight["position"].is_array()) {
-                        const auto &positionRef(spotlight["position"]);
-                        position = {positionRef[0], positionRef[1], positionRef[2]};
+                    if (spotlight.contains("direction") and spotlight["direction"].is_array()) {
+                        const auto &directionRef(spotlight["direction"]);
+                        direction = {directionRef[0], directionRef[1], directionRef[2]};
                     } else {
                         cerr << "Spotlight ["
                              << spotlightNum
-                             << "] is missing array property \"position\""
+                             << "] is missing array property \"direction\""
                              << endl;
                     }
             
@@ -244,9 +244,9 @@ void FlorbConfigs::load() {
                         const auto &colorRef(spotlight["color"]);
                         color = {colorRef[0], colorRef[1], colorRef[2]};
                     }
-            
+
                     // Create the new spotlight and push it onto our collection
-                    this->spotlights.push_back(make_shared<Spotlight>(name, position, intensity, color));
+                    this->spotlights.push_back(make_shared<Spotlight>(name, direction, intensity, color));
                         
                     spotlightNum++;
                 }
@@ -454,14 +454,6 @@ void FlorbConfigs::setImagePath(const string &p) {
 }
 
 
-// Cameras accessor
-
-const vector<shared_ptr<Camera>>& FlorbConfigs::getCameras() const {
-    lock_guard<mutex> lock(stateMutex);
-    return cameras;
-}
-
-
 // Video accessors / mutators
 
 float FlorbConfigs::getVideoFrameRate() const {
@@ -488,6 +480,14 @@ void FlorbConfigs::setImageSwitch(float s) {
     lock_guard<mutex> lock(stateMutex);
 
     imageSwitch = s;
+}
+
+
+// Cameras accessor
+
+const vector<shared_ptr<Camera>>& FlorbConfigs::getCameras() const {
+    lock_guard<mutex> lock(stateMutex);
+    return cameras;
 }
 
 
@@ -522,6 +522,14 @@ unsigned int FlorbConfigs::getSmoothness() const {
 void FlorbConfigs::setSmoothness(unsigned int s) {
     lock_guard<mutex> lock(stateMutex);
     smoothness = s;
+}
+
+
+// Spotlights accessor
+
+const vector<shared_ptr<Spotlight>>& FlorbConfigs::getSpotlights() const {
+    lock_guard<mutex> lock(stateMutex);
+    return spotlights;
 }
 
 

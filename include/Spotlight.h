@@ -11,7 +11,7 @@ public:
 
     // Constructor
     Spotlight(const std::string &name,
-              const std::vector<float> &view,
+              const std::vector<float> &direction,
               float intensity,
               const std::vector<float> &color);
 
