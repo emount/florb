@@ -179,15 +179,10 @@ int main(int numArgs, const char *args[]) {
 
     cout << "Florb v" << VERSION_MAJOR << "." << VERSION_MINOR << endl;
 
-    string imagePath;
-    if (numArgs == 2) {
-        imagePath = args[1];
-        cerr << "A : " << imagePath << endl;
-    } else if (numArgs > 2) {
-        cerr << "Usage : "
-             << args[0]
-             << " <image_path>"
-             << endl;
+    // All parameters are provided by the config JSON
+    if (numArgs > 1) {
+        cerr << "Usage : " << args[0] << endl;
+        return -EINVAL;
     }
 
     try {

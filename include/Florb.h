@@ -21,7 +21,7 @@ class Florb {
 
 public:
     Florb();
-    ~Florb();
+    virtual ~Florb();
 
     std::shared_ptr<FlorbConfigs> getConfigs() const;
 
