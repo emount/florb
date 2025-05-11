@@ -757,12 +757,10 @@ void FlorbConfigs::parseSpotlights(const json &light) {
                 color = {colorRef[0], colorRef[1], colorRef[2]};
             }
 
-            // Parse any movement object
-            //
-            // TODO - Create intermediate base class MultiMotion
+            // Parse any optional movement object
             shared_ptr<LinearMotion> motionPtr;
             if (spotlight.contains("motion") and spotlight["motion"].is_object()) {
-              const auto &motion(spotlight["motion"]);
+                const auto &motion(spotlight["motion"]);
 
                 if (motion.contains("type") and motion["type"].is_string()) {
                     const auto &type(motion["type"]);

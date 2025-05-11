@@ -1,8 +1,13 @@
+#include <iostream>
+#include <math.h>
+
 #include "LinearMotion.h"
 #include "Spotlight.h"
 
 // Namespace using directives
 
+using std::cerr;
+using std::endl;
 using std::lock_guard;
 using std::mutex;
 using std::shared_ptr;
@@ -30,7 +35,7 @@ Spotlight::Spotlight(const string &name,
                      const vector<float> &color,
                      shared_ptr<LinearMotion> linear) :
   Spotlight(name, direction, intensity, color) {
-    linear = linear;
+    this->linear = linear;
 }
 
 
@@ -68,4 +73,21 @@ void Spotlight::setColor(float r, float g, float b) {
     color[0] = r;
     color[1] = g;
     color[2] = b;
+}
+
+
+// Motion update method
+
+void Spotlight::updateMotion(float time) {
+    if (linear) {
+        vector<float> wrapped;
+        
+        auto result(linear->vectorEvaluate(time));
+        
+        for (size_t i = 0; i < result.size(); i++) {
+            wrapped.push_back(fmod(result[i] + 1.0f, 2.0f) - 1.0f);
+        }
+
+        setDirection(wrapped[0], wrapped[1], wrapped[2]);
+    }
 }

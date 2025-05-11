@@ -234,7 +234,8 @@ void Florb::renderFrame() {
         const auto& light = spotlights[i];
     
         string base = "spotlights[" + to_string(i) + "].";
-        
+
+        // TODO - Call getDirection() / getColor() only once each
         glUniform3f(glGetUniformLocation(shaderProgram, (base + "direction").c_str()),
                     light->getDirection()[0],
                     light->getDirection()[1],
@@ -733,6 +734,10 @@ void Florb::updatePhysicalEffects() {
 
     GLuint timeLoc = glGetUniformLocation(shaderProgram, "time");
     glUniform1f(timeLoc, timeSeconds);
+
+
+    // Update spotlight motion
+    for (auto &spotlight : spotlights) spotlight->updateMotion(timeSeconds);
 
 
     // Update the sphere

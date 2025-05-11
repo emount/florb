@@ -34,6 +34,8 @@ public:
 
     const std::vector<float>& getColor() const;
     void setColor(float r, float g, float b);
+
+    void updateMotion(float time);
     
 private:
 
