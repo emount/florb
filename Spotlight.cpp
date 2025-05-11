@@ -1,9 +1,11 @@
+#include "LinearMotion.h"
 #include "Spotlight.h"
 
 // Namespace using directives
 
 using std::lock_guard;
 using std::mutex;
+using std::shared_ptr;
 using std::string;
 using std::vector;
 
@@ -19,7 +21,17 @@ Spotlight::Spotlight(const string &name,
     name(name),
     direction(direction),
     intensity(intensity),
-    color(color) { }
+    color(color),
+    linear() { }
+
+Spotlight::Spotlight(const string &name,
+                     const vector<float> &direction,
+                     float intensity,
+                     const vector<float> &color,
+                     shared_ptr<LinearMotion> linear) :
+  Spotlight(name, direction, intensity, color) {
+    linear = linear;
+}
 
 
 // Accessors / mutators

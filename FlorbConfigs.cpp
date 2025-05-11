@@ -7,8 +7,6 @@
 #include "FlorbUtils.h"
 #include "Spotlight.h"
 
-#include "nlohmann/json.hpp"
-
 extern Display *display;
 extern Window window;
 
@@ -209,59 +207,7 @@ void FlorbConfigs::load() {
                 setShininess(light["shininess"]);
             }
 
-            if (light.contains("spotlights") && light["spotlights"].is_array()) {
-                const auto &spotlights(light["spotlights"]);
-            
-                unsigned int spotlightNum(0UL);
-                for (const auto &spotlight : spotlights) {
-                    string name;
-                    vector<float> direction(3, 0.0f);
-                    float intensity(0.0f);
-                    vector<float> color(3, 0.0f);
-
-                    // Limit the number of spotlights to a maximum
-                    if (spotlightNum >= k_MaxSpotlights) {
-                        cerr << "Number of spotlights exceeds maximum of ("
-                             << k_MaxSpotlights
-                             << ")"
-                             << endl;
-                        break;
-                    }
-
-                    if (spotlight.contains("name") && spotlight["name"].is_string()) {
-                        name = spotlight["name"];
-                    } else {
-                        cerr << "Spotlight ["
-                             << spotlightNum
-                             << "] is missing string property \"name\""
-                             << endl;
-                    }
-                    
-                    if (spotlight.contains("direction") and spotlight["direction"].is_array()) {
-                        const auto &directionRef(spotlight["direction"]);
-                        direction = {directionRef[0], directionRef[1], directionRef[2]};
-                    } else {
-                        cerr << "Spotlight ["
-                             << spotlightNum
-                             << "] is missing array property \"direction\""
-                             << endl;
-                    }
-            
-                    if (spotlight.contains("intensity") && spotlight["intensity"].is_number()) {
-                        intensity = spotlight["intensity"];
-                    }
-
-                    if (spotlight.contains("color") and spotlight["color"].is_array()) {
-                        const auto &colorRef(spotlight["color"]);
-                        color = {colorRef[0], colorRef[1], colorRef[2]};
-                    }
-
-                    // Create the new spotlight and push it onto our collection
-                    this->spotlights.push_back(make_shared<Spotlight>(name, direction, intensity, color));
-                        
-                    spotlightNum++;
-                }
-            } // spotlight configs
+            parseSpotlights(light);
 
             // Rim lighting
             if (light.contains("rim") && light["rim"].is_object()) {
@@ -757,4 +703,63 @@ FlorbConfigs::SpecularMode FlorbConfigs::getSpecularMode() const {
 void FlorbConfigs::setSpecularMode(FlorbConfigs::SpecularMode s) {
     lock_guard<mutex> lock(stateMutex);
     specularMode = s;
+}
+
+
+// Private methods
+
+void FlorbConfigs::parseSpotlights(const json &light) {            
+    if (light.contains("spotlights") && light["spotlights"].is_array()) {
+        const auto &spotlights(light["spotlights"]);
+    
+        unsigned int spotlightNum(0UL);
+        for (const auto &spotlight : spotlights) {
+            string name;
+            vector<float> direction(3, 0.0f);
+            float intensity(0.0f);
+            vector<float> color(3, 0.0f);
+
+            // Limit the number of spotlights to a maximum
+            if (spotlightNum >= k_MaxSpotlights) {
+                cerr << "Number of spotlights exceeds maximum of ("
+                     << k_MaxSpotlights
+                     << ")"
+                     << endl;
+                break;
+            }
+
+            if (spotlight.contains("name") && spotlight["name"].is_string()) {
+                name = spotlight["name"];
+            } else {
+                cerr << "Spotlight ["
+                     << spotlightNum
+                     << "] is missing string property \"name\""
+                     << endl;
+            }
+            
+            if (spotlight.contains("direction") and spotlight["direction"].is_array()) {
+                const auto &directionRef(spotlight["direction"]);
+                direction = {directionRef[0], directionRef[1], directionRef[2]};
+            } else {
+                cerr << "Spotlight ["
+                     << spotlightNum
+                     << "] is missing array property \"direction\""
+                     << endl;
+            }
+    
+            if (spotlight.contains("intensity") && spotlight["intensity"].is_number()) {
+                intensity = spotlight["intensity"];
+            }
+
+            if (spotlight.contains("color") and spotlight["color"].is_array()) {
+                const auto &colorRef(spotlight["color"]);
+                color = {colorRef[0], colorRef[1], colorRef[2]};
+            }
+
+            // Create the new spotlight and push it onto our collection
+            this->spotlights.push_back(make_shared<Spotlight>(name, direction, intensity, color));
+                
+            spotlightNum++;
+        }
+    } // spotlight configs
 }

@@ -5,15 +5,24 @@
 #include <string>
 #include <vector>
 
+// Class forward references
+class LinearMotion;
+
 class Spotlight {
 
 public:
 
-    // Constructor
+    // Constructors
     Spotlight(const std::string &name,
               const std::vector<float> &direction,
               float intensity,
               const std::vector<float> &color);
+
+    Spotlight(const std::string &name,
+              const std::vector<float> &direction,
+              float intensity,
+              const std::vector<float> &color,
+              std::shared_ptr<LinearMotion> linear);
 
 public:
 
@@ -35,6 +44,8 @@ private:
     float intensity;
 
     std::vector<float> color;
+
+    std::shared_ptr<LinearMotion> linear;
       
     mutable std::mutex stateMutex;
 

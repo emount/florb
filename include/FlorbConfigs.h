@@ -5,6 +5,8 @@
 #include <vector>
 #include <memory>
 
+#include "nlohmann/json.hpp"
+
 // Class forward references
 class Camera;
 class Spotlight;
@@ -129,6 +131,10 @@ public:
     static const std::string k_DefaultImagePath;
   
     static const float k_DefaultRadius;
+
+private:
+
+    void parseSpotlights(const nlohmann::json &light);
 
 private:
   
