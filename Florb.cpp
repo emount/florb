@@ -220,7 +220,6 @@ void Florb::renderFrame() {
 
     // Set light uniforms
     GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDir");
-    GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
 
     const auto &lightDirection(spotlights[0]->getDirection());
     glUniform3f(lightDirectionLoc,
@@ -228,18 +227,12 @@ void Florb::renderFrame() {
                 lightDirection[1],
                 lightDirection[2]);
     
-    // Weight light color with intensity
-    auto lightIntensity(spotlights[0]->getIntensity());
-
-    cerr << "Setting intensity to " << lightIntensity << endl;
+    GLuint lightIntensityLoc = glGetUniformLocation(shaderProgram, "lightIntensity");
+    glUniform1f(lightIntensityLoc, spotlights[0]->getIntensity());
     
+    GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
     const auto &lightColor(spotlights[0]->getColor());
-    vector<float> actualColor = {
-      (lightIntensity * lightColor[0]),
-      (lightIntensity * lightColor[1]),
-      (lightIntensity * lightColor[2])
-    };
-    glUniform3f(lightColorLoc, actualColor[0], actualColor[1], actualColor[2]);
+    glUniform3f(lightColorLoc, lightColor[0], lightColor[1], lightColor[2]);
 
 
     // Set specular reflection uniforms
@@ -462,6 +455,7 @@ void Florb::initShaders() {
         uniform vec2 resolution;
 
         uniform vec3 lightDir;
+        uniform float lightIntensity;
         uniform vec3 lightColor;
 
         uniform vec3 viewPos;
@@ -555,7 +549,7 @@ void Florb::initShaders() {
 
 
             // Final lighting contribution
-            vec3 lighting = clamp((diffuse + specular) * lightColor, 0.0, 1.0);
+            vec3 lighting = clamp(((diffuse + specular) * lightColor * lightIntensity), 0.0, 1.0);
 
 
             // Compute final color
