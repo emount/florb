@@ -11,7 +11,10 @@ public:
     void loadImage();
 
     const std::string& getFilename() const;
-    GLuint getTextureID() const { return textureID; }
+  
+    GLuint getTextureID() const;
+
+    // TODO - Move implementations into C++ file
     GLint getWidth() const { return width; }
     GLint getHeight() const { return height; }
     GLint getChannels() const { return channels; }

@@ -8,6 +8,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+// #define DEBUG_MESSAGES
+
 using std::cerr;
 using std::endl;
 using std::string;
@@ -69,11 +71,31 @@ void Flower::loadImage() {
     glBindTexture(GL_TEXTURE_2D, 0);
 
     stbi_image_free(data);
+
+#ifdef DEBUG_MESSAGES
+    cerr << "Loaded flower image \""
+         << getFilename()
+         << "\""
+         << endl;
+#endif
 }
 
 const string& Flower::getFilename() const {
     return filename;
 }
+  
+GLuint Flower::getTextureID() const {
+#ifdef DEBUG_MESSAGES
+    cerr << "Returning texture ID ("
+         << textureID
+         << ") for flower image \""
+         << getFilename()
+         << "\""
+         << endl;
+#endif
+    return textureID;
+}
+
 
 Flower& Flower::operator=(const Flower& other) {
     if (this != &other) {
@@ -89,7 +111,7 @@ Flower& Flower::operator=(const Flower& other) {
                 try {
                     loadImage();  // this sets textureID
                 } catch (const std::exception& e) {
-                    std::cerr << "Failed to assign Flower: " << e.what() << std::endl;
+                    cerr << "Failed to assign Flower: " << e.what() << endl;
                 }
             }
         }

@@ -134,6 +134,10 @@ void Florb::renderFrame() {
         cerr << "[renderFrame()] OpenGL context is not current" << endl;
     }
 
+    GLint texCount = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &texCount);
+
+
     // Update physical effects
     updatePhysicalEffects();
     
@@ -244,30 +248,7 @@ void Florb::renderFrame() {
                     light->getIntensity());
     }
 
-
-
     
-    // GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDir");
-    // 
-    // const auto &lightDirection(spotlights[0]->getDirection());
-    // glUniform3f(lightDirectionLoc,
-    //             lightDirection[0],
-    //             lightDirection[1],
-    //             lightDirection[2]);
-    // 
-    // GLuint lightIntensityLoc = glGetUniformLocation(shaderProgram, "lightIntensity");
-    // glUniform1f(lightIntensityLoc, spotlights[0]->getIntensity());
-    // 
-    // GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
-    // const auto &lightColor(spotlights[0]->getColor());
-    // glUniform3f(lightColorLoc, lightColor[0], lightColor[1], lightColor[2]);
-
-
-
-
-    
-
-
     // Set specular reflection uniforms
     GLuint shininessLoc = glGetUniformLocation(shaderProgram, "shininess");
     glUniform1f(shininessLoc, configs->getShininess());
@@ -333,6 +314,8 @@ void Florb::renderFrame() {
     
     glBindVertexArray(0);
     FlorbUtils::glCheck("glBindVertexArray(0) - A");
+
+    glFinish();
 
     firstFrame = false;
 }
