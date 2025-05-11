@@ -231,21 +231,32 @@ void Florb::renderFrame() {
 
     // Iterate through all spotlights
     for (int i = 0; i < lightCount; ++i) {
-        const auto& light = spotlights[i];
+        const auto& spotlight = spotlights[i];
     
         string base = "spotlights[" + to_string(i) + "].";
 
-        // TODO - Call getDirection() / getColor() only once each
+        const auto &direction(spotlight->getDirection());
+        
+        float alpha = direction[0];
+        float beta  = direction[1];
+
+        glm::vec3 dir;
+        dir.x = cos(alpha) * cos(beta);
+        dir.y = sin(beta);
+        dir.z = sin(alpha) * cos(beta);
+        dir = glm::normalize(dir);
+        
+        // TODO - Call getColor() only once
         glUniform3f(glGetUniformLocation(shaderProgram, (base + "direction").c_str()),
-                    light->getDirection()[0],
-                    light->getDirection()[1],
-                    light->getDirection()[2]);
+                    dir.x,
+                    dir.y,
+                    dir.z);
         glUniform3f(glGetUniformLocation(shaderProgram, (base + "color").c_str()),
-                    light->getColor()[0],
-                    light->getColor()[1],
-                    light->getColor()[2]);
+                    spotlight->getColor()[0],
+                    spotlight->getColor()[1],
+                    spotlight->getColor()[2]);
         glUniform1f(glGetUniformLocation(shaderProgram, (base + "intensity").c_str()),
-                    light->getIntensity());
+                    spotlight->getIntensity());
     }
 
     

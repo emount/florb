@@ -83,9 +83,10 @@ void Spotlight::updateMotion(float time) {
         vector<float> wrapped;
         
         auto result(linear->vectorEvaluate(time));
+        const float TWO_PI(2.0f * M_PI);
         
         for (size_t i = 0; i < result.size(); i++) {
-            wrapped.push_back(fmod(result[i] + 1.0f, 2.0f) - 1.0f);
+            wrapped.push_back(fmod(result[i] + TWO_PI, 2.0f * TWO_PI) - TWO_PI);
         }
 
         setDirection(wrapped[0], wrapped[1], wrapped[2]);
