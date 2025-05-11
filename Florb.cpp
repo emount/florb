@@ -230,6 +230,9 @@ void Florb::renderFrame() {
     
     // Weight light color with intensity
     auto lightIntensity(spotlights[0]->getIntensity());
+
+    cerr << "Setting intensity to " << lightIntensity << endl;
+    
     const auto &lightColor(spotlights[0]->getColor());
     vector<float> actualColor = {
       (lightIntensity * lightColor[0]),

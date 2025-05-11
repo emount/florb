@@ -17,6 +17,7 @@ SOURCES += Florb.cpp
 SOURCES += FlorbConfigs.cpp
 SOURCES += Flower.cpp
 SOURCES += FlorbUtils.cpp
+SOURCES += LinearMotion.cpp
 SOURCES += MotionAlgorithm.cpp
 SOURCES += SinusoidalMotion.cpp
 SOURCES += Spotlight.cpp
@@ -28,15 +29,20 @@ HEADERS += Florb.h
 HEADERS += FlorbConfigs.h
 HEADERS += FlorbUtils.h
 HEADERS += Flower.h
+HEADERS += LinearMotion.h
 HEADERS += MotionAlgorithm.h
 HEADERS += SinusoidalMotion.h
 HEADERS += Spotlight.h
+
+CONFIG = $(TARGET).json
 
 MAKEFILE = Makefile
 
 MAKEFLAGS += -r
 
 TARGET = florb
+
+TARBALL = $(TARGET).tgz
 
 VPATH = $(INC_DIRS)
 
@@ -48,5 +54,8 @@ all: $(TARGET)
 $(TARGET): $(OBJS) $(MAKEFILE)
 	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -o $(TARGET) $(SOURCES) $(LIBS:%=-l%)
 
+$(TARBALL): $(SOURCES) $(HEADERS) $(MAKEFILE) $(CONFIG)
+	tar czf $@ $^
+
 clean:
-	rm -f $(TARGET) $(OBJS)
+	rm -f $(TARGET) $(OBJS) $(TARBALL)
