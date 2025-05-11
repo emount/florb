@@ -2,7 +2,7 @@
 FROM ubuntu:24.04
 
 # Version of Florb
-ARG FLORB_VERSION=v1.0
+ARG FLORB_VERSION=v1.1
 
 # Label attributes
 LABEL title="Florb"
