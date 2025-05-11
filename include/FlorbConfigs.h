@@ -76,17 +76,8 @@ public:
     void setBreatheFrequency(float f);
 
   
-    const std::vector<float>& getLightDirection() const;
-    void setLightDirection(float alpha, float beta, float phi);
-
-    float getLightIntensity() const;
-    void setLightIntensity(float i);
-
     float getShininess() const;
     void setShininess(float s);
-
-    const std::vector<float>& getLightColor() const;
-    void setLightColor(float r, float g, float b);
 
   
     float getRimStrength() const;
@@ -166,10 +157,7 @@ private:
     std::vector<float> breatheAmplitude;
     float breatheFrequency;
 
-    std::vector<float> lightDirection;
-    float lightIntensity;
     float shininess;
-    std::vector<float> lightColor;
     
     float rimStrength;
     float rimExponent;

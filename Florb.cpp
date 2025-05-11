@@ -12,6 +12,7 @@
 #include "FlorbConfigs.h"
 #include "FlorbUtils.h"
 #include "SinusoidalMotion.h"
+#include "Spotlight.h"
 
 
 namespace chrono = std::chrono;
@@ -221,15 +222,15 @@ void Florb::renderFrame() {
     GLuint lightDirectionLoc = glGetUniformLocation(shaderProgram, "lightDir");
     GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
 
-    const auto &lightDirection(configs->getLightDirection());
+    const auto &lightDirection(spotlights[0]->getDirection());
     glUniform3f(lightDirectionLoc,
                 lightDirection[0],
                 lightDirection[1],
                 lightDirection[2]);
     
     // Weight light color with intensity
-    auto lightIntensity(configs->getLightIntensity());
-    const auto &lightColor(configs->getLightColor());
+    auto lightIntensity(spotlights[0]->getIntensity());
+    const auto &lightColor(spotlights[0]->getColor());
     vector<float> actualColor = {
       (lightIntensity * lightColor[0]),
       (lightIntensity * lightColor[1]),

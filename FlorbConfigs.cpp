@@ -71,10 +71,7 @@ FlorbConfigs::FlorbConfigs() :
     breatheAmplitude(2, k_DefaultRadius),
     breatheFrequency(0.0f),
     
-    lightDirection(3, 0.0f),
-    lightIntensity(1.0f),
     shininess(1.0f),
-    lightColor(3, 0.0f),
 
     rimStrength(0.0f),
     rimExponent(0.0f),
@@ -251,26 +248,6 @@ void FlorbConfigs::load() {
                     spotlightNum++;
                 }
             } // spotlight configs
-
-
-            // TODO - Move into spotlight loop above
-            if (light.contains("direction") and light["direction"].is_array()) {
-                const auto &direction(light["direction"]);
-                setLightDirection(direction[0], direction[1], direction[2]);
-            }
-            
-            if (light.contains("intensity") and light["intensity"].is_number()) {
-                setLightIntensity(light["intensity"]);
-            }
-            
-            if (light.contains("shininess") and light["shininess"].is_number()) {
-                setShininess(light["shininess"]);
-            }
-            
-            if (light.contains("color") and light["color"].is_array()) {
-                const auto &color(light["color"]);
-                setLightColor(color[0], color[1], color[2]);
-            }
 
             // Rim lighting
             if (light.contains("rim") && light["rim"].is_object()) {
@@ -600,29 +577,7 @@ void FlorbConfigs::setBreatheFrequency(float f) {
 }
 
 
-// Light accessors / mutators
-
-const vector<float>& FlorbConfigs::getLightDirection() const {
-    lock_guard<mutex> lock(stateMutex);
-    return lightDirection;
-}
-
-void FlorbConfigs::setLightDirection(float alpha, float beta, float phi) {
-    lock_guard<mutex> lock(stateMutex);
-    lightDirection[0] = alpha;
-    lightDirection[1] = beta;
-    lightDirection[2] = phi;
-}
-
-float FlorbConfigs::getLightIntensity() const {
-    lock_guard<mutex> lock(stateMutex);
-    return lightIntensity;
-}
-
-void FlorbConfigs::setLightIntensity(float i) {
-    lock_guard<mutex> lock(stateMutex);
-    lightIntensity = i;
-}
+// Shininess accessor / mutator
 
 float FlorbConfigs::getShininess() const {
     lock_guard<mutex> lock(stateMutex);
@@ -632,18 +587,6 @@ float FlorbConfigs::getShininess() const {
 void FlorbConfigs::setShininess(float s) {
     lock_guard<mutex> lock(stateMutex);
     shininess = s;
-}
-
-const vector<float>& FlorbConfigs::getLightColor() const {
-    lock_guard<mutex> lock(stateMutex);
-    return lightColor;
-}
-
-void FlorbConfigs::setLightColor(float r, float g, float b) {
-    lock_guard<mutex> lock(stateMutex);
-    lightColor[0] = r;
-    lightColor[1] = g;
-    lightColor[2] = b;
 }
 
 
