@@ -28,12 +28,12 @@
 	        "motion" : {
 	            "type" : "linear",
 	            "offsets" : [0.0, 0.0, 0.0],
-	            "speeds" : [0.5, 0.0, 0.0]
+	            "speeds" : [0.5, 0.1, 0.3]
 	        }
             }
         ],
 	"rim" : {
-	    "strength" : 0.00,
+	    "strength" : 0.30,
 	    "exponent" : 3.0,
 	    "color" : [0.000, 0.000, 1.000],
 	    "frequency" : 0.20,
@@ -50,7 +50,7 @@
 	    "frequency" : 0.2
 	},
 	"breathe" : {
-	    "enabled" : false,
+	    "enabled" : true,
 	    "amplitude" : [0.75, 0.8],
 	    "frequency" : 0.4
 	}
@@ -67,6 +67,6 @@
     },
     "debug" : {
 	"render_mode" : "fill",
-	"specular_mode" : "debug"
+	"specular_mode" : "normal"
     }
 }
