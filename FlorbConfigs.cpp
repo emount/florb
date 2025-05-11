@@ -776,10 +776,10 @@ void FlorbConfigs::parseSpotlights(const json &light) {
                             offset = motion["offset"];
                         }
                         
-                        // if (motion.contains("speed") and motion["speed"].is_array()) {
-                        //     const auto &speedRef(spotlight["speed"]);
-                        //     speed = {speedRef[0], speedRef[1], speedRef[2]};
-                        // }
+                        if (motion.contains("speed") and motion["speed"].is_array()) {
+                            const auto &speedRef(motion["speed"]);
+                            speed = {speedRef[0], speedRef[1], speedRef[2]};
+                        }
 
                         // motionPtr = make_shared<LinearMotion>(true, offset, speed);
                     } else {
