@@ -315,7 +315,8 @@ void Florb::renderFrame() {
     glBindVertexArray(0);
     FlorbUtils::glCheck("glBindVertexArray(0) - A");
 
-    glFinish();
+    // Flush the OpenGL pipeline
+    glFlush();
 
     firstFrame = false;
 }
