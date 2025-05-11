@@ -22,40 +22,19 @@
         "spotlights" : [
             {
                 "name" : "Spotlight 0",
-	        "direction" : [0.0, -0.7, -1.0],
-	        "intensity" : 0.250,
+	        "direction" : [-1.5, 0.2, 0.0],
+	        "intensity" : 1.0,
 	        "color" : [1.000, 1.000, 1.000],
 	        "motion" : {
+                    "enabled" : false,
 	            "type" : "linear",
 	            "offsets" : [0.0, 0.0, 0.0],
-	            "speeds" : [0.5, 0.1, 0.3]
-	        }
-            },
-            {
-                "name" : "Spotlight 1",
-	        "direction" : [0.0, -0.5, -1.0],
-	        "intensity" : 0.250,
-	        "color" : [1.000, 1.000, 1.000],
-	        "motion" : {
-	            "type" : "linear",
-	            "offsets" : [0.0, 0.0, 0.0],
-	            "speeds" : [0.05, 0.4, -0.05]
-	        }
-            },
-            {
-                "name" : "Spotlight 2",
-	        "direction" : [0.0, -0.3, -1.0],
-	        "intensity" : 0.250,
-	        "color" : [1.000, 1.000, 1.000],
-	        "motion" : {
-	            "type" : "linear",
-	            "offsets" : [0.0, 0.0, 0.0],
-	            "speeds" : [-0.5, -0.1, -0.3]
+	            "speeds" : [0.0, 0.2, 0.0]
 	        }
             }
         ],
 	"rim" : {
-	    "strength" : 0.40,
+	    "strength" : 0.00,
 	    "exponent" : 3.0,
 	    "color" : [0.000, 0.000, 1.000],
 	    "frequency" : 0.20,
@@ -72,7 +51,7 @@
 	    "frequency" : 0.2
 	},
 	"breathe" : {
-	    "enabled" : true,
+	    "enabled" : false,
 	    "amplitude" : [0.75, 0.8],
 	    "frequency" : 0.4
 	}
@@ -89,6 +68,6 @@
     },
     "debug" : {
 	"render_mode" : "fill",
-	"specular_mode" : "normal"
+	"specular_mode" : "debug"
     }
 }

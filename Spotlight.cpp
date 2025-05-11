@@ -79,7 +79,7 @@ void Spotlight::setColor(float r, float g, float b) {
 // Motion update method
 
 void Spotlight::updateMotion(float time) {
-    if (linear) {
+    if (linear and linear->getEnabled()) {
         vector<float> wrapped;
         
         auto result(linear->vectorEvaluate(time));

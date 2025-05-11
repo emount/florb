@@ -11,6 +11,6 @@ MotionAlgorithm::MotionAlgorithm() :
 MotionAlgorithm::MotionAlgorithm(bool enabled) :
     enabled(enabled) { }
 
-bool MotionAlgorithm::get_enabled() const {
+bool MotionAlgorithm::getEnabled() const {
     return enabled;
 }

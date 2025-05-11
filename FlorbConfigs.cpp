@@ -764,6 +764,11 @@ void FlorbConfigs::parseSpotlights(const json &light) {
 
                 if (motion.contains("type") and motion["type"].is_string()) {
                     const auto &type(motion["type"]);
+                    bool enabled(false);
+
+                    if (motion.contains("enabled") and motion["enabled"].is_boolean()) {
+                        enabled = motion["enabled"];
+                    }
                     
                     // TODO - Convert to a PluggableFactories pattern perhaps
                     if (type == "linear") {
@@ -780,7 +785,7 @@ void FlorbConfigs::parseSpotlights(const json &light) {
                             speeds = {speedsRef[0], speedsRef[1], speedsRef[2]};
                         }
 
-                        motionPtr = make_shared<LinearMotion>(true, offsets, speeds);
+                        motionPtr = make_shared<LinearMotion>(enabled, offsets, speeds);
                     } else {
                         cerr << "Unrecognized \"motion\" type \"" << type << "\"" << endl;
                     }

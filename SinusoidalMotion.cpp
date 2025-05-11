@@ -27,7 +27,7 @@ SinusoidalMotion::SinusoidalMotion(bool enabled,
 float SinusoidalMotion::evaluate(float time) const {
     float evaluated;
 
-    if (get_enabled()) {
+    if (getEnabled()) {
         float sinusoid(sinf(2.0f * M_PI * frequency * time + phase));
 	evaluated = (bias + (amplitude * sinusoid));
     } else {

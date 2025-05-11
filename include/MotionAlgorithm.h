@@ -10,7 +10,7 @@ public:
     
     virtual float evaluate(float time) const = 0;
 
-    bool get_enabled() const;
+    bool getEnabled() const;
 
 private:
     bool enabled;
