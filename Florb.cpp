@@ -134,9 +134,17 @@ void Florb::renderFrame() {
         cerr << "[renderFrame()] OpenGL context is not current" << endl;
     }
 
-    GLint texCount = 0;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &texCount);
-
+    // Perform one-time initialization upon the first frame
+    if (firstFrame) {
+        // Initialize the sphere
+        auto smoothness(configs->getSmoothness());
+        initSphere(smoothness, (smoothness / 2));
+      
+        // Load all flower images
+        for (auto &flower : flowers) {
+            flower->loadImage();
+        }
+    }
 
     // Update physical effects
     updatePhysicalEffects();
@@ -153,13 +161,6 @@ void Florb::renderFrame() {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
-
-    // Load all flower images upon the first frame
-    if (firstFrame) {
-        for (auto &flower : flowers) {
-            flower->loadImage();
-        }
     }
     
     GLuint textureID;
@@ -222,8 +223,6 @@ void Florb::renderFrame() {
                 cameraView[2]);
 
     glUniform1f(zoomLoc, cameras[0]->getZoom());
-
-
 
     
     // Set light uniforms
@@ -347,10 +346,51 @@ void Florb::loadFlowers() {
     }
 }
 
+void Florb::initSphere(int sectorCount, int stackCount) {
+    cerr << "initSphere(sectorCount = "
+         << sectorCount
+         << ", stackCount = "
+         << stackCount
+         << ")"
+         << endl;
+    
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    // Allocate vertex buffer
+    int numVertices((stackCount + 1) * (sectorCount + 1));
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+    FlorbUtils::glCheck("glBufferData(GL_ARRAY_BUFFER)");
+    cerr << "Allocated ("
+         << numVertices * sizeof(Vertex)
+         << ")-byte vertex buffer"
+         << endl;
+
+    // Allocate index buffer
+    int numIndices(stackCount * (sectorCount + 1) * 2);
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
+    FlorbUtils::glCheck("glBufferData(GL_ELEMENT_ARRAY_BUFFER)");
+    cerr << "Allocated ("
+         << numIndices * sizeof(GLuint)
+         << ")-byte index buffer"
+         << endl;
+}
+
 void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
     vector<Vertex> vertices;
     vector<unsigned int> indices;
 
+    cerr << "generateSphere(sectorCount = "
+         << sectorCount
+         << ", stackCount = "
+         << stackCount
+         << ")"
+         << endl;
+    
     for (int y = 0; y <= stackCount; ++y) {
         for (int x = 0; x <= sectorCount; ++x) {
             float xSegment = static_cast<float>(x) / sectorCount;
@@ -376,20 +416,32 @@ void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
 
     indexCount = static_cast<int>(indices.size());
 
-    glGenVertexArrays(1, &vao);
+    // Bind vertex and index arrays
     glBindVertexArray(vao);
-
-    // Load vertices
-    glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
-    FlorbUtils::glCheck("glBufferData(GL_ARRAY_BUFFER)");
-
-    // Load indices
-    glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-    FlorbUtils::glCheck("glBufferData(GL_ELEMENT_ARRAY_BUFFER)");
+
+    // Load vertices into existing buffer
+    glBufferSubData(GL_ARRAY_BUFFER,
+                    0,
+                    vertices.size() * sizeof(Vertex),
+                    vertices.data());
+    FlorbUtils::glCheck("glBufferSubData(GL_ARRAY_BUFFER)");
+    cerr << "Loaded ("
+         << vertices.size() * sizeof(Vertex)
+         << ")-byte vertex data"
+         << endl;
+
+    // Load indices into existing buffer
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,
+                    0,
+                    indices.size() * sizeof(GLuint),
+                    indices.data());
+    FlorbUtils::glCheck("glBufferSubData(GL_ELEMENT_ARRAY_BUFFER)");
+    cerr << "Loaded ("
+         << indices.size() * sizeof(GLuint)
+         << ")-byte index data"
+         << endl;
 
     // Vertex position attributes
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);

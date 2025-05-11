@@ -32,7 +32,8 @@ public:
 private:
   
     void loadFlowers();
-  
+
+    void initSphere(int sectorCount, int stackCount);
     void generateSphere(float radius, int sectorCount, int stackCount);
   
     void initShaders();
