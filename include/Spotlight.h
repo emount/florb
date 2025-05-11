@@ -5,15 +5,15 @@
 #include <string>
 #include <vector>
 
-class Light {
+class Spotlight {
 
 public:
 
     // Constructor
-    Light(const std::string &name,
-          const std::vector<float> &view,
-          float intensity,
-          const std::vector<float> &color);
+    Spotlight(const std::string &name,
+              const std::vector<float> &view,
+              float intensity,
+              const std::vector<float> &color);
 
 public:
 

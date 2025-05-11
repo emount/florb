@@ -5,6 +5,8 @@
 #include "Camera.h"
 #include "FlorbConfigs.h"
 #include "FlorbUtils.h"
+#include "Spotlight.h"
+
 #include "nlohmann/json.hpp"
 
 extern Display *display;
@@ -58,6 +60,8 @@ FlorbConfigs::FlorbConfigs() :
     offsetY(0.0f),
     radius(k_DefaultRadius),
     smoothness(7UL),
+
+    spotlights(),
 
     bounceEnabled(false),
     bounceAmplitude(0.0f),
@@ -149,12 +153,12 @@ void FlorbConfigs::load() {
                 vector<float> view(3, 0.0f);
                 float zoom(0.0f);
               
-                if (camera.contains("name") && camera["name"].is_array()) {
+                if (camera.contains("name") && camera["name"].is_string()) {
                     name = camera["name"];
                 } else {
                     cerr << "Camera ["
                          << cameraNum
-                         << " is missing string property \"name\""
+                         << "] is missing string property \"name\""
                          << endl;
                 }
                 
@@ -178,7 +182,7 @@ void FlorbConfigs::load() {
                     
                 cameraNum++;
             }
-        }
+        } // camera configs
         
 
         // Geometry configs
@@ -198,50 +202,58 @@ void FlorbConfigs::load() {
             }
         }        
 
-
-        // Effects configs
-        if (config.contains("effects") && config["effects"].is_object()) {
-            const auto &effects(config["effects"]);
-
-            if (effects.contains("bounce") && effects["bounce"].is_object()) {
-                const auto &bounce(effects["bounce"]);
-
-                if (bounce.contains("enabled") and bounce["enabled"].is_boolean()) {
-                    setBounceEnabled(bounce["enabled"]);
-                }
-
-                if (bounce.contains("amplitude") and bounce["amplitude"].is_number()) {
-                    const auto &amplitude(bounce["amplitude"]);
-                    setBounceAmplitude(amplitude);
-                }
-                
-                if (bounce.contains("frequency") and bounce["frequency"].is_number()) {
-                    setBounceFrequency(bounce["frequency"]);
-                }
-            }
-
-            if (effects.contains("breathe") && effects["breathe"].is_object()) {
-                const auto &breathe(effects["breathe"]);
-
-                if (breathe.contains("enabled") and breathe["enabled"].is_boolean()) {
-                    setBreatheEnabled(breathe["enabled"]);
-                }
-
-                if (breathe.contains("amplitude") and breathe["amplitude"].is_array()) {
-                    const auto &amplitude(breathe["amplitude"]);
-                    setBreatheAmplitude(amplitude[0], amplitude[1]);
-                }
-                
-                if (breathe.contains("frequency") and breathe["frequency"].is_number()) {
-                    setBreatheFrequency(breathe["frequency"]);
-                }
-            }
-        }    
-        
+ 
         // Light configs
         if (config.contains("light") && config["light"].is_object()) {
             const auto &light(config["light"]);
+
+            if (config.contains("spotlights") && config["spotlights"].is_array()) {
+                const auto &spotlights(config["spotlights"]);
             
+                unsigned int spotlightNum(0UL);
+                for (const auto &spotlight : spotlights) {
+                    string name;
+                    vector<float> position(3, 0.0f);
+                    float intensity(0.0f);
+                    vector<float> color(3, 0.0f);
+                  
+                    if (spotlight.contains("name") && spotlight["name"].is_string()) {
+                        name = spotlight["name"];
+                    } else {
+                        cerr << "Spotlight ["
+                             << spotlightNum
+                             << "] is missing string property \"name\""
+                             << endl;
+                    }
+                    
+                    if (spotlight.contains("position") and spotlight["position"].is_array()) {
+                        const auto &positionRef(spotlight["position"]);
+                        position = {positionRef[0], positionRef[1], positionRef[2]};
+                    } else {
+                        cerr << "Spotlight ["
+                             << spotlightNum
+                             << "] is missing array property \"position\""
+                             << endl;
+                    }
+            
+                    if (spotlight.contains("intensity") && spotlight["intensity"].is_number()) {
+                        intensity = spotlight["intensity"];
+                    }
+
+                    if (spotlight.contains("color") and spotlight["color"].is_array()) {
+                        const auto &colorRef(spotlight["color"]);
+                        color = {colorRef[0], colorRef[1], colorRef[2]};
+                    }
+            
+                    // Create the new spotlight and push it onto our collection
+                    this->spotlights.push_back(make_shared<Spotlight>(name, position, intensity, color));
+                        
+                    spotlightNum++;
+                }
+            } // spotlight configs
+
+
+            // TODO - Move into spotlight loop above
             if (light.contains("direction") and light["direction"].is_array()) {
                 const auto &direction(light["direction"]);
                 setLightDirection(direction[0], direction[1], direction[2]);
@@ -294,6 +306,46 @@ void FlorbConfigs::load() {
                 } // animate configs
             } // rim configs
         } // light configs
+                        
+        
+        // Effects configs
+        if (config.contains("effects") && config["effects"].is_object()) {
+            const auto &effects(config["effects"]);
+
+            if (effects.contains("bounce") && effects["bounce"].is_object()) {
+                const auto &bounce(effects["bounce"]);
+
+                if (bounce.contains("enabled") and bounce["enabled"].is_boolean()) {
+                    setBounceEnabled(bounce["enabled"]);
+                }
+
+                if (bounce.contains("amplitude") and bounce["amplitude"].is_number()) {
+                    const auto &amplitude(bounce["amplitude"]);
+                    setBounceAmplitude(amplitude);
+                }
+                
+                if (bounce.contains("frequency") and bounce["frequency"].is_number()) {
+                    setBounceFrequency(bounce["frequency"]);
+                }
+            }
+
+            if (effects.contains("breathe") && effects["breathe"].is_object()) {
+                const auto &breathe(effects["breathe"]);
+
+                if (breathe.contains("enabled") and breathe["enabled"].is_boolean()) {
+                    setBreatheEnabled(breathe["enabled"]);
+                }
+
+                if (breathe.contains("amplitude") and breathe["amplitude"].is_array()) {
+                    const auto &amplitude(breathe["amplitude"]);
+                    setBreatheAmplitude(amplitude[0], amplitude[1]);
+                }
+                
+                if (breathe.contains("frequency") and breathe["frequency"].is_number()) {
+                    setBreatheFrequency(breathe["frequency"]);
+                }
+            }
+        }    
 
         
         // Vignette configs

@@ -17,19 +17,17 @@
 	"radius" : 0.8,
 	"smoothness" : 288
     },
-    "effects" : {
-	"bounce" : {
-	    "enabled" : false,
-	    "amplitude" : 0.1,
-	    "frequency" : 0.2
-	},
-	"breathe" : {
-	    "enabled" : false,
-	    "amplitude" : [0.75, 0.8],
-	    "frequency" : 0.4
-	}
-    },
     "light" : {
+        "spotlights" : [
+            {
+                "name" : "Spotlight 0",
+	        "direction" : [0.0, -0.5, -1.0],
+	        "intensity" : 0.60,
+	        "color" : [1.000, 1.000, 1.000]
+            }
+        ],
+
+        
 	"direction" : [0.0, -0.5, -1.0],
 	"intensity" : 0.60,
 	"shininess" : 64.0,
@@ -44,6 +42,18 @@
                 "enabled" : true,
                 "frequency" : 60.0
             }
+	}
+    },
+    "effects" : {
+	"bounce" : {
+	    "enabled" : false,
+	    "amplitude" : 0.1,
+	    "frequency" : 0.2
+	},
+	"breathe" : {
+	    "enabled" : false,
+	    "amplitude" : [0.75, 0.8],
+	    "frequency" : 0.4
 	}
     },
     "vignette" : {

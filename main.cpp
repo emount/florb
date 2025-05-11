@@ -5,6 +5,7 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <string>
 #include <thread>
 
 #include "Florb.h"
@@ -24,6 +25,12 @@ using chrono::steady_clock;
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::exception;
+using std::runtime_error;
+using std::string;
+
+namespace this_thread = std::this_thread;
+
 
 Display *display;
 Window window;
@@ -32,10 +39,11 @@ GLXContext context;
 int screenWidth = 800;
 int screenHeight = 600;
 
+
 // Initialize OpenGL and X11 Window
 void initOpenGL() {
     display = XOpenDisplay(nullptr);
-    if (!display) throw std::runtime_error("Cannot open X11 display");
+    if (!display) throw runtime_error("Cannot open X11 display");
 
     int screenNum = DefaultScreen(display);
     Screen* screen = ScreenOfDisplay(display, screenNum);
@@ -51,7 +59,7 @@ void initOpenGL() {
     };
 
     XVisualInfo* vi = glXChooseVisual(display, screenNum, visualAttribs);
-    if (!vi) throw std::runtime_error("No appropriate visual found");
+    if (!vi) throw runtime_error("No appropriate visual found");
 
     Colormap cmap = XCreateColormap(display, RootWindow(display, vi->screen), vi->visual, AllocNone);
 
@@ -62,7 +70,7 @@ void initOpenGL() {
     window = XCreateWindow(display, RootWindow(display, vi->screen),
                            0, 0, screenWidth, screenHeight, 0, vi->depth, InputOutput,
                            vi->visual, CWColormap | CWEventMask, &swa);
-    if (!window) throw std::runtime_error("Failed to create window");
+    if (!window) throw runtime_error("Failed to create window");
 
     // Map the window (show it)
     XMapWindow(display, window);
@@ -97,7 +105,7 @@ void initOpenGL() {
         glXGetProcAddress((const GLubyte*)"glXCreateContextAttribsARB");
 
     if (!glXCreateContextAttribsARB) {
-        throw std::runtime_error("glXCreateContextAttribsARB not supported");
+        throw runtime_error("glXCreateContextAttribsARB not supported");
     }
 
     int context_attribs[] = {
@@ -123,12 +131,12 @@ void initOpenGL() {
         None
     };
     fbc = glXChooseFBConfig(display, screenNum, fbAttribs, &fbcount);
-    if (!fbc) throw std::runtime_error("Failed to get FBConfig");
+    if (!fbc) throw runtime_error("Failed to get FBConfig");
 
     glXDestroyContext(display, tempContext);
 
     context = glXCreateContextAttribsARB(display, fbc[0], nullptr, True, context_attribs);
-    if (!context) throw std::runtime_error("Failed to create modern GLX context");
+    if (!context) throw runtime_error("Failed to create modern GLX context");
 
     glXMakeCurrent(display, window, context);
 
@@ -147,7 +155,7 @@ void initOpenGL() {
 
     GLenum err = glewInit();
     if (err != GLEW_OK) {
-        throw std::runtime_error(std::string("GLEW init failed: ") + (const char*)glewGetErrorString(err));
+        throw runtime_error(string("GLEW init failed: ") + (const char*)glewGetErrorString(err));
     }
 
     // Graphical housekeeping
@@ -167,13 +175,20 @@ void initOpenGL() {
     cout << "[INFO] OpenGL version: " << version << endl;
 }
 
-int main() {
+int main(int numArgs, const char *args[]) {
 
-    std::cout << "Florb v"
-              << VERSION_MAJOR
-              << "."
-              << VERSION_MINOR
-              << endl;
+    cout << "Florb v" << VERSION_MAJOR << "." << VERSION_MINOR << endl;
+
+    string imagePath;
+    if (numArgs == 2) {
+        imagePath = args[1];
+        cerr << "A : " << imagePath << endl;
+    } else if (numArgs > 2) {
+        cerr << "Usage : "
+             << args[0]
+             << " <image_path>"
+             << endl;
+    }
 
     try {
         initOpenGL();
@@ -217,28 +232,28 @@ int main() {
                 startTime = steady_clock::now();
             }
 
-	    // Fetch the configurable frame rate from the Florb
-	    const float k_FrameTime(1000.0f / florbConfigs->getVideoFrameRate());
+            // Fetch the configurable frame rate from the Florb
+            const float k_FrameTime(1000.0f / florbConfigs->getVideoFrameRate());
 
-	    static steady_clock::time_point lastFrame = steady_clock::now();
-	    float frameElapsed = duration_cast<milliseconds>(steady_clock::now() - lastFrame).count();
+            static steady_clock::time_point lastFrame = steady_clock::now();
+            float frameElapsed = duration_cast<milliseconds>(steady_clock::now() - lastFrame).count();
 
-	    if (frameElapsed < k_FrameTime) {
-	      // Busy-wait or sleep for the remaining time
-	      std::this_thread::sleep_for(milliseconds(static_cast<int>(k_FrameTime - frameElapsed)));
-	    }
+            if (frameElapsed < k_FrameTime) {
+              // Busy-wait or sleep for the remaining time
+              this_thread::sleep_for(milliseconds(static_cast<int>(k_FrameTime - frameElapsed)));
+            }
 
-	    // Mark start of new frame
-	    lastFrame = steady_clock::now();
+            // Mark start of new frame
+            lastFrame = steady_clock::now();
  
             // Render a flower frame
-	    florb.renderFrame();
-	    glXSwapBuffers(display, window);
+            florb.renderFrame();
+            glXSwapBuffers(display, window);
 
 
-	// cerr << "Frame start : "
-	// 	 << duration_cast<milliseconds>(frameElapsed).count() << " ms" << endl;
-	    
+        // cerr << "Frame start : "
+        //          << duration_cast<milliseconds>(frameElapsed).count() << " ms" << endl;
+            
         } // while (running)
 
         glXMakeCurrent(display, None, nullptr);
@@ -247,8 +262,8 @@ int main() {
         XDestroyWindow(display, window);
         XCloseDisplay(display);
 
-    } catch (const std::exception& e) {
-        std::cerr << "Fatal error: " << e.what() << std::endl;
+    } catch (const exception& e) {
+        cerr << "Fatal error: " << e.what() << std::endl;
         return 1;
     }
 

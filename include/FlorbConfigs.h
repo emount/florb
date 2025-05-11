@@ -5,6 +5,11 @@
 #include <vector>
 #include <memory>
 
+// Class forward references
+class Camera;
+class Spotlight;
+
+
 class FlorbConfigs : public std::enable_shared_from_this<FlorbConfigs> {
 
 public:
@@ -147,6 +152,8 @@ private:
     float offsetY;
     float radius;
     unsigned int smoothness;
+
+    std::vector<std::shared_ptr<Spotlight>> spotlights;
 
     bool bounceEnabled;
     float bounceAmplitude;

@@ -17,9 +17,9 @@ SOURCES += Florb.cpp
 SOURCES += FlorbConfigs.cpp
 SOURCES += Flower.cpp
 SOURCES += FlorbUtils.cpp
-SOURCES += Light.cpp
 SOURCES += MotionAlgorithm.cpp
 SOURCES += SinusoidalMotion.cpp
+SOURCES += Spotlight.cpp
 
 OBJS = $(SOURCES:%.cpp=%.o)
 
@@ -28,9 +28,9 @@ HEADERS += Florb.h
 HEADERS += FlorbConfigs.h
 HEADERS += FlorbUtils.h
 HEADERS += Flower.h
-HEADERS += Light.h
 HEADERS += MotionAlgorithm.h
 HEADERS += SinusoidalMotion.h
+HEADERS += Spotlight.h
 
 MAKEFILE = Makefile
 
