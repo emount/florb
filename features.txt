@@ -33,6 +33,7 @@ Create method initPhysics() to create breather, call initMotes(), etc.
 Doxyfile for Doxygen documentation pages
 Convert integer types to uint32_t, etc.
 Generate shader code programatically
+Introduce a linter for C++-(11/14/17?)
 
 
 Debug features

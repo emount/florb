@@ -25,7 +25,7 @@
 	        "direction" : [0.0, -0.7, -1.0],
 	        "intensity" : 0.80,
 	        "color" : [1.000, 1.000, 1.000],
-	        "movement" : {
+	        "motion" : {
 	            "type" : "linear",
 	            "offset" : 0.0,
 	            "speed" : [0.1, 0.0, 0.0]

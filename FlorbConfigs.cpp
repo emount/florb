@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "FlorbConfigs.h"
 #include "FlorbUtils.h"
+#include "LinearMotion.h"
 #include "Spotlight.h"
 
 extern Display *display;
@@ -110,7 +111,7 @@ void FlorbConfigs::load() {
         file >> config;
 
         // Title config
-        if (config.contains("title") && config["title"].is_string()) {
+        if (config.contains("title") and config["title"].is_string()) {
             setTitle(config["title"]);
         } else {
             setTitle(k_DefaultTitle);
@@ -118,7 +119,7 @@ void FlorbConfigs::load() {
 
         
         // Image path config
-        if (config.contains("image_path") && config["image_path"].is_string()) {
+        if (config.contains("image_path") and config["image_path"].is_string()) {
             setImagePath(config["image_path"]);
         } else {
             setImagePath(k_DefaultImagePath);
@@ -126,7 +127,7 @@ void FlorbConfigs::load() {
 
 
         // Video configs
-        if (config.contains("video") && config["video"].is_object()) {
+        if (config.contains("video") and config["video"].is_object()) {
             const auto &video(config["video"]);
             
             if (video.contains("frame_rate") and video["frame_rate"].is_number()) {
@@ -140,7 +141,7 @@ void FlorbConfigs::load() {
 
 
         // Cameras
-        if (config.contains("cameras") && config["cameras"].is_array()) {
+        if (config.contains("cameras") and config["cameras"].is_array()) {
             const auto &cameras(config["cameras"]);
         
             unsigned int cameraNum(0UL);
@@ -149,7 +150,7 @@ void FlorbConfigs::load() {
                 vector<float> view(3, 0.0f);
                 float zoom(0.0f);
               
-                if (camera.contains("name") && camera["name"].is_string()) {
+                if (camera.contains("name") and camera["name"].is_string()) {
                     name = camera["name"];
                 } else {
                     cerr << "Camera ["
@@ -168,7 +169,7 @@ void FlorbConfigs::load() {
                          << endl;
                 }
 
-                if (camera.contains("zoom") && camera["zoom"].is_number()) {
+                if (camera.contains("zoom") and camera["zoom"].is_number()) {
                     auto zoomFactor(1.0f / static_cast<float>(camera["zoom"]));
                     zoom = zoomFactor;
                 }
@@ -182,10 +183,10 @@ void FlorbConfigs::load() {
         
 
         // Geometry configs
-        if (config.contains("geometry") && config["geometry"].is_object()) {
+        if (config.contains("geometry") and config["geometry"].is_object()) {
             const auto &geometry(config["geometry"]);
 
-            if (geometry.contains("center") && geometry["center"].is_array() && geometry["center"].size() == 2) {
+            if (geometry.contains("center") and geometry["center"].is_array() and geometry["center"].size() == 2) {
                 setCenter(geometry["center"][0], geometry["center"][1]);
             }
 
@@ -200,17 +201,17 @@ void FlorbConfigs::load() {
 
  
         // Light configs
-        if (config.contains("light") && config["light"].is_object()) {
+        if (config.contains("light") and config["light"].is_object()) {
             const auto &light(config["light"]);
 
-            if (light.contains("shininess") && light["shininess"].is_number()) {
+            if (light.contains("shininess") and light["shininess"].is_number()) {
                 setShininess(light["shininess"]);
             }
 
             parseSpotlights(light);
 
             // Rim lighting
-            if (light.contains("rim") && light["rim"].is_object()) {
+            if (light.contains("rim") and light["rim"].is_object()) {
                 const auto &rim(light["rim"]);
 
                 if (rim.contains("strength") and rim["strength"].is_number()) {
@@ -246,10 +247,10 @@ void FlorbConfigs::load() {
                         
         
         // Effects configs
-        if (config.contains("effects") && config["effects"].is_object()) {
+        if (config.contains("effects") and config["effects"].is_object()) {
             const auto &effects(config["effects"]);
 
-            if (effects.contains("bounce") && effects["bounce"].is_object()) {
+            if (effects.contains("bounce") and effects["bounce"].is_object()) {
                 const auto &bounce(effects["bounce"]);
 
                 if (bounce.contains("enabled") and bounce["enabled"].is_boolean()) {
@@ -266,7 +267,7 @@ void FlorbConfigs::load() {
                 }
             }
 
-            if (effects.contains("breathe") && effects["breathe"].is_object()) {
+            if (effects.contains("breathe") and effects["breathe"].is_object()) {
                 const auto &breathe(effects["breathe"]);
 
                 if (breathe.contains("enabled") and breathe["enabled"].is_boolean()) {
@@ -286,7 +287,7 @@ void FlorbConfigs::load() {
 
         
         // Vignette configs
-        if (config.contains("vignette") && config["vignette"].is_object()) {
+        if (config.contains("vignette") and config["vignette"].is_object()) {
             const auto &vignette(config["vignette"]);
             
             if (vignette.contains("radius") and vignette["radius"].is_number()) {
@@ -300,7 +301,7 @@ void FlorbConfigs::load() {
 
 
         // Mote configs
-        if (config.contains("motes") && config["motes"].is_object()) {
+        if (config.contains("motes") and config["motes"].is_object()) {
             const auto &motes(config["motes"]);
 
             if (motes.contains("count") and motes["count"].is_number_integer()) {
@@ -326,11 +327,11 @@ void FlorbConfigs::load() {
 
         
         // Debug configs
-        if (config.contains("debug") && config["debug"].is_object()) {
+        if (config.contains("debug") and config["debug"].is_object()) {
             const auto &debug(config["debug"]);
 
             // Rendering mode - normal fill, or wiremesh lines
-            if (debug.contains("render_mode") && debug["render_mode"].is_string()) {
+            if (debug.contains("render_mode") and debug["render_mode"].is_string()) {
                 if(debug["render_mode"] == "fill") {
                     setRenderMode(RenderMode::FILL);
                 } else if(debug["render_mode"] == "line") {
@@ -344,7 +345,7 @@ void FlorbConfigs::load() {
             }
 
             // Specular mode - normal reflections, or debug spot
-            if (debug.contains("specular_mode") && debug["specular_mode"].is_string()) {
+            if (debug.contains("specular_mode") and debug["specular_mode"].is_string()) {
                 if(debug["specular_mode"] == "normal") {
                     setSpecularMode(SpecularMode::NORMAL);
                 } else if(debug["specular_mode"] == "debug") {
@@ -709,7 +710,7 @@ void FlorbConfigs::setSpecularMode(FlorbConfigs::SpecularMode s) {
 // Private methods
 
 void FlorbConfigs::parseSpotlights(const json &light) {            
-    if (light.contains("spotlights") && light["spotlights"].is_array()) {
+    if (light.contains("spotlights") and light["spotlights"].is_array()) {
         const auto &spotlights(light["spotlights"]);
     
         unsigned int spotlightNum(0UL);
@@ -728,7 +729,7 @@ void FlorbConfigs::parseSpotlights(const json &light) {
                 break;
             }
 
-            if (spotlight.contains("name") && spotlight["name"].is_string()) {
+            if (spotlight.contains("name") and spotlight["name"].is_string()) {
                 name = spotlight["name"];
             } else {
                 cerr << "Spotlight ["
@@ -747,7 +748,7 @@ void FlorbConfigs::parseSpotlights(const json &light) {
                      << endl;
             }
     
-            if (spotlight.contains("intensity") && spotlight["intensity"].is_number()) {
+            if (spotlight.contains("intensity") and spotlight["intensity"].is_number()) {
                 intensity = spotlight["intensity"];
             }
 
@@ -756,8 +757,43 @@ void FlorbConfigs::parseSpotlights(const json &light) {
                 color = {colorRef[0], colorRef[1], colorRef[2]};
             }
 
+            // Parse any movement object
+            //
+            // TODO - Create intermediate base class MultiMotion
+            shared_ptr<LinearMotion> motionPtr;
+            if (spotlight.contains("motion") and spotlight["motion"].is_object()) {
+              const auto &motion(spotlight["motion"]);
+
+                if (motion.contains("type") and motion["type"].is_string()) {
+                    const auto &type(motion["type"]);
+                    
+                    // TODO - Convert to a PluggableFactories pattern perhaps
+                    if (type == "linear") {
+                        float offset(0.0f);
+                        vector<float> speed(3, 0.0f);
+
+                        if (motion.contains("offset") and motion["offset"].is_number()) {
+                            offset = motion["offset"];
+                        }
+                        
+                        // if (motion.contains("speed") and motion["speed"].is_array()) {
+                        //     const auto &speedRef(spotlight["speed"]);
+                        //     speed = {speedRef[0], speedRef[1], speedRef[2]};
+                        // }
+
+                        // motionPtr = make_shared<LinearMotion>(true, offset, speed);
+                    } else {
+                        cerr << "Unrecognized \"motion\" type \"" << type << "\"" << endl;
+                    }
+                }
+            } // motion parsing
+
             // Create the new spotlight and push it onto our collection
-            this->spotlights.push_back(make_shared<Spotlight>(name, direction, intensity, color));
+            this->spotlights.push_back(make_shared<Spotlight>(name,
+                                                              direction,
+                                                              intensity,
+                                                              color,
+                                                              motionPtr));
                 
             spotlightNum++;
         }

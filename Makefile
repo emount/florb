@@ -52,7 +52,7 @@ all: $(TARGET)
 	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -c -o $@ $<
 
 $(TARGET): $(OBJS) $(MAKEFILE)
-	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -o $(TARGET) $(SOURCES) $(LIBS:%=-l%)
+	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -o $(TARGET) $(OBJS) $(LIBS:%=-l%)
 
 $(TARBALL): $(SOURCES) $(HEADERS) $(MAKEFILE) $(CONFIG)
 	tar czf $@ $^
