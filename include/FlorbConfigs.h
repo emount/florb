@@ -182,6 +182,8 @@ private:
     static const float k_MaxVideoFrameRate;
     static const float k_DefaultVideoFrameRate;
     static const float k_DefaultImageSwitch;
+
+    static const unsigned int k_MaxSpotlights;
   
     static const int k_MaxMotes;
 };

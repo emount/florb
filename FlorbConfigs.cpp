@@ -41,6 +41,8 @@ const float FlorbConfigs::k_DefaultVideoFrameRate(60.0f);
 
 const float FlorbConfigs::k_DefaultImageSwitch(5.0f);
 
+const unsigned int FlorbConfigs::k_MaxSpotlights(4UL);
+
 const float FlorbConfigs::k_DefaultRadius(0.8f);
 
 const int FlorbConfigs::k_MaxMotes(128);
@@ -217,6 +219,15 @@ void FlorbConfigs::load() {
                     float intensity(0.0f);
                     vector<float> color(3, 0.0f);
 
+                    // Limit the number of spotlights to a maximum
+                    if (numSpotlights >= k_MaxSpotlights) {
+                        cerr << "Number of spotlights exceeds maximum of ("
+                             << k_MaxSpotlights
+                             << ")"
+                             << endl;
+                        break;
+                    }
+
                     if (spotlight.contains("name") && spotlight["name"].is_string()) {
                         name = spotlight["name"];
                     } else {
@@ -264,10 +275,10 @@ void FlorbConfigs::load() {
                     setRimExponent(rim["exponent"]);
                 }
             
-		if (rim.contains("color") and rim["color"].is_array()) {
-		    const auto &color(rim["color"]);
-		    setRimColor(color[0], color[1], color[2]);
-		}
+                if (rim.contains("color") and rim["color"].is_array()) {
+                    const auto &color(rim["color"]);
+                    setRimColor(color[0], color[1], color[2]);
+                }
                 
                 if (rim.contains("frequency") and rim["frequency"].is_number()) {
                     setRimFrequency(rim["frequency"]);
