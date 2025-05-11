@@ -347,13 +347,7 @@ void Florb::loadFlowers() {
 }
 
 void Florb::initSphere(int sectorCount, int stackCount) {
-    cerr << "initSphere(sectorCount = "
-         << sectorCount
-         << ", stackCount = "
-         << stackCount
-         << ")"
-         << endl;
-    
+    // Generate and bind the vertex array
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
@@ -363,10 +357,6 @@ void Florb::initSphere(int sectorCount, int stackCount) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
     FlorbUtils::glCheck("glBufferData(GL_ARRAY_BUFFER)");
-    cerr << "Allocated ("
-         << numVertices * sizeof(Vertex)
-         << ")-byte vertex buffer"
-         << endl;
 
     // Allocate index buffer
     int numIndices(stackCount * (sectorCount + 1) * 2);
@@ -374,22 +364,11 @@ void Florb::initSphere(int sectorCount, int stackCount) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
     FlorbUtils::glCheck("glBufferData(GL_ELEMENT_ARRAY_BUFFER)");
-    cerr << "Allocated ("
-         << numIndices * sizeof(GLuint)
-         << ")-byte index buffer"
-         << endl;
 }
 
 void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
     vector<Vertex> vertices;
     vector<unsigned int> indices;
-
-    cerr << "generateSphere(sectorCount = "
-         << sectorCount
-         << ", stackCount = "
-         << stackCount
-         << ")"
-         << endl;
     
     for (int y = 0; y <= stackCount; ++y) {
         for (int x = 0; x <= sectorCount; ++x) {
@@ -427,10 +406,6 @@ void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
                     vertices.size() * sizeof(Vertex),
                     vertices.data());
     FlorbUtils::glCheck("glBufferSubData(GL_ARRAY_BUFFER)");
-    cerr << "Loaded ("
-         << vertices.size() * sizeof(Vertex)
-         << ")-byte vertex data"
-         << endl;
 
     // Load indices into existing buffer
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,
@@ -438,10 +413,6 @@ void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
                     indices.size() * sizeof(GLuint),
                     indices.data());
     FlorbUtils::glCheck("glBufferSubData(GL_ELEMENT_ARRAY_BUFFER)");
-    cerr << "Loaded ("
-         << indices.size() * sizeof(GLuint)
-         << ")-byte index data"
-         << endl;
 
     // Vertex position attributes
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
