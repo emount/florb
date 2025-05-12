@@ -5,6 +5,7 @@
 	"frame_rate" : 60.0,
 	"image_switch" : 5.0
     },
+    "transition_mode" : "flip",
     "cameras" : [
         {
             "name" : "Camera 0",

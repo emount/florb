@@ -16,6 +16,9 @@ class FlorbConfigs : public std::enable_shared_from_this<FlorbConfigs> {
 
 public:
   
+    // Enumerated type for image transition mode
+    enum class TransitionMode { FLIP, BLEND };
+  
     // Enumerated type for render mode
     enum class RenderMode { FILL, LINE };
 
@@ -33,6 +36,10 @@ public:
   
     const std::string& getImagePath() const;
     void setImagePath(const std::string& p);
+
+
+    TransitionMode getTransitionMode() const;
+    void setTransitionMode(TransitionMode t);
 
   
     float getVideoFrameRate() const;
@@ -144,6 +151,8 @@ private:
   
     float videoFrameRate;
     float imageSwitch;
+
+    TransitionMode transitionMode;
   
     std::vector<std::shared_ptr<Camera>> cameras;
 

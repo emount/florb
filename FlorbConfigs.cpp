@@ -140,6 +140,21 @@ void FlorbConfigs::load() {
         }
 
 
+        // Transition mode config
+        if (config.contains("transition_mode") and config["transition_mode"].is_string()) {
+            if(config["transition_mode"] == "flip") {
+                setTransitionMode(TransitionMode::FLIP);
+            } else if(config["transition_mode"] == "blend") {
+                setTransitionMode(TransitionMode::BLEND);
+            } else {
+                cerr << "Invalid transition_mode config value \""
+                     << config["transition_mode"]
+                     << "\""
+                     << endl;
+            }
+        }
+        
+
         // Cameras
         if (config.contains("cameras") and config["cameras"].is_array()) {
             const auto &cameras(config["cameras"]);
@@ -416,8 +431,20 @@ float FlorbConfigs::getImageSwitch() const {
 
 void FlorbConfigs::setImageSwitch(float s) {
     lock_guard<mutex> lock(stateMutex);
-
     imageSwitch = s;
+}
+
+
+// Transition mode accessor / mutator
+
+FlorbConfigs::TransitionMode FlorbConfigs::getTransitionMode() const {
+    lock_guard<mutex> lock(stateMutex);
+    return transitionMode;
+}
+
+void FlorbConfigs::setTransitionMode(TransitionMode t) {
+    lock_guard<mutex> lock(stateMutex);
+    transitionMode = t;
 }
 
 
