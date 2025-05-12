@@ -373,8 +373,11 @@ void Florb::loadFlowers() {
 // Flower transition update method
 
 void Florb::updateTransition(float timeSeconds) {
+    auto transitionMode(configs->getTransitionMode());
+    float progress(transitionMode == FlorbConfigs::TransitionMode::FLIP ? 1.0f : 0.5f);
+    
     GLuint transitionProgressLoc = glGetUniformLocation(shaderProgram, "transitionProgress");
-    glUniform1f(transitionProgressLoc, 0.5f);
+    glUniform1f(transitionProgressLoc, progress);
 }
 
 
