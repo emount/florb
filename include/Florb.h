@@ -62,6 +62,7 @@ private:
     std::vector<std::shared_ptr<Flower>> flowers;
     std::vector<std::string> flowerPaths;
     unsigned int currentFlower;
+    unsigned int previousFlower;
 
     std::vector<std::shared_ptr<Camera>> cameras;
 
@@ -95,7 +96,7 @@ private:
     GLuint vbo = 0;
     GLuint ebo = 0;
     GLuint shaderProgram = 0;
-    GLuint fallbackTextureID = 0;
+    GLuint fallbackTexture = 0;
   
     int indexCount = 0;
 

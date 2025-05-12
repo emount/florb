@@ -48,6 +48,7 @@ Florb::Florb() :
     flowers(),
     flowerPaths(),
     currentFlower(0UL),
+    previousFlower(0UL),
 
     cameras(),
 
@@ -72,7 +73,7 @@ Florb::Florb() :
     breather(make_shared<SinusoidalMotion>()),
     rimPulser(make_shared<SinusoidalMotion>()),
     
-    fallbackTextureID(FlorbUtils::createDebugTexture()),
+    fallbackTexture(FlorbUtils::createDebugTexture()),
     
     dist(0.0f, 1.0f) {
 
@@ -117,6 +118,7 @@ shared_ptr<FlorbConfigs> Florb::getConfigs() const {
 }
 
 void Florb::nextFlower() {
+    previousFlower = currentFlower;
     if(++currentFlower >= flowers.size()) currentFlower = 0;
 }
 
@@ -162,18 +164,19 @@ void Florb::renderFrame() {
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
-    
-    GLuint textureID;
+
+    GLuint previousTexture;
+    GLuint currentTexture;
     if(flowers.empty()) {
-        textureID = fallbackTextureID;
+        previousTexture = currentTexture = fallbackTexture;
     } else {
-        auto flower = flowers[currentFlower];
-        textureID = flower->getTextureID();
+        previousTexture = flowers[previousFlower]->getTextureID();
+        currentTexture = flowers[currentFlower]->getTextureID();
     }
     
-    if (!glIsTexture(textureID))
+    if (!glIsTexture(currentTexture))
         cerr << "[WARN] Texture ID ("
-             << textureID
+             << currentTexture
              << ") is not valid"
              << endl;
 
@@ -193,9 +196,12 @@ void Florb::renderFrame() {
     glUniformMatrix4fv(projViewLoc, 1, GL_FALSE, glm::value_ptr(projView));
     FlorbUtils::glCheck("glUniformMatrix4fv()");
 
-    // Use texture unit 0
-    int texLoc = glGetUniformLocation(shaderProgram, "currentTexture");
-    glUniform1i(texLoc, 0);
+
+    // Use texture units zero and one for current and previous flowers
+    GLuint previousTextureLoc = glGetUniformLocation(shaderProgram, "previousTexture");
+    GLuint currentTextureLoc = glGetUniformLocation(shaderProgram, "currentTexture");
+    glUniform1i(previousTextureLoc, 0);
+    glUniform1i(currentTextureLoc, 1);
 
 
     // Set screen resolution uniform
@@ -315,7 +321,7 @@ void Florb::renderFrame() {
     
     // Activate texture
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    glBindTexture(GL_TEXTURE_2D, currentTexture);
 
     glBindVertexArray(vao);
     FlorbUtils::glCheck("glBindVertexArray(vao)");
@@ -522,6 +528,8 @@ void Florb::initShaders() {
         uniform int specularDebug;
 
         uniform sampler2D currentTexture;
+        uniform sampler2D previousTexture;
+        uniform float transitionProgress;
         
         void main() {
             vec3 dir = normalize(fragPos);
@@ -607,8 +615,11 @@ void Florb::initShaders() {
             }
 
 
-            // Sample texture color
-            vec4 texColor = texture(currentTexture, uv);
+            // Sample texture colors
+            vec4 colorPrev = texture(previousTexture, uv);
+            vec4 colorCurr = texture(currentTexture, uv);
+            
+            vec4 texColor = mix(colorPrev, colorCurr, clamp(transitionProgress, 0.0, 1.0));
 
             // Compute final color
             vec3 finalColor = vignette * totalLighting * texColor.rgb;
@@ -745,6 +756,11 @@ void Florb::updatePhysicalEffects() {
 
     GLuint timeLoc = glGetUniformLocation(shaderProgram, "time");
     glUniform1f(timeLoc, timeSeconds);
+
+
+    // Clear transition progress for now
+    GLuint transitionProgressLoc = glGetUniformLocation(shaderProgram, "transitionProgress");
+    glUniform1f(transitionProgressLoc, 0.0f);
 
 
     // Update spotlight motion
