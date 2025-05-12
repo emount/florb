@@ -42,6 +42,9 @@ public:
     TransitionMode getTransitionMode() const;
     void setTransitionMode(TransitionMode t);
 
+    float getTransitionTime() const;
+    void setTransitionTime(float t);
+
   
     float getVideoFrameRate() const;
     void setVideoFrameRate(float r);
@@ -155,6 +158,7 @@ private:
     float imageSwitch;
 
     TransitionMode transitionMode;
+    float transitionTime;
     std::shared_ptr<MotionAlgorithm> transitioner;
   
     std::vector<std::shared_ptr<Camera>> cameras;
@@ -200,6 +204,8 @@ private:
     static const float k_MaxVideoFrameRate;
     static const float k_DefaultVideoFrameRate;
     static const float k_DefaultImageSwitch;
+
+    static const float k_DefaultTransitionTime;
 
     static const unsigned int k_MaxSpotlights;
   

@@ -51,6 +51,8 @@ Florb::Florb() :
     previousFlower(0UL),
 
     transitioner(),
+    transitionStart(0.0f),
+    transitionEnd(0.0f),
 
     cameras(),
 
@@ -129,7 +131,7 @@ void Florb::nextFlower() {
 
 // Render frame method
 
-void Florb::renderFrame() {
+void Florb::renderFrame(bool transition) {
     extern int screenWidth;
     extern int screenHeight;
     static bool firstFrame(true);
@@ -153,7 +155,7 @@ void Florb::renderFrame() {
     }
 
     // Update physical effects
-    updatePhysicalEffects();
+    updatePhysicalEffects(transition);
     
     // Set a dark gray background color for the window
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -376,10 +378,29 @@ void Florb::loadFlowers() {
 
 // Flower transition update method
 
-void Florb::updateTransition(float timeSeconds) {
+void Florb::updateTransition(bool transition, float timeSeconds) {
     auto transitionMode(configs->getTransitionMode());
-    float progress(transitionMode == FlorbConfigs::TransitionMode::FLIP ? 1.0f : 0.5f);
-    
+
+    if (transition) {
+        transitionStart = timeSeconds;
+        transitionEnd = (transitionStart + configs->getTransitionTime());
+    }
+
+    if (transition) cerr << "Transition at ("
+                         << transitionStart
+                         << "), ends at ("
+                         << transitionEnd
+                         << ")"
+                         << endl;
+
+    float progress;
+    if (transitionMode == FlorbConfigs::TransitionMode::BLEND) {
+        progress = 0.5f;
+    } else {
+        // Progress completes immediately
+        progress = 1.0f;
+    }
+        
     GLuint transitionProgressLoc = glGetUniformLocation(shaderProgram, "transitionProgress");
     glUniform1f(transitionProgressLoc, progress);
 }
@@ -787,7 +808,7 @@ void Florb::createRimPulser() {
 
 // Update physical effects method
 
-void Florb::updatePhysicalEffects() {
+void Florb::updatePhysicalEffects(bool transition) {
     // Update the time uniform for physical effects
     static steady_clock::time_point startTime = steady_clock::now();
     float timeMsec = duration_cast<milliseconds>(steady_clock::now() - startTime).count();
@@ -797,8 +818,8 @@ void Florb::updatePhysicalEffects() {
     glUniform1f(timeLoc, timeSeconds);
 
 
-    // Update transition progress for now
-    updateTransition(timeSeconds);
+    // Update flower image transition progress
+    updateTransition(transition, timeSeconds);
 
 
     // Update spotlight motion

@@ -222,9 +222,11 @@ int main(int numArgs, const char *args[]) {
             float timeMsec = duration_cast<milliseconds>(steady_clock::now() - startTime).count();
             float timeSeconds = (timeMsec / 1000.0f);
 
+            bool transition(false);
             if (timeSeconds >= florbConfigs->getImageSwitch()) {
                 florb.nextFlower();
                 startTime = steady_clock::now();
+                transition = true;
             }
 
             // Fetch the configurable frame rate from the Florb
@@ -241,8 +243,8 @@ int main(int numArgs, const char *args[]) {
             // Mark start of new frame
             lastFrame = steady_clock::now();
  
-            // Render a flower frame
-            florb.renderFrame();
+            // Render a flower frame, marking transition frames
+            florb.renderFrame(transition);
             glXSwapBuffers(display, window);
 
 

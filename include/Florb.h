@@ -27,13 +27,13 @@ public:
 
     void nextFlower();
   
-    void renderFrame();
+    void renderFrame(bool transition);
 
 private:
   
     void loadFlowers();
 
-    void updateTransition(float timeSeconds);
+    void updateTransition(bool transition, float timeSeconds);
 
     void initSphere(int sectorCount, int stackCount);
     void generateSphere(float radius, int sectorCount, int stackCount);
@@ -50,7 +50,7 @@ private:
     void createBreather();
     void createRimPulser();
   
-    void updatePhysicalEffects();
+    void updatePhysicalEffects(bool transition);
 
 private:
 
@@ -68,6 +68,8 @@ private:
     unsigned int previousFlower;
 
     std::shared_ptr<MotionAlgorithm> transitioner;
+    float transitionStart;
+    float transitionEnd;
 
     std::vector<std::shared_ptr<Camera>> cameras;
 

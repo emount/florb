@@ -32,17 +32,26 @@ using json = nlohmann::json_abi_v3_12_0::json;
 
 const string FlorbConfigs::k_DefaultImagePath("images");
 
+
 const string FlorbConfigs::k_DefaultTitle("Florb v0.3");
+
 
 const float FlorbConfigs::k_MaxVideoFrameRate(120.0f);
 
 const float FlorbConfigs::k_DefaultVideoFrameRate(60.0f);
 
+
 const float FlorbConfigs::k_DefaultImageSwitch(5.0f);
+
+
+const float FlorbConfigs::k_DefaultTransitionTime(1.0f);
+
 
 const unsigned int FlorbConfigs::k_MaxSpotlights(4UL);
 
+
 const float FlorbConfigs::k_DefaultRadius(0.8f);
+
 
 const int FlorbConfigs::k_MaxMotes(128);
 
@@ -55,6 +64,8 @@ FlorbConfigs::FlorbConfigs() :
     videoFrameRate(k_DefaultVideoFrameRate),
     imageSwitch(k_DefaultImageSwitch),
 
+    transitionMode(TransitionMode::FLIP),
+    transitionTime(k_DefaultTransitionTime),
     transitioner(),
 
     cameras(),
@@ -142,17 +153,25 @@ void FlorbConfigs::load() {
         }
 
 
-        // Transition mode config
-        if (config.contains("transition_mode") and config["transition_mode"].is_string()) {
-            if(config["transition_mode"] == "flip") {
-                setTransitionMode(TransitionMode::FLIP);
-            } else if(config["transition_mode"] == "blend") {
-                setTransitionMode(TransitionMode::BLEND);
-            } else {
-                cerr << "Invalid transition_mode config value \""
-                     << config["transition_mode"]
-                     << "\""
-                     << endl;
+        // Transition configs
+        if (config.contains("transitions") and config["transitions"].is_object()) {
+            const auto &transitions(config["transitions"]);
+            
+            if (transitions.contains("mode") and transitions["mode"].is_string()) {
+                if(transitions["mode"] == "flip") {
+                    setTransitionMode(TransitionMode::FLIP);
+                } else if(transitions["mode"] == "blend") {
+                    setTransitionMode(TransitionMode::BLEND);
+                } else {
+                    cerr << "Invalid transition mode value \""
+                         << transitions["mode"]
+                         << "\""
+                         << endl;
+                }
+            }
+            
+            if (transitions.contains("time") and transitions["time"].is_number()) {
+                setTransitionTime(transitions["time"]);
             }
         }
         
@@ -452,6 +471,17 @@ void FlorbConfigs::setTransitionMode(TransitionMode t) {
         // TEMPORARY - Make transition speed into a config
         transitioner = make_shared<LinearMotion>(true, 0.0f, 1.0f);
     } else transitioner = nullptr;
+}
+
+
+float FlorbConfigs::getTransitionTime() const {
+    lock_guard<mutex> lock(stateMutex);
+    return transitionTime;
+}
+
+void FlorbConfigs::setTransitionTime(float t) {
+    lock_guard<mutex> lock(stateMutex);
+    transitionTime = t;
 }
 
 

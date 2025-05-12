@@ -5,7 +5,10 @@
 	"frame_rate" : 60.0,
 	"image_switch" : 5.0
     },
-    "transition_mode" : "blend",
+    "transitions" : {
+        "mode" : "blend",
+        "time" : 2.0
+    },
     "cameras" : [
         {
             "name" : "Camera 0",
