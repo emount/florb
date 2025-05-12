@@ -55,6 +55,8 @@ FlorbConfigs::FlorbConfigs() :
     videoFrameRate(k_DefaultVideoFrameRate),
     imageSwitch(k_DefaultImageSwitch),
 
+    transitioner(),
+
     cameras(),
     
     offsetX(0.0f),
@@ -445,6 +447,18 @@ FlorbConfigs::TransitionMode FlorbConfigs::getTransitionMode() const {
 void FlorbConfigs::setTransitionMode(TransitionMode t) {
     lock_guard<mutex> lock(stateMutex);
     transitionMode = t;
+
+    if (transitionMode == TransitionMode::BLEND) {
+        // TEMPORARY - Make transition speed into a config
+        transitioner = make_shared<LinearMotion>(true, 0.0f, 1.0f);
+    } else transitioner = nullptr;
+}
+
+
+// Flower transitioner accessor
+
+shared_ptr<MotionAlgorithm> FlorbConfigs::getTransitioner() const {
+    return transitioner;
 }
 
 

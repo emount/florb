@@ -50,6 +50,8 @@ Florb::Florb() :
     currentFlower(0UL),
     previousFlower(0UL),
 
+    transitioner(),
+
     cameras(),
 
     baseRadius(FlorbConfigs::k_DefaultRadius),
@@ -79,6 +81,8 @@ Florb::Florb() :
 
     // Load configs and initialize dependent elements
     configs->load();
+
+    transitioner = configs->getTransitioner();
 
     cameras = configs->getCameras();
 

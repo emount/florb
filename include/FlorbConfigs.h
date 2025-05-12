@@ -9,6 +9,7 @@
 
 // Class forward references
 class Camera;
+class MotionAlgorithm;
 class Spotlight;
 
 
@@ -48,6 +49,7 @@ public:
     float getImageSwitch() const;
     void setImageSwitch(float s);
 
+    std::shared_ptr<MotionAlgorithm> getTransitioner() const;
   
     const std::vector<std::shared_ptr<Camera>>& getCameras() const;
 
@@ -153,6 +155,7 @@ private:
     float imageSwitch;
 
     TransitionMode transitionMode;
+    std::shared_ptr<MotionAlgorithm> transitioner;
   
     std::vector<std::shared_ptr<Camera>> cameras;
 
