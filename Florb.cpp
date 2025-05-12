@@ -319,10 +319,13 @@ void Florb::renderFrame() {
     glUniform1f(bounceOffsetLoc, bounceOffset);
 
     
-    // Activate texture
+    // Activate textures
     glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, previousTexture);
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, currentTexture);
 
+    
     glBindVertexArray(vao);
     FlorbUtils::glCheck("glBindVertexArray(vao)");
 
@@ -760,7 +763,7 @@ void Florb::updatePhysicalEffects() {
 
     // Clear transition progress for now
     GLuint transitionProgressLoc = glGetUniformLocation(shaderProgram, "transitionProgress");
-    glUniform1f(transitionProgressLoc, 0.0f);
+    glUniform1f(transitionProgressLoc, 0.5f);
 
 
     // Update spotlight motion
