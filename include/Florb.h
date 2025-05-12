@@ -33,21 +33,24 @@ private:
   
     void loadFlowers();
 
+    void updateTransition(float timeSeconds);
+
     void initSphere(int sectorCount, int stackCount);
     void generateSphere(float radius, int sectorCount, int stackCount);
   
     void initShaders();
+  
     void initMotes(unsigned int count,
 		   float radius,
 		   float maxStep,
 		   const std::vector<float> &color);
+    void updateMotes();
 
     void createBouncer();
     void createBreather();
     void createRimPulser();
   
     void updatePhysicalEffects();
-    void updateMotes();
 
 private:
 

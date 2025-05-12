@@ -344,6 +344,8 @@ void Florb::renderFrame() {
 
 // Private methods
 
+// Load flowers method
+
 void Florb::loadFlowers() {
     const auto &imagePath(configs->getImagePath());
     fs::path filepath(imagePath);
@@ -366,6 +368,17 @@ void Florb::loadFlowers() {
         cerr << "Image path \"" << imagePath << "\" does not exist" << endl;
     }
 }
+
+
+// Flower transition update method
+
+void Florb::updateTransition(float timeSeconds) {
+    GLuint transitionProgressLoc = glGetUniformLocation(shaderProgram, "transitionProgress");
+    glUniform1f(transitionProgressLoc, 0.5f);
+}
+
+
+// Sphere geometry methods
 
 void Florb::initSphere(int sectorCount, int stackCount) {
     // Generate and bind the vertex array
@@ -670,7 +683,7 @@ void Florb::initShaders() {
 }
 
 
-// Dust mote initialization method
+// Dust mote methods
 
 void Florb::initMotes(unsigned int count,
                       float radius,
@@ -697,6 +710,22 @@ void Florb::initMotes(unsigned int count,
     moteSpeeds = vector<float>(moteCount, maxStep);
     moteMaxStep = maxStep;
     moteColor = color;
+}
+
+void Florb::updateMotes() {
+    // Update random walk for each dust mote
+    for (auto i = 0UL; i < (2 * moteCount); ++i) {
+        // float vecDir(2.0f * (dist(gen) - 0.5f));
+        float vecDir(dist(gen));
+        float step(moteMaxStep * vecDir);
+        auto &component(moteCenters[i]);
+        
+        // Update this component by the computed step
+        component += (step * moteDirections[i]);
+        
+        // Wrap the component to keep it on the sphere
+        moteCenters[i] = fmod(moteCenters[i] + 1.0f, 2.0f) - 1.0f;
+    }
 }
 
 
@@ -761,9 +790,8 @@ void Florb::updatePhysicalEffects() {
     glUniform1f(timeLoc, timeSeconds);
 
 
-    // Clear transition progress for now
-    GLuint transitionProgressLoc = glGetUniformLocation(shaderProgram, "transitionProgress");
-    glUniform1f(transitionProgressLoc, 0.5f);
+    // Update transition progress for now
+    updateTransition(timeSeconds);
 
 
     // Update spotlight motion
@@ -800,20 +828,4 @@ void Florb::updatePhysicalEffects() {
     
     // Update dust motes
     updateMotes();
-}
-
-void Florb::updateMotes() {
-    // Update random walk for each dust mote
-    for (auto i = 0UL; i < (2 * moteCount); ++i) {
-        // float vecDir(2.0f * (dist(gen) - 0.5f));
-        float vecDir(dist(gen));
-        float step(moteMaxStep * vecDir);
-        auto &component(moteCenters[i]);
-        
-        // Update this component by the computed step
-        component += (step * moteDirections[i]);
-        
-        // Wrap the component to keep it on the sphere
-        moteCenters[i] = fmod(moteCenters[i] + 1.0f, 2.0f) - 1.0f;
-    }
 }
