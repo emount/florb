@@ -66,7 +66,6 @@ FlorbConfigs::FlorbConfigs() :
 
     transitionMode(TransitionMode::FLIP),
     transitionTime(k_DefaultTransitionTime),
-    transitioner(),
 
     cameras(),
     
@@ -466,11 +465,6 @@ FlorbConfigs::TransitionMode FlorbConfigs::getTransitionMode() const {
 void FlorbConfigs::setTransitionMode(TransitionMode t) {
     lock_guard<mutex> lock(stateMutex);
     transitionMode = t;
-
-    if (transitionMode == TransitionMode::BLEND) {
-        // TEMPORARY - Make transition speed into a config
-        transitioner = make_shared<LinearMotion>(true, 0.0f, 1.0f);
-    } else transitioner = nullptr;
 }
 
 
@@ -482,13 +476,6 @@ float FlorbConfigs::getTransitionTime() const {
 void FlorbConfigs::setTransitionTime(float t) {
     lock_guard<mutex> lock(stateMutex);
     transitionTime = t;
-}
-
-
-// Flower transitioner accessor
-
-shared_ptr<MotionAlgorithm> FlorbConfigs::getTransitioner() const {
-    return transitioner;
 }
 
 

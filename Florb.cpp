@@ -50,9 +50,7 @@ Florb::Florb() :
     currentFlower(0UL),
     previousFlower(0UL),
 
-    transitioner(),
     transitionStart(0.0f),
-    transitionEnd(0.0f),
 
     cameras(),
 
@@ -83,8 +81,6 @@ Florb::Florb() :
 
     // Load configs and initialize dependent elements
     configs->load();
-
-    transitioner = configs->getTransitioner();
 
     cameras = configs->getCameras();
 
@@ -381,21 +377,12 @@ void Florb::loadFlowers() {
 void Florb::updateTransition(bool transition, float timeSeconds) {
     auto transitionMode(configs->getTransitionMode());
 
-    if (transition) {
-        transitionStart = timeSeconds;
-        transitionEnd = (transitionStart + configs->getTransitionTime());
-    }
-
-    if (transition) cerr << "Transition at ("
-                         << transitionStart
-                         << "), ends at ("
-                         << transitionEnd
-                         << ")"
-                         << endl;
+    if (transition) transitionStart = timeSeconds;
 
     float progress;
     if (transitionMode == FlorbConfigs::TransitionMode::BLEND) {
-        progress = 0.5f;
+        // Compute transition progress
+        progress = ((timeSeconds - transitionStart) / configs->getTransitionTime());
     } else {
         // Progress completes immediately
         progress = 1.0f;

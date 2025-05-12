@@ -52,8 +52,6 @@ public:
     float getImageSwitch() const;
     void setImageSwitch(float s);
 
-    std::shared_ptr<MotionAlgorithm> getTransitioner() const;
-  
     const std::vector<std::shared_ptr<Camera>>& getCameras() const;
 
   
@@ -159,7 +157,6 @@ private:
 
     TransitionMode transitionMode;
     float transitionTime;
-    std::shared_ptr<MotionAlgorithm> transitioner;
   
     std::vector<std::shared_ptr<Camera>> cameras;
 

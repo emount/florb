@@ -67,9 +67,7 @@ private:
     unsigned int currentFlower;
     unsigned int previousFlower;
 
-    std::shared_ptr<MotionAlgorithm> transitioner;
     float transitionStart;
-    float transitionEnd;
 
     std::vector<std::shared_ptr<Camera>> cameras;
 
