@@ -7,9 +7,12 @@ CXX = g++
 
 CXXFLAGS = -std=c++17 -Wall -O2
 
-LIBS = GL GLEW GLU X11
+LIBS = GL GLEW GLU glfw dl X11 pthread
 
-INC_DIRS = include
+IMGUI_DIR = imgui
+
+INC_DIRS  = include
+INC_DIRS += $(IMGUI_DIR)
 
 SOURCES  = main.cpp
 SOURCES += Camera.cpp
@@ -23,7 +26,14 @@ SOURCES += MultiMotion.cpp
 SOURCES += SinusoidalMotion.cpp
 SOURCES += Spotlight.cpp
 
-OBJS = $(SOURCES:%.cpp=%.o)
+IMGUI_SOURCES  = imgui.cpp
+IMGUI_SOURCES += imgui_draw.cpp
+IMGUI_SOURCES += imgui_widgets.cpp
+IMGUI_SOURCES += imgui_tables.cpp
+IMGUI_SOURCES += imgui_impl_glfw.cpp
+IMGUI_SOURCES += imgui_impl_opengl3.cpp
+
+OBJS = $(SOURCES:%.cpp=%.o) $(IMGUI_SOURCES:%.cpp=%.o)
 
 HEADERS  = Camera.h
 HEADERS += Florb.h
@@ -46,7 +56,7 @@ TARGET = florb
 
 TARBALL = $(TARGET).tgz
 
-VPATH = $(INC_DIRS)
+VPATH = $(IMGUI_DIR) $(IMGUI_DIR)/backends $(INC_DIRS)
 
 all: $(TARGET)
 
