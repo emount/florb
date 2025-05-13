@@ -200,8 +200,12 @@ int main(int numArgs, const char *args[]) {
         
                 if (event.type == KeyPress) {
                     KeySym sym = XLookupKeysym(&event.xkey, 0);
-                    if (sym == XK_Escape || sym == XK_space)
+                    if (sym == XK_space) {
+                        cerr << "Showing the dashboard" << endl;
+                    } else if (sym == XK_Escape) {
+                        // Exit the application
                         running = false;
+                    }
                 }
                 else if (event.type == ConfigureNotify) {
                     XConfigureEvent xce = event.xconfigure;
