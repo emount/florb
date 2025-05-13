@@ -16,6 +16,7 @@ INC_DIRS += $(IMGUI_DIR)
 
 SOURCES  = main.cpp
 SOURCES += Camera.cpp
+SOURCES += Dashboard.cpp
 SOURCES += Florb.cpp
 SOURCES += FlorbConfigs.cpp
 SOURCES += Flower.cpp
