@@ -35,6 +35,7 @@ IMGUI_SOURCES += imgui_impl_glfw.cpp
 IMGUI_SOURCES += imgui_impl_opengl3.cpp
 
 OBJS = $(SOURCES:%.cpp=%.o) $(IMGUI_SOURCES:%.cpp=%.o)
+DEPFILES = ${SOURCES:%.cpp=%.d}
 
 HEADERS  = Camera.h
 HEADERS += Florb.h
@@ -64,6 +65,9 @@ all: $(TARGET)
 %o: %cpp
 	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -c -o $@ $<
 
+%.d: %.cpp
+	$(CXX) -MM $(CXXAFLAGS) $(INC_DIRS:%=-I%) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
+
 $(TARGET): $(OBJS) $(MAKEFILE)
 	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -o $(TARGET) $(OBJS) $(LIBS:%=-l%)
 
@@ -71,4 +75,6 @@ $(TARBALL): $(SOURCES) $(HEADERS) $(MAKEFILE) $(CONFIG)
 	tar czf $@ $^
 
 clean:
-	rm -f $(TARGET) $(OBJS) $(TARBALL)
+	rm -f $(TARGET) $(OBJS) $(DEPFILES) $(TARBALL)
+
+-include ${DEPFILES}
