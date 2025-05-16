@@ -2,8 +2,8 @@
     "title" : "Eldridge's Wildflowers",
     "image_path" : "images",
     "video" : {
-	"frame_rate" : 60.0,
-	"image_switch" : 8.0
+        "frame_rate" : 60.0,
+        "image_switch" : 8.0
     },
     "transitions" : {
         "mode" : "blend",
@@ -12,102 +12,102 @@
     "cameras" : [
         {
             "name" : "Camera 0",
-	    "view" : [0.0, 0.0, 3.0],
+            "view" : [0.0, 0.0, 3.0],
             "zoom" : 0.90
         }
     ],
     "geometry" : {
         "center" : [0.25, 0.00],
-	"radius" : 0.80,
-	"smoothness" : 288
+    "radius" : 0.80,
+    "smoothness" : 288
     },
     "light" : {
         "shininess" : 4.00,
         "spotlights" : [
             {
                 "name" : "Spotlight",
-	        "direction" : [-1.5, 0.2, 0.0],
-	        "intensity" : 0.200,
-	        "color" : [1.000, 1.000, 1.000],
-	        "motion" : {
+                "direction" : [-1.5, 0.2, 0.0],
+                "intensity" : 0.200,
+                "color" : [1.000, 1.000, 1.000],
+                "motion" : {
                     "enabled" : false,
-	            "type" : "linear",
-	            "offsets" : [0.0, 0.0, 0.0],
-	            "speeds" : [0.0, 0.0, 0.0]
-	        }
+                    "type" : "linear",
+                    "offsets" : [0.0, 0.0, 0.0],
+                    "speeds" : [0.0, 0.0, 0.0]
+                }
             },
             {
                 "name" : "UFO 0",
-	        "direction" : [0.0, -0.7, -1.0],
-	        "intensity" : 0.250,
-	        "color" : [1.000, 1.000, 1.000],
-	        "motion" : {
+                "direction" : [0.0, -0.7, -1.0],
+                "intensity" : 0.250,
+                "color" : [1.000, 1.000, 1.000],
+                "motion" : {
                     "enabled" : true,
-	            "type" : "linear",
-	            "offsets" : [0.0, 0.0, 0.0],
-	            "speeds" : [0.5, 0.1, 0.3]
-	        }
+                    "type" : "linear",
+                    "offsets" : [0.0, 0.0, 0.0],
+                    "speeds" : [0.5, 0.1, 0.3]
+                }
             },
             {
                 "name" : "UFO 1",
-	        "direction" : [0.0, -0.5, -1.0],
-	        "intensity" : 0.250,
-	        "color" : [1.000, 1.000, 1.000],
-	        "motion" : {
+                "direction" : [0.0, -0.5, -1.0],
+                "intensity" : 0.250,
+                "color" : [1.000, 1.000, 1.000],
+                "motion" : {
                     "enabled" : true,
-	            "type" : "linear",
-	            "offsets" : [0.0, 0.0, 0.0],
-	            "speeds" : [0.05, 0.4, -0.05]
-	        }
+                    "type" : "linear",
+                    "offsets" : [0.0, 0.0, 0.0],
+                    "speeds" : [0.05, 0.4, -0.05]
+                }
             },
             {
                 "name" : "UFO 2",
-	        "direction" : [0.0, -0.3, -1.0],
-	        "intensity" : 0.250,
-	        "color" : [1.000, 1.000, 1.000],
-	        "motion" : {
+                "direction" : [0.0, -0.3, -1.0],
+                "intensity" : 0.250,
+                "color" : [1.000, 1.000, 1.000],
+                "motion" : {
                     "enabled" : true,
-	            "type" : "linear",
-	            "offsets" : [0.0, 0.0, 0.0],
-	            "speeds" : [-0.5, -0.1, -0.3]
-	        }
+                    "type" : "linear",
+                    "offsets" : [0.0, 0.0, 0.0],
+                    "speeds" : [-0.5, -0.1, -0.3]
+                }
             }
         ],
-	"rim" : {
-	    "strength" : 0.40,
-	    "exponent" : 3.0,
-	    "color" : [0.000, 0.000, 1.000],
-	    "frequency" : 0.20,
+        "rim" : {
+            "strength" : 0.40,
+            "exponent" : 3.0,
+            "color" : [0.000, 0.000, 1.000],
+            "frequency" : 0.20,
             "animate" : {
                 "enabled" : true,
                 "frequency" : 60.0
             }
-	}
+    }
     },
     "effects" : {
-	"bounce" : {
-	    "enabled" : false,
-	    "amplitude" : 0.1,
-	    "frequency" : 0.2
-	},
-	"breathe" : {
-	    "enabled" : true,
-	    "amplitude" : [0.75, 0.8],
-	    "frequency" : 0.4
-	}
+    "bounce" : {
+        "enabled" : false,
+        "amplitude" : 0.1,
+        "frequency" : 0.2
+    },
+    "breathe" : {
+        "enabled" : true,
+        "amplitude" : [0.75, 0.8],
+        "frequency" : 0.4
+    }
     },
     "vignette" : {
-	"radius" : 0.70,
-	"exponent" : 3.0
+        "radius" : 0.70,
+        "exponent" : 3.0
     },
     "motes" : {
-	"count" : 0,
-	"radius" : 3,
-	"color" : [0.800, 0.800, 0.800],
-	"max_step" : 0.001
+        "count" : 0,
+        "radius" : 3,
+        "color" : [0.800, 0.800, 0.800],
+        "max_step" : 0.001
     },
     "debug" : {
-	"render_mode" : "fill",
-	"specular_mode" : "normal"
+        "render_mode" : "fill",
+        "specular_mode" : "normal"
     }
 }
