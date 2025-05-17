@@ -13,7 +13,7 @@
     "cameras" : [
         {
             "name" : "Camera 0",
-            "view" : [0.0, 0.0, 3.0],
+            "view" : [-1.100, -0.4],
             "zoom" : 0.90
         }
     ],
@@ -23,12 +23,12 @@
         "smoothness" : 288
     },
     "light" : {
-        "shininess" : 4.00,
+        "shininess" : 1.00,
         "spotlights" : [
             {
                 "name" : "Spotlight",
-                "direction" : [-1.5, 0.2, 0.0],
-                "intensity" : 0.200,
+                "direction" : [0.000, 0.000],
+                "intensity" : 0.400,
                 "color" : [1.000, 1.000, 1.000],
                 "motion" : {
                     "enabled" : false,
@@ -37,42 +37,42 @@
                     "speeds" : [0.0, 0.0, 0.0]
                 }
             },
-            {
-                "name" : "UFO 0",
-                "direction" : [0.0, -0.7, -1.0],
-                "intensity" : 0.400,
-                "color" : [1.000, 1.000, 1.000],
-                "motion" : {
-                    "enabled" : true,
-                    "type" : "linear",
-                    "offsets" : [0.0, 0.0, 0.0],
-                    "speeds" : [0.5, 0.1, 0.3]
-                }
-            },
-            {
-                "name" : "UFO 1",
-                "direction" : [0.0, -0.5, -1.0],
-                "intensity" : 0.400,
-                "color" : [1.000, 1.000, 1.000],
-                "motion" : {
-                    "enabled" : true,
-                    "type" : "linear",
-                    "offsets" : [0.0, 0.0, 0.0],
-                    "speeds" : [0.05, 0.4, -0.05]
-                }
-            },
-            {
-                "name" : "UFO 2",
-                "direction" : [0.0, -0.3, -1.0],
-                "intensity" : 0.400,
-                "color" : [1.000, 1.000, 1.000],
-                "motion" : {
-                    "enabled" : true,
-                    "type" : "linear",
-                    "offsets" : [0.0, 0.0, 0.0],
-                    "speeds" : [-0.5, -0.1, -0.3]
-                }
-            }
+             {
+                 "name" : "UFO 0",
+                 "direction" : [0.0, -0.7, -1.0],
+                 "intensity" : 0.400,
+                 "color" : [1.000, 1.000, 1.000],
+                 "motion" : {
+                     "enabled" : true,
+                     "type" : "linear",
+                     "offsets" : [0.0, 0.0, 0.0],
+                     "speeds" : [0.5, 0.1, 0.3]
+                 }
+             },
+             {
+                 "name" : "UFO 1",
+                 "direction" : [0.0, -0.5, -1.0],
+                 "intensity" : 0.400,
+                 "color" : [1.000, 1.000, 1.000],
+                 "motion" : {
+                     "enabled" : true,
+                     "type" : "linear",
+                     "offsets" : [0.0, 0.0, 0.0],
+                     "speeds" : [0.05, 0.4, -0.05]
+                 }
+             },
+             {
+                 "name" : "UFO 2",
+                 "direction" : [0.0, -0.3, -1.0],
+                 "intensity" : 0.400,
+                 "color" : [1.000, 1.000, 1.000],
+                 "motion" : {
+                     "enabled" : true,
+                     "type" : "linear",
+                     "offsets" : [0.0, 0.0, 0.0],
+                     "speeds" : [-0.5, -0.1, -0.3]
+                 }
+             }
         ],
         "rim" : {
             "strength" : 0.40,
@@ -102,7 +102,7 @@
         "exponent" : 3.0
     },
     "motes" : {
-        "count" : 0,
+        "count" : 120,
         "radius" : 3,
         "color" : [0.800, 0.800, 0.800],
         "max_step" : 0.001

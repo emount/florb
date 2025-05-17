@@ -23,7 +23,8 @@ a radius and exponent.
 
 ### Spotlights
 Spotlights provide a highly-configurable means for illuinating the orb,
-with the ability to set direction, intensity, color, and motion.
+with the ability to set direction, intensity, color, and motion. A
+shininess factor sets the reflectivity on a global basis.
 
 ### Rim lighting
 Rim lighting can provide either a subtle glow around the edges of the

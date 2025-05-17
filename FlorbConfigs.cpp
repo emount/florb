@@ -1,6 +1,7 @@
 #include <GL/glx.h>
 #include <fstream>
 #include <iostream>
+#include <cmath>
 
 #include "Camera.h"
 #include "FlorbConfigs.h"
@@ -12,6 +13,7 @@ extern Display *display;
 extern Window window;
 
 using std::cerr;
+using std::cos;
 using std::endl;
 using std::exception;
 using std::ifstream;
@@ -20,6 +22,7 @@ using std::make_shared;
 using std::mutex;
 using std::pair;
 using std::shared_ptr;
+using std::sin;
 using std::string;
 using std::vector;
 
@@ -214,7 +217,22 @@ void FlorbConfigs::load() {
                 
                 if (camera.contains("view") and camera["view"].is_array()) {
                     const auto &viewRef(camera["view"]);
-                    view = {viewRef[0], viewRef[1], viewRef[2]};
+
+                    if (viewRef.size() == 2) {
+                        float azimuth(viewRef[0]);
+                        float elevation(viewRef[1]);
+                        
+                        view = {
+                            (cos(elevation) * cos(azimuth)),
+                            sin(elevation),
+                            (cos(elevation) * sin(azimuth))
+                        };
+                    } else {
+                        cerr << "Camera view vector has incorrect size ("
+                             << viewRef.size()
+                             << "), expected (2)"
+                             << endl;
+                    }
                 } else {
                     cerr << "Camera ["
                          << cameraNum
@@ -825,7 +843,22 @@ void FlorbConfigs::parseSpotlights(const json &light) {
             
             if (spotlight.contains("direction") and spotlight["direction"].is_array()) {
                 const auto &directionRef(spotlight["direction"]);
-                direction = {directionRef[0], directionRef[1], directionRef[2]};
+
+                if (directionRef.size() == 2) {
+                    float azimuth(directionRef[0]);
+                    float elevation(directionRef[1]);
+
+                    direction = {
+                        (cos(elevation) * cos(azimuth)),
+                        sin(elevation),
+                        (cos(elevation) * sin(azimuth))
+                    };
+                } else {
+                    cerr << "Spotlight direction vector has incorrect size ("
+                         << directionRef.size()
+                         << "), expected (2)"
+                         << endl;
+                }
             } else {
                 cerr << "Spotlight ["
                      << spotlightNum
