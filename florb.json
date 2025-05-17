@@ -105,7 +105,7 @@
         "count" : 120,
         "radius" : 3,
         "color" : [0.800, 0.800, 0.800],
-        "max_step" : 0.001
+        "max_step" : 0.002
     },
     "debug" : {
         "render_mode" : "fill",
