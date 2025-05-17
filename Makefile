@@ -57,6 +57,7 @@ MAKEFLAGS += -r
 TARGET = florb
 
 TARBALL = $(TARGET).tgz
+IMAGES_TARBALL = images.tgz
 
 VPATH = $(IMGUI_DIR) $(IMGUI_DIR)/backends $(INC_DIRS)
 
@@ -71,7 +72,12 @@ all: $(TARGET)
 $(TARGET): $(OBJS) $(MAKEFILE)
 	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -o $(TARGET) $(OBJS) $(LIBS:%=-l%)
 
+.PHONY: $(TARBALL)
 $(TARBALL): $(SOURCES) $(HEADERS) $(MAKEFILE) $(CONFIG)
+	tar czf $@ $^
+
+.PHONY: $(IMAGES_TARBALL)
+$(IMAGES_TARBALL): images/*
 	tar czf $@ $^
 
 clean:
