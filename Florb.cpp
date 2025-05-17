@@ -25,6 +25,7 @@ using chrono::steady_clock;
 using std::cerr;
 using std::cos;
 using std::cout;
+using std::default_random_engine;
 using std::endl;
 using std::make_shared;
 using std::min;
@@ -32,6 +33,7 @@ using std::mt19937;
 using std::pair;
 using std::random_device;
 using std::shared_ptr;
+using std::shuffle;
 using std::sin;
 using std::sort;
 using std::string;
@@ -360,12 +362,21 @@ void Florb::loadFlowers() {
             }
         }
 
-        // Sort the collection of Flowers by filename
-        sort(flowers.begin(),
-             flowers.end(),
-             [](const shared_ptr<Flower>& a, const shared_ptr<Flower>& b) {
-                 return a->getFilename() < b->getFilename();
-             });
+        // Determine the ordering mode to use for the Flowers
+        if (configs->getTransitionOrder() == FlorbConfigs::TransitionOrder::ALPHABETICAL) {
+            // Sort the collection of Flowers by filename
+            sort(flowers.begin(),
+                 flowers.end(),
+                 [](const shared_ptr<Flower>& a, const shared_ptr<Flower>& b) {
+                     return a->getFilename() < b->getFilename();
+                 });
+        } else {
+            // Randomly shuffle the collection of Flowers
+            unsigned seed(chrono::system_clock::now().time_since_epoch().count());
+            default_random_engine rng(seed);
+
+            shuffle(flowers.begin(), flowers.end(), rng);
+        }
     } else {
         cerr << "Image path \"" << imagePath << "\" does not exist" << endl;
     }

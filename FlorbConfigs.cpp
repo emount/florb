@@ -65,6 +65,7 @@ FlorbConfigs::FlorbConfigs() :
     imageSwitch(k_DefaultImageSwitch),
 
     transitionMode(TransitionMode::FLIP),
+    transitionOrder(TransitionOrder::ALPHABETICAL),
     transitionTime(k_DefaultTransitionTime),
 
     cameras(),
@@ -157,17 +158,34 @@ void FlorbConfigs::load() {
             const auto &transitions(config["transitions"]);
             
             if (transitions.contains("mode") and transitions["mode"].is_string()) {
-                if(transitions["mode"] == "flip") {
+                const auto &mode(transitions["mode"]);
+
+                if(mode == "flip") {
                     setTransitionMode(TransitionMode::FLIP);
-                } else if(transitions["mode"] == "blend") {
+                } else if(mode == "blend") {
                     setTransitionMode(TransitionMode::BLEND);
                 } else {
                     cerr << "Invalid transition mode value \""
-                         << transitions["mode"]
+                         << mode
                          << "\""
                          << endl;
                 }
             }
+
+            if (transitions.contains("order") and transitions["order"].is_string()) {
+                const auto &order(transitions["order"]);
+
+                if(order == "alphabetical") {
+                    setTransitionOrder(TransitionOrder::ALPHABETICAL);
+                } else if(order == "random") {
+                    setTransitionOrder(TransitionOrder::RANDOM);
+                } else {
+                    cerr << "Invalid transition order value \""
+                         << order
+                         << "\""
+                         << endl;
+                }
+            }            
             
             if (transitions.contains("time") and transitions["time"].is_number()) {
                 setTransitionTime(transitions["time"]);
@@ -467,6 +485,15 @@ void FlorbConfigs::setTransitionMode(TransitionMode t) {
     transitionMode = t;
 }
 
+FlorbConfigs::TransitionOrder FlorbConfigs::getTransitionOrder() const {
+    lock_guard<mutex> lock(stateMutex);
+    return transitionOrder;
+}
+
+void FlorbConfigs::setTransitionOrder(TransitionOrder o) {
+    lock_guard<mutex> lock(stateMutex);
+    transitionOrder = o;
+}
 
 float FlorbConfigs::getTransitionTime() const {
     lock_guard<mutex> lock(stateMutex);

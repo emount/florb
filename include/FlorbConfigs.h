@@ -19,6 +19,9 @@ public:
   
     // Enumerated type for image transition mode
     enum class TransitionMode { FLIP, BLEND };
+
+    // Enumerated type for image transition order
+    enum class TransitionOrder { ALPHABETICAL, RANDOM };
   
     // Enumerated type for render mode
     enum class RenderMode { FILL, LINE };
@@ -41,6 +44,9 @@ public:
 
     TransitionMode getTransitionMode() const;
     void setTransitionMode(TransitionMode t);
+
+    TransitionOrder getTransitionOrder() const;
+    void setTransitionOrder(TransitionOrder o);
 
     float getTransitionTime() const;
     void setTransitionTime(float t);
@@ -156,6 +162,7 @@ private:
     float imageSwitch;
 
     TransitionMode transitionMode;
+    TransitionOrder transitionOrder;
     float transitionTime;
   
     std::vector<std::shared_ptr<Camera>> cameras;

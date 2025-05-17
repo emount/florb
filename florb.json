@@ -7,6 +7,7 @@
     },
     "transitions" : {
         "mode" : "blend",
+        "order" : "random",
         "time" : 2.0
     },
     "cameras" : [
@@ -39,7 +40,7 @@
             {
                 "name" : "UFO 0",
                 "direction" : [0.0, -0.7, -1.0],
-                "intensity" : 0.250,
+                "intensity" : 0.400,
                 "color" : [1.000, 1.000, 1.000],
                 "motion" : {
                     "enabled" : true,
@@ -51,7 +52,7 @@
             {
                 "name" : "UFO 1",
                 "direction" : [0.0, -0.5, -1.0],
-                "intensity" : 0.250,
+                "intensity" : 0.400,
                 "color" : [1.000, 1.000, 1.000],
                 "motion" : {
                     "enabled" : true,
@@ -63,7 +64,7 @@
             {
                 "name" : "UFO 2",
                 "direction" : [0.0, -0.3, -1.0],
-                "intensity" : 0.250,
+                "intensity" : 0.400,
                 "color" : [1.000, 1.000, 1.000],
                 "motion" : {
                     "enabled" : true,
@@ -86,7 +87,7 @@
     },
     "effects" : {
     "bounce" : {
-        "enabled" : false,
+        "enabled" : true,
         "amplitude" : 0.1,
         "frequency" : 0.2
     },
