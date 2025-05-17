@@ -19,8 +19,8 @@
     ],
     "geometry" : {
         "center" : [0.25, 0.00],
-    "radius" : 0.80,
-    "smoothness" : 288
+        "radius" : 0.80,
+        "smoothness" : 288
     },
     "light" : {
         "shininess" : 4.00,
