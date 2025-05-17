@@ -66,6 +66,7 @@ private:
     std::vector<std::string> flowerPaths;
     unsigned int currentFlower;
     unsigned int previousFlower;
+    std::shared_ptr<std::default_random_engine> flowersRandom;
 
     float transitionStart;
 

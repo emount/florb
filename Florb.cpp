@@ -51,6 +51,7 @@ Florb::Florb() :
     flowerPaths(),
     currentFlower(0UL),
     previousFlower(0UL),
+    flowersRandom(),
 
     transitionStart(0.0f),
 
@@ -103,7 +104,10 @@ Florb::Florb() :
               configs->getMoteMaxStep(),
               configs->getMoteColor());
 
+    unsigned seed(chrono::system_clock::now().time_since_epoch().count());
+    flowersRandom = make_shared<default_random_engine>(seed);
     loadFlowers();
+    
     initShaders();
 
     // Seed the Mersenne Twister
@@ -123,7 +127,15 @@ shared_ptr<FlorbConfigs> Florb::getConfigs() const {
 
 void Florb::nextFlower() {
     previousFlower = currentFlower;
-    if(++currentFlower >= flowers.size()) currentFlower = 0;
+    if(++currentFlower >= flowers.size()) {
+        // Reset the current flower to the head of the collection
+        currentFlower = 0;
+
+        // If the transition order is random, re-shuffle the collection
+        if (configs->getTransitionOrder() == FlorbConfigs::TransitionOrder::RANDOM) {
+            shuffle(flowers.begin(), flowers.end(), *flowersRandom);
+        }
+    }
 }
 
 
@@ -372,10 +384,7 @@ void Florb::loadFlowers() {
                  });
         } else {
             // Randomly shuffle the collection of Flowers
-            unsigned seed(chrono::system_clock::now().time_since_epoch().count());
-            default_random_engine rng(seed);
-
-            shuffle(flowers.begin(), flowers.end(), rng);
+            shuffle(flowers.begin(), flowers.end(), *flowersRandom);
         }
     } else {
         cerr << "Image path \"" << imagePath << "\" does not exist" << endl;
