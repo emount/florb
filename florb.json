@@ -75,7 +75,7 @@
              }
         ],
         "rim" : {
-            "strength" : 0.40,
+            "strength" : 0.30,
             "exponent" : 3.0,
             "color" : [0.000, 0.000, 1.000],
             "frequency" : 0.20,
@@ -87,7 +87,7 @@
     },
     "effects" : {
     "bounce" : {
-        "enabled" : true,
+        "enabled" : false,
         "amplitude" : 0.1,
         "frequency" : 0.2
     },

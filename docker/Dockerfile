@@ -38,6 +38,7 @@ RUN apt install -y      \
         clang           \
         emacs           \
         libglew-dev     \
+        libglfw3-dev    \
         libglm-dev      \
         libx11-dev      \
         perl            \
