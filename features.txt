@@ -47,3 +47,9 @@ Debug features
 --------------
 
 Calculate and display average frame rate
+
+
+Outstanding bugs
+----------------
+
+Correct for aspect ratio

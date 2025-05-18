@@ -854,7 +854,9 @@ void FlorbConfigs::parseSpotlights(const json &light) {
                         (cos(elevation) * sin(azimuth))
                     };
                 } else {
-                    cerr << "Spotlight direction vector has incorrect size ("
+                    cerr << "Spotlight \""
+                         << name
+                         << "\" direction vector has incorrect size ("
                          << directionRef.size()
                          << "), expected (2)"
                          << endl;
