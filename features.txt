@@ -1,6 +1,7 @@
 Florb feature wish list
 -----------------------
 
+Dynamic petal fluttering
 Dust motes
   Wink in and out like fireflies
 Lighting

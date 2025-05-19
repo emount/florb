@@ -376,7 +376,15 @@ void FlorbConfigs::load() {
             const auto &motes(config["motes"]);
 
             if (motes.contains("count") and motes["count"].is_number_integer()) {
-              setMoteCount(motes["count"]);
+                auto moteCount(motes["count"]);
+
+                if (moteCount < 0) {
+                    moteCount = 0UL;
+                } if (moteCount > k_MaxMotes) {
+                    moteCount = k_MaxMotes;
+                }
+                
+                setMoteCount(moteCount);
             }
             
             if (motes.contains("radius") and motes["radius"].is_number()) {

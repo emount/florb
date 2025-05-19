@@ -13,8 +13,10 @@ class MotionAlgorithm;
 class Spotlight;
 
 
+// Declaration of class FlorbConfigs
 class FlorbConfigs : public std::enable_shared_from_this<FlorbConfigs> {
 
+    // Public type definitions
 public:
   
     // Enumerated type for image transition mode
@@ -29,8 +31,15 @@ public:
     // Enumerated type for specular mode
     enum class SpecularMode { NORMAL, DEBUG };
 
+
+    // Constructor
 public:
+        
     FlorbConfigs();
+
+
+    // Public interface methods
+public:
 
     void load();
 
@@ -142,16 +151,22 @@ public:
     SpecularMode getSpecularMode() const;
     void setSpecularMode(SpecularMode s);  
 
+    
+    // Public attributes
 public:
   
     static const std::string k_DefaultImagePath;
   
     static const float k_DefaultRadius;
 
+    
+    // Private helper methods
 private:
 
     void parseSpotlights(const nlohmann::json &light);
 
+
+    // Private attributes
 private:
   
     std::string imagePath;
@@ -214,4 +229,5 @@ private:
     static const unsigned int k_MaxSpotlights;
   
     static const int k_MaxMotes;
+    
 };

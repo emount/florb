@@ -68,6 +68,8 @@ Florb::Florb() :
     moteSpeeds(),
     moteMaxStep(),
     moteCenters(),
+    motePulsers(),
+    moteAmplitudes(),
     moteDirections(),
     moteColor(3, 0.0f),
 
@@ -274,14 +276,15 @@ void Florb::renderFrame(bool transition) {
         dir = glm::normalize(dir);
         
         // TODO - Call getColor() only once
+        const auto &spotlightColor(spotlight->getColor());
         glUniform3f(glGetUniformLocation(shaderProgram, (base + "direction").c_str()),
                     dir.x,
                     dir.y,
                     dir.z);
         glUniform3f(glGetUniformLocation(shaderProgram, (base + "color").c_str()),
-                    spotlight->getColor()[0],
-                    spotlight->getColor()[1],
-                    spotlight->getColor()[2]);
+                    spotlightColor[0],
+                    spotlightColor[1],
+                    spotlightColor[2]);
         glUniform1f(glGetUniformLocation(shaderProgram, (base + "intensity").c_str()),
                     spotlight->getIntensity());
     }
@@ -327,11 +330,13 @@ void Florb::renderFrame(bool transition) {
     GLuint moteRadiiLoc = glGetUniformLocation(shaderProgram, "moteRadii");
     GLuint moteSpeedsLoc = glGetUniformLocation(shaderProgram, "moteSpeeds");
     GLuint moteCentersLoc = glGetUniformLocation(shaderProgram, "moteCenters");
+    GLuint moteAmplitudesLoc = glGetUniformLocation(shaderProgram, "moteAmplitudes");
     GLuint moteColorLoc = glGetUniformLocation(shaderProgram, "moteColor");
     glUniform1i(moteCountLoc, moteCount);
     glUniform1fv(moteRadiiLoc, moteRadii.size(), moteRadii.data());
     glUniform1fv(moteSpeedsLoc, moteSpeeds.size(), moteSpeeds.data());
     glUniform2fv(moteCentersLoc, moteCenters.size(), moteCenters.data());
+    glUniform1fv(moteAmplitudesLoc, moteAmplitudes.size(), moteAmplitudes.data());
     glUniform3f(moteColorLoc, moteColor[0], moteColor[1], moteColor[2]);
 
 
@@ -551,12 +556,14 @@ void Florb::initShaders() {
 
         uniform float radius;
 
-        uniform int moteCount;
-
         uniform float time;
-        uniform float moteRadii[128];
-        uniform float moteSpeeds[128];
-        uniform vec2 moteCenters[128];
+
+        #define MAX_MOTES 128
+        uniform int moteCount;
+        uniform float moteRadii[MAX_MOTES];
+        uniform float moteSpeeds[MAX_MOTES];
+        uniform vec2 moteCenters[MAX_MOTES];
+        uniform float moteAmplitudes[MAX_MOTES];
         uniform vec3 moteColor;
 
         uniform vec3 rimColor;
@@ -615,6 +622,7 @@ void Florb::initShaders() {
 
 
             // Dust mote contributions
+            float moteGlow = 0.0;
             float dust = 0.0;
             for (int i = 0; i < moteCount; ++i) {
                 float speed = moteSpeeds[i]; // pre-randomized per mote
@@ -632,7 +640,8 @@ void Florb::initShaders() {
             
                 float dist = distance(uv, motePos);
                 float alpha = smoothstep(radius, 0.0, dist);
-                dust += alpha;
+
+                dust += moteAmplitudes[i] * alpha;
             }
 
             // Aspect-corrected center-relative coords
@@ -742,6 +751,7 @@ void Florb::initMotes(unsigned int count,
     // Randomize dust mote centers
     moteCount = count;
     moteCenters.resize(2 * moteCount);
+    motePulsers.resize(moteCount);
     for (auto i = 0UL; i < (2 * moteCount); i++) {
         // Sample in [-1.0, 1.0] to cover full UV space after offset/zoom
         moteCenters[i] = ((2.0f * dist(gen)) - 1.0f);
@@ -756,16 +766,22 @@ void Florb::initMotes(unsigned int count,
         } else moteDirections.push_back(1.0f);
     }
 
+    for (auto i = 0UL; i < moteCount; i++) {
+        // TODO - Use the random distribution for frequency and phase
+        motePulsers[i] =
+            make_shared<SinusoidalMotion>(true, 0.5f, 0.5f, 0.2f, 0.0f);
+    }    
+    
     moteRadii = vector<float>(moteCount, radius);
     moteSpeeds = vector<float>(moteCount, maxStep);
     moteMaxStep = maxStep;
+    moteAmplitudes = vector<float>(moteCount, 0.0f);
     moteColor = color;
 }
 
-void Florb::updateMotes() {
+void Florb::updateMotes(float timeSeconds) {
     // Update random walk for each dust mote
-    for (auto i = 0UL; i < (2 * moteCount); ++i) {
-        // float vecDir(2.0f * (dist(gen) - 0.5f));
+    for (auto i = 0UL; i < (2 * moteCount); i++) {
         float vecDir(dist(gen));
         float step(moteMaxStep * vecDir);
         auto &component(moteCenters[i]);
@@ -775,6 +791,11 @@ void Florb::updateMotes() {
         
         // Wrap the component to keep it on the sphere
         moteCenters[i] = fmod(moteCenters[i] + 1.0f, 2.0f) - 1.0f;
+    }
+
+    // Update mote phases for winking firefly effect
+    for (auto i = 0UL; i < moteCount; i++) {
+        moteAmplitudes[i] = motePulsers[i]->evaluate(timeSeconds);
     }
 }
 
@@ -874,8 +895,8 @@ void Florb::updatePhysicalEffects(bool transition) {
         float b = 0.5f + 0.5f * sinf(2.0f * M_PI * (t + 0.66f));
         animatedRimColor = glm::vec3(r, g, b);
     }
-    
-    
+
+
     // Update dust motes
-    updateMotes();
+    updateMotes(timeSeconds);
 }

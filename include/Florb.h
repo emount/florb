@@ -44,7 +44,7 @@ private:
 		   float radius,
 		   float maxStep,
 		   const std::vector<float> &color);
-    void updateMotes();
+    void updateMotes(float timeSeconds);
 
     void createBouncer();
     void createBreather();
@@ -88,6 +88,8 @@ private:
     std::vector<float> moteSpeeds;
     float moteMaxStep;
     std::vector<float> moteCenters;
+    std::vector<std::shared_ptr<MotionAlgorithm>> motePulsers;
+    std::vector<float> moteAmplitudes;
     std::vector<float> moteDirections;
     std::vector<float> moteColor;
 
