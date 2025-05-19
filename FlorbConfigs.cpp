@@ -28,6 +28,8 @@ using std::vector;
 
 using json = nlohmann::json_abi_v3_12_0::json;
 
+#define LOCK_CONFIGS lock_guard<mutex> lock(stateMutex)
+
 
 // Implementation of class FlorbConfigs
 
@@ -56,7 +58,7 @@ const unsigned int FlorbConfigs::k_MaxSpotlights(4UL);
 const float FlorbConfigs::k_DefaultRadius(0.8f);
 
 
-const int FlorbConfigs::k_MaxMotes(128);
+const int FlorbConfigs::k_MaxMotes(256);
 
 
 // Constructor
@@ -100,9 +102,11 @@ FlorbConfigs::FlorbConfigs() :
     vignetteExponent(0.0f),
 
     moteCount(0ULL),
-    moteRadius(0.0f),
-    moteMaxStep(0.0f),
-    moteColor(3, 0.0f),
+    motesRadius(0.0f),
+    motesMaxStep(0.0f),
+    motesWinkingEnabled(false),
+    motesMaxOff(0.0f),
+    motesColor(3, 0.0f),
 
     renderMode(RenderMode::FILL),
     specularMode(SpecularMode::NORMAL),
@@ -388,16 +392,28 @@ void FlorbConfigs::load() {
             }
             
             if (motes.contains("radius") and motes["radius"].is_number()) {
-                setMoteRadius(motes["radius"]);
+                setMotesRadius(motes["radius"]);
             }
 
             if (motes.contains("max_step") and motes["max_step"].is_number()) {
-                setMoteMaxStep(motes["max_step"]);
+                setMotesMaxStep(motes["max_step"]);
+            }
+
+            if (motes.contains("winking") and motes["winking"].is_object()) {
+                const auto &winking(motes["winking"]);
+
+                if (winking.contains("enabled") and winking["enabled"].is_boolean()) {
+                    setMotesWinkingEnabled(winking["enabled"]);
+                }
+
+                if (winking.contains("max_off") and winking["max_off"].is_number()) {
+                    setMotesWinkingMaxOff(winking["max_off"]);
+                }                
             }
 
             if (motes.contains("color") and motes["color"].is_array()) {
                 const auto &color(motes["color"]);
-                setMoteColor(color[0], color[1], color[2]);
+                setMotesColor(color[0], color[1], color[2]);
             }
         }
 
@@ -447,12 +463,12 @@ void FlorbConfigs::load() {
 // Title mutator
 
 const string& FlorbConfigs::getTitle() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return title;
 }
   
 void FlorbConfigs::setTitle(const string &t) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     title = t;
     FlorbUtils::setWindowTitle(display, window, title);
 }
@@ -461,12 +477,12 @@ void FlorbConfigs::setTitle(const string &t) {
 // Image path accessor / mutator
 
 const string& FlorbConfigs::getImagePath() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return imagePath;
 }
   
 void FlorbConfigs::setImagePath(const string &p) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     imagePath = p;
 }
 
@@ -474,12 +490,12 @@ void FlorbConfigs::setImagePath(const string &p) {
 // Video accessors / mutators
 
 float FlorbConfigs::getVideoFrameRate() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return videoFrameRate;
 }
 
 void FlorbConfigs::setVideoFrameRate(float r) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
 
     if (videoFrameRate >= k_MaxVideoFrameRate) {
         videoFrameRate = k_MaxVideoFrameRate;
@@ -489,12 +505,12 @@ void FlorbConfigs::setVideoFrameRate(float r) {
 }
 
 float FlorbConfigs::getImageSwitch() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return imageSwitch;
 }
 
 void FlorbConfigs::setImageSwitch(float s) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     imageSwitch = s;
 }
 
@@ -502,32 +518,32 @@ void FlorbConfigs::setImageSwitch(float s) {
 // Transition mode accessor / mutator
 
 FlorbConfigs::TransitionMode FlorbConfigs::getTransitionMode() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return transitionMode;
 }
 
 void FlorbConfigs::setTransitionMode(TransitionMode t) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     transitionMode = t;
 }
 
 FlorbConfigs::TransitionOrder FlorbConfigs::getTransitionOrder() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return transitionOrder;
 }
 
 void FlorbConfigs::setTransitionOrder(TransitionOrder o) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     transitionOrder = o;
 }
 
 float FlorbConfigs::getTransitionTime() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return transitionTime;
 }
 
 void FlorbConfigs::setTransitionTime(float t) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     transitionTime = t;
 }
 
@@ -535,7 +551,7 @@ void FlorbConfigs::setTransitionTime(float t) {
 // Cameras accessor
 
 const vector<shared_ptr<Camera>>& FlorbConfigs::getCameras() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return cameras;
 }
 
@@ -543,33 +559,33 @@ const vector<shared_ptr<Camera>>& FlorbConfigs::getCameras() const {
 // Geometry accessors / mutators
 
 pair<float, float> FlorbConfigs::getCenter() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return {offsetX, offsetY};
 }
 
 void FlorbConfigs::setCenter(float x, float y) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     offsetX = x;
     offsetY = y;
 }
 
 float FlorbConfigs::getRadius() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return radius;
 }
 
 void FlorbConfigs::setRadius(float r) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     radius = r;
 }
 
 unsigned int FlorbConfigs::getSmoothness() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return smoothness;
 }
 
 void FlorbConfigs::setSmoothness(unsigned int s) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     smoothness = s;
 }
 
@@ -577,7 +593,7 @@ void FlorbConfigs::setSmoothness(unsigned int s) {
 // Spotlights accessor
 
 const vector<shared_ptr<Spotlight>>& FlorbConfigs::getSpotlights() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return spotlights;
 }
 
@@ -585,32 +601,32 @@ const vector<shared_ptr<Spotlight>>& FlorbConfigs::getSpotlights() const {
 // Bounce accessors / mutators
 
 bool FlorbConfigs::getBounceEnabled() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return bounceEnabled;
 }
 
 void FlorbConfigs::setBounceEnabled(bool e) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     bounceEnabled = e;
 }
 
 float FlorbConfigs::getBounceAmplitude() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return bounceAmplitude;
 }
 
 void FlorbConfigs::setBounceAmplitude(float a) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     bounceAmplitude = a;
 }
 
 float FlorbConfigs::getBounceFrequency() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return bounceFrequency;
 }
 
 void FlorbConfigs::setBounceFrequency(float f) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     bounceFrequency = f;
 }
 
@@ -618,33 +634,33 @@ void FlorbConfigs::setBounceFrequency(float f) {
 // Breathe accessors / mutators
 
 bool FlorbConfigs::getBreatheEnabled() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return breatheEnabled;
 }
 
 void FlorbConfigs::setBreatheEnabled(bool e) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     breatheEnabled = e;
 }
 
 const vector<float>& FlorbConfigs::getBreatheAmplitude() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return breatheAmplitude;
 }
 
 void FlorbConfigs::setBreatheAmplitude(float min, float max) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     breatheAmplitude[0] = min;
     breatheAmplitude[1] = max;
 }
 
 float FlorbConfigs::getBreatheFrequency() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return breatheFrequency;
 }
 
 void FlorbConfigs::setBreatheFrequency(float f) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     breatheFrequency = f;
 }
 
@@ -652,12 +668,12 @@ void FlorbConfigs::setBreatheFrequency(float f) {
 // Shininess accessor / mutator
 
 float FlorbConfigs::getShininess() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return shininess;
 }
 
 void FlorbConfigs::setShininess(float s) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     shininess = s;
 }
 
@@ -665,64 +681,64 @@ void FlorbConfigs::setShininess(float s) {
 // Rim light accessors / mutators
 
 float FlorbConfigs::getRimStrength() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return rimStrength;
 }
 
 void FlorbConfigs::setRimStrength(float s) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     rimStrength = s;
 }
 
 float FlorbConfigs::getRimExponent() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return rimExponent;
 }
 
 void FlorbConfigs::setRimExponent(float s) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     rimExponent = s;
 }
 
 const vector<float>& FlorbConfigs::getRimColor() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return rimColor;
 }
 
 void FlorbConfigs::setRimColor(float r, float g, float b) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     rimColor[0] = r;
     rimColor[1] = g;
     rimColor[2] = b;
 }
 
 float FlorbConfigs::getRimFrequency() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return rimFrequency;
 }
 
 void FlorbConfigs::setRimFrequency(float f) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     rimFrequency = f;
 }
 
 bool FlorbConfigs::getRimAnimateEnabled() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return rimAnimateEnabled;
 }
 
 void FlorbConfigs::setRimAnimateEnabled(bool a) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     rimAnimateEnabled = a;
 }
 
 float FlorbConfigs::getRimAnimateFrequency() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return rimAnimateFrequency;
 }
 
 void FlorbConfigs::setRimAnimateFrequency(float f) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     rimAnimateFrequency = f;
 }
 
@@ -730,22 +746,22 @@ void FlorbConfigs::setRimAnimateFrequency(float f) {
 // Vignette accessors / mutators
 
 float FlorbConfigs::getVignetteRadius() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return vignetteRadius;
 }
 
 void FlorbConfigs::setVignetteRadius(float r) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     vignetteRadius = r;
 }
 
 float FlorbConfigs::getVignetteExponent() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return vignetteExponent;
 }
 
 void FlorbConfigs::setVignetteExponent(float r) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     vignetteExponent = r;
 }
 
@@ -753,67 +769,88 @@ void FlorbConfigs::setVignetteExponent(float r) {
 // Mote accessors / mutators
 
 unsigned int FlorbConfigs::getMoteCount() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return moteCount;
 }
 
 void FlorbConfigs::setMoteCount(unsigned int c) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     moteCount = c;
 }
 
-float FlorbConfigs::getMoteRadius() const {
-    lock_guard<mutex> lock(stateMutex);
-    return moteRadius;
+float FlorbConfigs::getMotesRadius() const {
+    LOCK_CONFIGS;
+    return motesRadius;
 }
 
-void FlorbConfigs::setMoteRadius(float r) {
-    lock_guard<mutex> lock(stateMutex);
-    moteRadius = r;
+void FlorbConfigs::setMotesRadius(float r) {
+    LOCK_CONFIGS;
+    motesRadius = r;
 }    
 
-float FlorbConfigs::getMoteMaxStep() const {
-    lock_guard<mutex> lock(stateMutex);
-    return moteMaxStep;
+float FlorbConfigs::getMotesMaxStep() const {
+    LOCK_CONFIGS;
+    return motesMaxStep;
 }
 
-void FlorbConfigs::setMoteMaxStep(float s) {
-    lock_guard<mutex> lock(stateMutex);
-    moteMaxStep = s;
+void FlorbConfigs::setMotesMaxStep(float s) {
+    LOCK_CONFIGS;
+    motesMaxStep = s;
 }
 
-const vector<float>& FlorbConfigs::getMoteColor() const {
-    lock_guard<mutex> lock(stateMutex);
-    return moteColor;
+
+bool FlorbConfigs::getMotesWinkingEnabled() const {
+    LOCK_CONFIGS;
+    return motesWinkingEnabled;
 }
 
-void FlorbConfigs::setMoteColor(float r, float g, float b) {
-    lock_guard<mutex> lock(stateMutex);
-    moteColor[0] = r;
-    moteColor[1] = g;
-    moteColor[2] = b;
+void FlorbConfigs::setMotesWinkingEnabled(bool e) {
+    LOCK_CONFIGS;
+    motesWinkingEnabled = e;
+}
+
+float FlorbConfigs::getMotesWinkingMaxOff() const {
+    LOCK_CONFIGS;
+    return motesMaxOff;
+}
+
+void FlorbConfigs::setMotesWinkingMaxOff(float m) {
+    LOCK_CONFIGS;
+    motesMaxOff = m;
+}
+
+const vector<float>& FlorbConfigs::getMotesColor() const {
+    LOCK_CONFIGS;
+    return motesColor;
+}
+
+void FlorbConfigs::setMotesColor(float r, float g, float b) {
+    LOCK_CONFIGS;
+    motesColor[0] = r;
+    motesColor[1] = g;
+    motesColor[2] = b;
 }
 
 
 // Debug accessors / mutators
 
 FlorbConfigs::RenderMode FlorbConfigs::getRenderMode() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return renderMode;
 }
 
 void FlorbConfigs::setRenderMode(FlorbConfigs::RenderMode r) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     renderMode = r;
 }
 
 FlorbConfigs::SpecularMode FlorbConfigs::getSpecularMode() const {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     return specularMode;
 }
 
 void FlorbConfigs::setSpecularMode(FlorbConfigs::SpecularMode s) {
-    lock_guard<mutex> lock(stateMutex);
+    LOCK_CONFIGS;
     specularMode = s;
 }
 

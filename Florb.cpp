@@ -115,9 +115,9 @@ Florb::Florb() :
     createRimPulser();
     
     initMotes(configs->getMoteCount(),
-              configs->getMoteRadius(),
-              configs->getMoteMaxStep(),
-              configs->getMoteColor());
+              configs->getMotesRadius(),
+              configs->getMotesMaxStep(),
+              configs->getMotesColor());
 
     unsigned seed(chrono::system_clock::now().time_since_epoch().count());
     flowersRandom = make_shared<default_random_engine>(seed);
@@ -570,7 +570,7 @@ void Florb::initShaders() {
 
         uniform float time;
 
-        #define MAX_MOTES 128
+        #define MAX_MOTES 256
         uniform int moteCount;
         uniform float moteRadii[MAX_MOTES];
         uniform float moteSpeeds[MAX_MOTES];
@@ -764,6 +764,8 @@ void Florb::initMotes(unsigned int count,
     moteCount = count;
     moteCenters.resize(2 * moteCount);
     motePulsers.resize(moteCount);
+    moteWinking.resize(moteCount);
+    moteWinkTimes.resize(moteCount);
     for (auto i = 0UL; i < (2 * moteCount); i++) {
         // Sample in [-1.0, 1.0] to cover full UV space after offset/zoom
         moteCenters[i] = ((2.0f * dist(gen)) - 1.0f);
@@ -785,13 +787,14 @@ void Florb::initMotes(unsigned int count,
         
         motePulsers[i] =
             make_shared<SinusoidalMotion>(true, 0.5f, 0.5f, winkFrequency, 0.0f);
+
+        moteWinking[i] = ((dist(gen) > 0.5) ? true : false);
+        moteWinkTimes[i] = (k_MaxMoteWinkTime * dist(gen));
     }    
     
     moteRadii = vector<float>(moteCount, radius);
     moteSpeeds = vector<float>(moteCount, maxStep);
     moteMaxStep = maxStep;
-    moteWinking = vector<bool>(moteCount, false);
-    moteWinkTimes = vector<float>(moteCount, 0.0f);
     moteAmplitudes = vector<float>(moteCount, 0.0f);
     moteColor = color;
 }

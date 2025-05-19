@@ -135,14 +135,20 @@ public:
     unsigned int getMoteCount() const;
     void setMoteCount(unsigned int c);
     
-    float getMoteRadius() const;
-    void setMoteRadius(float r);
+    float getMotesRadius() const;
+    void setMotesRadius(float r);
     
-    float getMoteMaxStep() const;
-    void setMoteMaxStep(float s);
+    float getMotesMaxStep() const;
+    void setMotesMaxStep(float s);
+
+    bool getMotesWinkingEnabled() const;
+    void setMotesWinkingEnabled(bool e);
+
+    float getMotesWinkingMaxOff() const;
+    void setMotesWinkingMaxOff(float m);
     
-    const std::vector<float>& getMoteColor() const;
-    void setMoteColor(float r, float g, float b);
+    const std::vector<float>& getMotesColor() const;
+    void setMotesColor(float r, float g, float b);
 
   
     RenderMode getRenderMode() const;
@@ -209,9 +215,11 @@ private:
     float vignetteExponent;
 
     unsigned int moteCount;
-    float moteRadius;
-    float moteMaxStep;
-    std::vector<float> moteColor;
+    float motesRadius;
+    float motesMaxStep;
+    bool motesWinkingEnabled;
+    float motesMaxOff;
+    std::vector<float> motesColor;
 
     RenderMode renderMode;
     SpecularMode specularMode;

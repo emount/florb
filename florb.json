@@ -102,10 +102,14 @@
         "exponent" : 3.0
     },
     "motes" : {
-        "count" : 120,
+        "count" : 256,
         "radius" : 3,
         "color" : [0.800, 0.800, 0.800],
-        "max_step" : 0.002
+        "max_step" : 0.002,
+        "winking" : {
+            "enabled" : true,
+            "max_off" : 2.0
+        }
     },
     "debug" : {
         "render_mode" : "fill",
