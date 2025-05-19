@@ -223,6 +223,11 @@ void Florb::renderFrame(bool transition) {
     // Set screen resolution uniform
     GLuint resolutionLoc = glGetUniformLocation(shaderProgram, "resolution");
     glUniform2f(resolutionLoc, screenWidth, screenHeight);
+
+
+    // Set screen aspect ratio uniform
+    GLuint aspectRatioLoc = glGetUniformLocation(shaderProgram, "aspectRatio");
+    glUniform1f(aspectRatioLoc, aspect);
     
     
     // Set offset and radius uniforms
@@ -542,6 +547,8 @@ void Florb::initShaders() {
 
         out vec4 FragColor;
 
+        uniform float aspectRatio;
+
         uniform float radius;
 
         uniform int moteCount;
@@ -583,15 +590,23 @@ void Florb::initShaders() {
         uniform float transitionProgress;
         
         void main() {
+
             vec3 dir = normalize(fragPos);
 
             // Fragment location
             vec2 uv;
             uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
             uv.y = asin(dir.y) / 3.14159265 + 0.5;
-        
+
+            // Flip Y axis, apply zoom and offset
             uv = (uv - 0.5) * zoom + 0.5 + offset;
             uv.y = 1.0 - uv.y;
+
+            // Apply aspect ratio correction centered on (0.5, 0.5)
+            uv.x = (uv.x - 0.5) * aspectRatio + 0.5;
+            
+            // Clamp to avoid oversampling outside the texture
+            uv = clamp(uv, vec2(0.0), vec2(1.0));
 
 
             // Discard any pixel locations beyond the radius of the sphere
