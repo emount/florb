@@ -395,6 +395,14 @@ void FlorbConfigs::load() {
                 setMotesRadius(motes["radius"]);
             }
 
+            if (motes.contains("color") and motes["color"].is_array()) {
+                if (motes.contains("color") and motes["color"].is_array()) {
+                    const auto &color(motes["color"]);
+
+                    setMotesColor(color[0], color[1], color[2]);
+                }
+            }            
+
             if (motes.contains("max_step") and motes["max_step"].is_number()) {
                 setMotesMaxStep(motes["max_step"]);
             }
