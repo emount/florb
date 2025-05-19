@@ -89,6 +89,8 @@ private:
     float moteMaxStep;
     std::vector<float> moteCenters;
     std::vector<std::shared_ptr<MotionAlgorithm>> motePulsers;
+    std::vector<float> moteWinkTimes;
+    std::vector<bool> moteWinking;
     std::vector<float> moteAmplitudes;
     std::vector<float> moteDirections;
     std::vector<float> moteColor;
@@ -112,7 +114,9 @@ private:
     std::mt19937 gen;
     std::uniform_real_distribution<float> dist;
 
+    static const float k_MaxMoteWinkTime;
     static const float k_MinMoteWinkFrequency;
     static const float k_MaxMoteWinkFrequency;
+    static const float k_MoteWinkThreshold;
   
 };

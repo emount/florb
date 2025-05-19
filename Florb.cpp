@@ -46,9 +46,13 @@ using std::vector;
 
 // Static attribute initialization
 
+const float Florb::k_MaxMoteWinkTime(10.0f);
+
 const float Florb::k_MinMoteWinkFrequency(0.2f);
 
 const float Florb::k_MaxMoteWinkFrequency(1.0f);
+
+const float Florb::k_MoteWinkThreshold(0.001f);
 
 
 // Constructor
@@ -76,6 +80,8 @@ Florb::Florb() :
     moteMaxStep(),
     moteCenters(),
     motePulsers(),
+    moteWinkTimes(),
+    moteWinking(),
     moteAmplitudes(),
     moteDirections(),
     moteColor(3, 0.0f),
@@ -784,6 +790,8 @@ void Florb::initMotes(unsigned int count,
     moteRadii = vector<float>(moteCount, radius);
     moteSpeeds = vector<float>(moteCount, maxStep);
     moteMaxStep = maxStep;
+    moteWinking = vector<bool>(moteCount, false);
+    moteWinkTimes = vector<float>(moteCount, 0.0f);
     moteAmplitudes = vector<float>(moteCount, 0.0f);
     moteColor = color;
 }
@@ -802,9 +810,18 @@ void Florb::updateMotes(float timeSeconds) {
         moteCenters[i] = fmod(moteCenters[i] + 1.0f, 2.0f) - 1.0f;
     }
 
-    // Update mote phases for winking firefly effect
+    // Update mote winking state and amplitudes for winking firefly effect
     for (auto i = 0UL; i < moteCount; i++) {
-        moteAmplitudes[i] = motePulsers[i]->evaluate(timeSeconds);
+        if (moteWinking[i] == true) {           
+            moteAmplitudes[i] = motePulsers[i]->evaluate(timeSeconds);
+
+            if (moteAmplitudes[i] <= k_MoteWinkThreshold) {
+                moteWinkTimes[i] = (timeSeconds + (k_MaxMoteWinkTime * dist(gen)));
+                moteWinking[i] = false;
+            }
+        } else if (timeSeconds >= moteWinkTimes[i]) {
+            moteWinking[i] = true;
+        }
     }
 }
 
