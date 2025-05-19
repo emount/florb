@@ -42,7 +42,14 @@ using std::uniform_real_distribution;
 using std::vector;
 
 
-// Florb class implementation
+// Class Florb implementation
+
+// Static attribute initialization
+
+const float Florb::k_MinMoteWinkFrequency(0.2f);
+
+const float Florb::k_MaxMoteWinkFrequency(1.0f);
+
 
 // Constructor
 
@@ -275,7 +282,6 @@ void Florb::renderFrame(bool transition) {
         dir.z = sin(alpha) * cos(beta);
         dir = glm::normalize(dir);
         
-        // TODO - Call getColor() only once
         const auto &spotlightColor(spotlight->getColor());
         glUniform3f(glGetUniformLocation(shaderProgram, (base + "direction").c_str()),
                     dir.x,
@@ -767,9 +773,12 @@ void Florb::initMotes(unsigned int count,
     }
 
     for (auto i = 0UL; i < moteCount; i++) {
-        // TODO - Use the random distribution for frequency and phase
+        auto winkAmplitude((k_MaxMoteWinkFrequency - k_MinMoteWinkFrequency) *
+                           dist(gen) / 2.0f);
+        auto winkFrequency(k_MinMoteWinkFrequency + winkAmplitude);
+        
         motePulsers[i] =
-            make_shared<SinusoidalMotion>(true, 0.5f, 0.5f, 0.2f, 0.0f);
+            make_shared<SinusoidalMotion>(true, 0.5f, 0.5f, winkFrequency, 0.0f);
     }    
     
     moteRadii = vector<float>(moteCount, radius);
