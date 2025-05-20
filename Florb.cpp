@@ -332,11 +332,20 @@ void Florb::renderFrame(bool transition) {
     glUniform1f(rimStrengthLoc, configs->getRimStrength());
 
 
-    // Set vignette effect uniforms
+    // Set vignette uniforms
     GLuint vignetteRadiusLoc = glGetUniformLocation(shaderProgram, "vignetteRadius");
     GLuint vignetteExponentLoc = glGetUniformLocation(shaderProgram, "vignetteExponent");
     glUniform1f(vignetteRadiusLoc, configs->getVignetteRadius());
     glUniform1f(vignetteExponentLoc, configs->getVignetteExponent());
+
+
+    // Set iridescence uniforms
+    GLuint iridescenceStrengthLoc = glGetUniformLocation(shaderProgram, "iridescenceStrength");
+    GLuint iridescenceFrequencyLoc = glGetUniformLocation(shaderProgram, "iridescenceFrequency");
+    GLuint iridescenceShiftLoc = glGetUniformLocation(shaderProgram, "iridescenceShift");
+    glUniform1f(iridescenceStrengthLoc, 0.3f);
+    glUniform1f(iridescenceFrequencyLoc, 8.0f);
+    glUniform1f(iridescenceShiftLoc, 0.0f);
 
     
     // Dust mote uniforms
@@ -575,11 +584,14 @@ void Florb::initShaders() {
 
         out vec4 FragColor;
 
+        uniform float time;
+
+        uniform vec2 resolution;
         uniform float aspectRatio;
 
+        uniform vec2 offset;
+        uniform float zoom;
         uniform float radius;
-
-        uniform float time;
 
         #define MAX_MOTES 256
         uniform int moteCount;
@@ -595,10 +607,10 @@ void Florb::initShaders() {
         
         uniform float vignetteRadius;
         uniform float vignetteExponent;
-        uniform float zoom;
-        
-        uniform vec2 offset;
-        uniform vec2 resolution;
+
+        uniform float iridescenceStrength;
+        uniform float iridescenceFrequency;
+        uniform float iridescenceShift;
 
         #define MAX_LIGHTS 4
         
@@ -728,6 +740,22 @@ void Florb::initShaders() {
             }
 
 
+            // Iridescence effect
+            vec3 N = normalize(fragNormal);
+            vec3 V = normalize(viewPos - fragPos);
+            float angle = dot(N, V);
+
+            float facing = clamp(1.0 - angle, 0.0, 1.0);
+            float iridescence = sin(facing * iridescenceFrequency + iridescenceShift);
+            iridescence = 0.5 + 0.5 * iridescence;
+
+            vec3 shimmerColor = vec3(
+                0.5 + 0.5 * sin(6.2831 * iridescence + 0.0),
+                0.5 + 0.5 * sin(6.2831 * iridescence + 2.0),
+                0.5 + 0.5 * sin(6.2831 * iridescence + 4.0)
+            );
+
+
             // Sample texture colors
             vec4 colorPrev = texture(previousTexture, uv);
             vec4 colorCurr = texture(currentTexture, uv);
@@ -740,6 +768,10 @@ void Florb::initShaders() {
 
             // Clamp and overlay colored dust mote glow
             finalColor += clamp(dust, 0.0, 1.0) * motesColor;
+
+            // Incorporate iridescence
+            finalColor.rgb = mix(finalColor.rgb, shimmerColor, iridescenceStrength);
+
 
             // Assign final color, taking debug modes into account
             if (specularDebug != 0) {

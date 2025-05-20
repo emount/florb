@@ -40,7 +40,7 @@
              {
                  "name" : "UFO 0",
                  "direction" : [-1.0, 0.0],
-                 "intensity" : 0.400,
+                 "intensity" : 0.250,
                  "color" : [1.000, 1.000, 1.000],
                  "motion" : {
                      "enabled" : true,
@@ -52,7 +52,7 @@
              {
                  "name" : "UFO 1",
                  "direction" : [0.0, -0.5],
-                 "intensity" : 0.400,
+                 "intensity" : 0.250,
                  "color" : [1.000, 1.000, 1.000],
                  "motion" : {
                      "enabled" : true,
@@ -64,7 +64,7 @@
              {
                  "name" : "UFO 2",
                  "direction" : [1.0, 0.0],
-                 "intensity" : 0.400,
+                 "intensity" : 0.250,
                  "color" : [1.000, 1.000, 1.000],
                  "motion" : {
                      "enabled" : true,
@@ -75,7 +75,7 @@
              }
         ],
         "rim" : {
-            "strength" : 0.30,
+            "strength" : 0.00,
             "exponent" : 3.0,
             "color" : [0.000, 0.000, 1.000],
             "frequency" : 0.20,
@@ -92,7 +92,7 @@
         "frequency" : 0.2
     },
     "breathe" : {
-        "enabled" : true,
+        "enabled" : false,
         "amplitude" : [0.75, 0.8],
         "frequency" : 0.4
     }
@@ -102,7 +102,7 @@
         "exponent" : 3.0
     },
     "motes" : {
-        "count" : 256,
+        "count" : 0,
         "radius" : 3,
         "color" : [0.800, 0.800, 0.800],
         "max_step" : 0.002,
@@ -112,7 +112,7 @@
         }
     },
     "flutter" : {
-        "enabled" : true,
+        "enabled" : false,
         "amplitude" : 0.01,
         "frequency" : 8.0,
         "speed" : 2.0
