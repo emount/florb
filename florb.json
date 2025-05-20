@@ -83,7 +83,7 @@
                 "enabled" : true,
                 "frequency" : 60.0
             }
-    }
+        }
     },
     "effects" : {
         "bounce" : {
@@ -96,31 +96,31 @@
             "amplitude" : [0.75, 0.8],
             "frequency" : 0.4
         },
+        "flutter" : {
+            "enabled" : false,
+            "amplitude" : 0.01,
+            "frequency" : 8.0,
+            "speed" : 2.0
+        },
+        "motes" : {
+            "count" : 256,
+            "radius" : 3,
+            "color" : [0.800, 0.800, 0.800],
+            "max_step" : 0.002,
+            "winking" : {
+                "enabled" : true,
+                "max_off" : 2.0
+            }
+        },
         "iridescence" : {
             "strength" : 0.10,
             "frequency" : 6.0,
             "shift" : 1.0
+        },
+        "vignette" : {
+            "radius" : 0.70,
+            "exponent" : 3.0
         }
-    },
-    "vignette" : {
-        "radius" : 0.70,
-        "exponent" : 3.0
-    },
-    "motes" : {
-        "count" : 0,
-        "radius" : 3,
-        "color" : [0.800, 0.800, 0.800],
-        "max_step" : 0.002,
-        "winking" : {
-            "enabled" : true,
-            "max_off" : 2.0
-        }
-    },
-    "flutter" : {
-        "enabled" : false,
-        "amplitude" : 0.01,
-        "frequency" : 8.0,
-        "speed" : 2.0
     },
     "debug" : {
         "render_mode" : "fill",

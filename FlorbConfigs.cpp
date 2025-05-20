@@ -323,9 +323,11 @@ void FlorbConfigs::load() {
                     if (animate.contains("frequency") and animate["frequency"].is_number()) {
                         setRimAnimateFrequency(animate["frequency"]);
                     }
-                } // animate configs
-            } // rim configs
-        } // light configs
+                } // Animate configs
+                
+            } // Rim configs
+            
+        } // Light configs
 
 
         // Effects configs
@@ -347,7 +349,7 @@ void FlorbConfigs::load() {
                 if (bounce.contains("frequency") and bounce["frequency"].is_number()) {
                     setBounceFrequency(bounce["frequency"]);
                 }
-            } // bounce configs
+            } // Bounce configs
 
             if (effects.contains("breathe") and effects["breathe"].is_object()) {
                 const auto &breathe(effects["breathe"]);
@@ -364,8 +366,34 @@ void FlorbConfigs::load() {
                 if (breathe.contains("frequency") and breathe["frequency"].is_number()) {
                     setBreatheFrequency(breathe["frequency"]);
                 }
-            } // breathe configs
+            } // Breathe configs
 
+            // Flutter configs
+            if (effects.contains("flutter") and effects["flutter"].is_object()) {
+                const auto &flutter(effects["flutter"]);
+
+                if (flutter.contains("enabled") and flutter["enabled"].is_boolean()) {
+                    const auto enabled(flutter["enabled"]);
+
+                    if (enabled) {
+                        if (flutter.contains("amplitude") and flutter["amplitude"].is_number()) {
+                            setFlutterAmplitude(flutter["amplitude"]);
+                        }
+                    } else {
+                        setFlutterAmplitude(0.0f);
+                    }
+                }
+
+                if (flutter.contains("frequency") and flutter["frequency"].is_number()) {
+                    setFlutterFrequency(flutter["frequency"]);
+                }
+
+                if (flutter.contains("speed") and flutter["speed"].is_number()) {
+                    setFlutterSpeed(flutter["speed"]);
+                }
+            } // Flutter configs
+
+            // Iridescence configs
             if (effects.contains("iridescence") and effects["iridescence"].is_object()) {
                 const auto &iridescence(effects["iridescence"]);
 
@@ -380,98 +408,72 @@ void FlorbConfigs::load() {
                 if (iridescence.contains("shift") and iridescence["shift"].is_number()) {
                     setIridescenceShift(iridescence["shift"]);
                 }
-            } // iridescence configs
-        }
+            } // Iridescence configs
 
-        
-        // Vignette configs
-        if (config.contains("vignette") and config["vignette"].is_object()) {
-            const auto &vignette(config["vignette"]);
-            
-            if (vignette.contains("radius") and vignette["radius"].is_number()) {
-                setVignetteRadius(vignette["radius"]);
-            }
-            
-            if (vignette.contains("exponent") and vignette["exponent"].is_number()) {
-                setVignetteExponent(vignette["exponent"]);
-            }
-        }
+            // Mote configs
+            if (effects.contains("motes") and effects["motes"].is_object()) {
+                const auto &motes(effects["motes"]);
 
+                if (motes.contains("count") and motes["count"].is_number_integer()) {
+                    auto moteCount(motes["count"]);
 
-        // Mote configs
-        if (config.contains("motes") and config["motes"].is_object()) {
-            const auto &motes(config["motes"]);
-
-            if (motes.contains("count") and motes["count"].is_number_integer()) {
-                auto moteCount(motes["count"]);
-
-                if (moteCount < 0) {
-                    moteCount = 0UL;
-                } if (moteCount > k_MaxMotes) {
-                    moteCount = k_MaxMotes;
-                }
+                    if (moteCount < 0) {
+                        moteCount = 0UL;
+                    } if (moteCount > k_MaxMotes) {
+                        moteCount = k_MaxMotes;
+                    }
                 
-                setMoteCount(moteCount);
-            }
+                    setMoteCount(moteCount);
+                }
             
-            if (motes.contains("radius") and motes["radius"].is_number()) {
-                setMotesRadius(motes["radius"]);
-            }
+                if (motes.contains("radius") and motes["radius"].is_number()) {
+                    setMotesRadius(motes["radius"]);
+                }
 
-            if (motes.contains("color") and motes["color"].is_array()) {
+                if (motes.contains("color") and motes["color"].is_array()) {
+                    if (motes.contains("color") and motes["color"].is_array()) {
+                        const auto &color(motes["color"]);
+
+                        setMotesColor(color[0], color[1], color[2]);
+                    }
+                }            
+
+                if (motes.contains("max_step") and motes["max_step"].is_number()) {
+                    setMotesMaxStep(motes["max_step"]);
+                }
+
+                if (motes.contains("winking") and motes["winking"].is_object()) {
+                    const auto &winking(motes["winking"]);
+
+                    if (winking.contains("enabled") and winking["enabled"].is_boolean()) {
+                        setMotesWinkingEnabled(winking["enabled"]);
+                    }
+
+                    if (winking.contains("max_off") and winking["max_off"].is_number()) {
+                        setMotesWinkingMaxOff(winking["max_off"]);
+                    }                
+                }
+
                 if (motes.contains("color") and motes["color"].is_array()) {
                     const auto &color(motes["color"]);
-
                     setMotesColor(color[0], color[1], color[2]);
                 }
-            }            
+            } // Motes configs
 
-            if (motes.contains("max_step") and motes["max_step"].is_number()) {
-                setMotesMaxStep(motes["max_step"]);
-            }
-
-            if (motes.contains("winking") and motes["winking"].is_object()) {
-                const auto &winking(motes["winking"]);
-
-                if (winking.contains("enabled") and winking["enabled"].is_boolean()) {
-                    setMotesWinkingEnabled(winking["enabled"]);
+            // Vignette configs
+            if (effects.contains("vignette") and effects["vignette"].is_object()) {
+                const auto &vignette(effects["vignette"]);
+                
+                if (vignette.contains("radius") and vignette["radius"].is_number()) {
+                    setVignetteRadius(vignette["radius"]);
                 }
-
-                if (winking.contains("max_off") and winking["max_off"].is_number()) {
-                    setMotesWinkingMaxOff(winking["max_off"]);
-                }                
-            }
-
-            if (motes.contains("color") and motes["color"].is_array()) {
-                const auto &color(motes["color"]);
-                setMotesColor(color[0], color[1], color[2]);
-            }
-        }
-
-
-        if (config.contains("flutter") and config["flutter"].is_object()) {
-            const auto &flutter(config["flutter"]);
-
-            if (flutter.contains("enabled") and flutter["enabled"].is_boolean()) {
-                const auto enabled(flutter["enabled"]);
-
-                if (enabled) {
-                    if (flutter.contains("amplitude") and flutter["amplitude"].is_number()) {
-                        setFlutterAmplitude(flutter["amplitude"]);
-                    }
-                } else {
-                    setFlutterAmplitude(0.0f);
+                
+                if (vignette.contains("exponent") and vignette["exponent"].is_number()) {
+                    setVignetteExponent(vignette["exponent"]);
                 }
-            }
-
-            if (flutter.contains("frequency") and flutter["frequency"].is_number()) {
-                setFlutterFrequency(flutter["frequency"]);
-            }
-
-            if (flutter.contains("speed") and flutter["speed"].is_number()) {
-                setFlutterSpeed(flutter["speed"]);
-            }
-        }
+            } // Vignette configs
+            
+        } // Effects configs
         
         
         // Debug configs
