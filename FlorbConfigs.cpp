@@ -254,6 +254,9 @@ void FlorbConfigs::load() {
                     
                 cameraNum++;
             }
+
+            // TODO - Add tilt (center-axis rotation) config
+
         } // camera configs
         
 
@@ -426,8 +429,30 @@ void FlorbConfigs::load() {
         }
 
 
-        // TODO - Add tilt (center-axis rotation) config
+        if (config.contains("flutter") and config["flutter"].is_object()) {
+            const auto &flutter(config["flutter"]);
 
+            if (flutter.contains("enabled") and flutter["enabled"].is_boolean()) {
+                const auto enabled(flutter["enabled"]);
+
+                if (enabled) {
+                    if (flutter.contains("amplitude") and flutter["amplitude"].is_number()) {
+                        setFlutterAmplitude(flutter["amplitude"]);
+                    }
+                } else {
+                    setFlutterAmplitude(0.0f);
+                }
+            }
+
+            if (flutter.contains("frequency") and flutter["frequency"].is_number()) {
+                setFlutterFrequency(flutter["frequency"]);
+            }
+
+            if (flutter.contains("speed") and flutter["speed"].is_number()) {
+                setFlutterSpeed(flutter["speed"]);
+            }
+        }
+        
         
         // Debug configs
         if (config.contains("debug") and config["debug"].is_object()) {
@@ -837,6 +862,49 @@ void FlorbConfigs::setMotesColor(float r, float g, float b) {
     motesColor[0] = r;
     motesColor[1] = g;
     motesColor[2] = b;
+}
+
+
+// Flutter accessors / mutators
+
+bool FlorbConfigs::getFlutterEnabled(void) const {
+    LOCK_CONFIGS;
+    return flutterEnabled;
+}
+
+void FlorbConfigs::setFlutterEnabled(bool e) {
+    LOCK_CONFIGS;
+    flutterEnabled = e;
+}
+
+float FlorbConfigs::getFlutterAmplitude(void) const {
+    LOCK_CONFIGS;
+    return flutterAmplitude;
+}
+
+void FlorbConfigs::setFlutterAmplitude(float a) {
+    LOCK_CONFIGS;
+    flutterAmplitude = a;
+}
+
+float FlorbConfigs::getFlutterFrequency(void) const {
+    LOCK_CONFIGS;
+    return flutterFrequency;
+}
+
+void FlorbConfigs::setFlutterFrequency(float f) {
+    LOCK_CONFIGS;
+    flutterFrequency = f;
+}
+
+float FlorbConfigs::getFlutterSpeed(void) const {
+    LOCK_CONFIGS;
+    return flutterSpeed;
+}
+
+void FlorbConfigs::setFlutterSpeed(float s) {
+    LOCK_CONFIGS;
+    flutterSpeed = s;
 }
 
 

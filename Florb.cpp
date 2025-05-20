@@ -75,16 +75,18 @@ Florb::Florb() :
     animatedRimColor(0.0f, 0.0f, 0.0f),
     
     moteCount(0UL),
-    moteRadii(),
-    moteSpeeds(),
-    moteMaxStep(),
-    moteCenters(),
-    motePulsers(),
-    moteWinkTimes(),
-    moteWinking(),
-    moteAmplitudes(),
-    moteDirections(),
-    moteColor(3, 0.0f),
+    motesRadii(),
+    motesSpeeds(),
+    motesMaxStep(),
+    motesCenters(),
+    motesPulsers(),
+    motesWinkingEnabled(),
+    motesWinkTimes(),
+    motesWinking(),
+    motesAmplitudes(),
+    motesMaxOff(),
+    motesDirections(),
+    motesColor(),
 
     configs(make_shared<FlorbConfigs>()),
 
@@ -339,17 +341,26 @@ void Florb::renderFrame(bool transition) {
     
     // Dust mote uniforms
     GLuint moteCountLoc = glGetUniformLocation(shaderProgram, "moteCount");
-    GLuint moteRadiiLoc = glGetUniformLocation(shaderProgram, "moteRadii");
-    GLuint moteSpeedsLoc = glGetUniformLocation(shaderProgram, "moteSpeeds");
-    GLuint moteCentersLoc = glGetUniformLocation(shaderProgram, "moteCenters");
-    GLuint moteAmplitudesLoc = glGetUniformLocation(shaderProgram, "moteAmplitudes");
-    GLuint moteColorLoc = glGetUniformLocation(shaderProgram, "moteColor");
+    GLuint motesRadiiLoc = glGetUniformLocation(shaderProgram, "motesRadii");
+    GLuint motesSpeedsLoc = glGetUniformLocation(shaderProgram, "motesSpeeds");
+    GLuint motesCentersLoc = glGetUniformLocation(shaderProgram, "motesCenters");
+    GLuint motesAmplitudesLoc = glGetUniformLocation(shaderProgram, "motesAmplitudes");
+    GLuint motesColorLoc = glGetUniformLocation(shaderProgram, "motesColor");
     glUniform1i(moteCountLoc, moteCount);
-    glUniform1fv(moteRadiiLoc, moteRadii.size(), moteRadii.data());
-    glUniform1fv(moteSpeedsLoc, moteSpeeds.size(), moteSpeeds.data());
-    glUniform2fv(moteCentersLoc, moteCenters.size(), moteCenters.data());
-    glUniform1fv(moteAmplitudesLoc, moteAmplitudes.size(), moteAmplitudes.data());
-    glUniform3f(moteColorLoc, moteColor[0], moteColor[1], moteColor[2]);
+    glUniform1fv(motesRadiiLoc, motesRadii.size(), motesRadii.data());
+    glUniform1fv(motesSpeedsLoc, motesSpeeds.size(), motesSpeeds.data());
+    glUniform2fv(motesCentersLoc, motesCenters.size(), motesCenters.data());
+    glUniform1fv(motesAmplitudesLoc, motesAmplitudes.size(), motesAmplitudes.data());
+    glUniform3f(motesColorLoc, motesColor[0], motesColor[1], motesColor[2]);
+
+
+    // Flutter wave uniforms
+    GLuint waveAmplitudeLoc = glGetUniformLocation(shaderProgram, "waveAmplitude");
+    GLuint waveFrequencyLoc = glGetUniformLocation(shaderProgram, "waveFrequency");
+    GLuint waveSpeedLoc = glGetUniformLocation(shaderProgram, "waveSpeed");
+    glUniform1f(waveAmplitudeLoc, configs->getFlutterAmplitude());
+    glUniform1f(waveFrequencyLoc, configs->getFlutterFrequency());
+    glUniform1f(waveSpeedLoc, configs->getFlutterSpeed());
 
 
     // Bounce offset uniform
@@ -572,11 +583,11 @@ void Florb::initShaders() {
 
         #define MAX_MOTES 256
         uniform int moteCount;
-        uniform float moteRadii[MAX_MOTES];
-        uniform float moteSpeeds[MAX_MOTES];
-        uniform vec2 moteCenters[MAX_MOTES];
-        uniform float moteAmplitudes[MAX_MOTES];
-        uniform vec3 moteColor;
+        uniform float motesRadii[MAX_MOTES];
+        uniform float motesSpeeds[MAX_MOTES];
+        uniform vec2 motesCenters[MAX_MOTES];
+        uniform float motesAmplitudes[MAX_MOTES];
+        uniform vec3 motesColor;
 
         uniform vec3 rimColor;
         uniform float rimExponent;
@@ -604,13 +615,25 @@ void Florb::initShaders() {
         uniform float shininess;
         uniform int specularDebug;
 
+        uniform float waveAmplitude;
+        uniform float waveFrequency;
+        uniform float waveSpeed;
+
         uniform sampler2D currentTexture;
         uniform sampler2D previousTexture;
         uniform float transitionProgress;
         
         void main() {
 
+            // Obtain a normalized direction vector from the fragment shader
             vec3 dir = normalize(fragPos);
+
+            // Use spherical coordinates to modulate wave phase
+            float wavePhase =
+                ((dot(dir, vec3(1.0, 0.0, 0.0)) * waveFrequency) - (time * waveSpeed));
+
+            // Sine-based displacement along a direction (e.g. vertical in UV space)
+            vec2 waveOffset = vec2(0.0, sin(wavePhase) * waveAmplitude);
 
             // Fragment location
             vec2 uv;
@@ -627,6 +650,9 @@ void Florb::initShaders() {
             // Clamp to avoid oversampling outside the texture
             uv = clamp(uv, vec2(0.0), vec2(1.0));
 
+            // Apply displacement to UVs before texture sampling
+            uv += waveOffset;
+            uv = clamp(uv, vec2(0.0), vec2(1.0));
 
             // Discard any pixel locations beyond the radius of the sphere
             if (length(fragPos) > radius)
@@ -637,8 +663,8 @@ void Florb::initShaders() {
             float moteGlow = 0.0;
             float dust = 0.0;
             for (int i = 0; i < moteCount; ++i) {
-                float speed = moteSpeeds[i]; // pre-randomized per mote
-                float radius = moteRadii[i] / resolution.y;
+                float speed = motesSpeeds[i];
+                float radius = motesRadii[i] / resolution.y;
             
                 // Wobbling orbit using sin/cos with time
                 float wobbleX = sin(time * speed);
@@ -647,13 +673,13 @@ void Florb::initShaders() {
                 vec2 orbitOffset = vec2(wobbleX, wobbleY) * 0.01;
 
                 // Map [-1,1] to [0,1]
-                vec2 motePos = (moteCenters[i] * 0.5 + 0.5);
+                vec2 motePos = (motesCenters[i] * 0.5 + 0.5);
                 motePos += orbitOffset;
             
                 float dist = distance(uv, motePos);
                 float alpha = smoothstep(radius, 0.0, dist);
 
-                dust += moteAmplitudes[i] * alpha;
+                dust += motesAmplitudes[i] * alpha;
             }
 
             // Aspect-corrected center-relative coords
@@ -713,7 +739,7 @@ void Florb::initShaders() {
             finalColor += rimLight;
 
             // Clamp and overlay colored dust mote glow
-            finalColor += clamp(dust, 0.0, 1.0) * moteColor;
+            finalColor += clamp(dust, 0.0, 1.0) * motesColor;
 
             // Assign final color, taking debug modes into account
             if (specularDebug != 0) {
@@ -762,22 +788,22 @@ void Florb::initMotes(unsigned int count,
                       const vector<float> &color) {
     // Randomize dust mote centers
     moteCount = count;
-    moteCenters.resize(2 * moteCount);
-    motePulsers.resize(moteCount);
-    moteWinking.resize(moteCount);
-    moteWinkTimes.resize(moteCount);
+    motesCenters.resize(2 * moteCount);
+    motesPulsers.resize(moteCount);
+    motesWinking.resize(moteCount);
+    motesWinkTimes.resize(moteCount);
     for (auto i = 0UL; i < (2 * moteCount); i++) {
         // Sample in [-1.0, 1.0] to cover full UV space after offset/zoom
-        moteCenters[i] = ((2.0f * dist(gen)) - 1.0f);
+        motesCenters[i] = ((2.0f * dist(gen)) - 1.0f);
         
         if ((i % 2) == 0) {
             float bias(dist(gen));
             if (bias > 0.5f) {
-                moteDirections.push_back(1.0f);
+                motesDirections.push_back(1.0f);
             } else {
-                moteDirections.push_back(-1.0f);
+                motesDirections.push_back(-1.0f);
             }
-        } else moteDirections.push_back(1.0f);
+        } else motesDirections.push_back(1.0f);
     }
 
     for (auto i = 0UL; i < moteCount; i++) {
@@ -785,45 +811,45 @@ void Florb::initMotes(unsigned int count,
                            dist(gen) / 2.0f);
         auto winkFrequency(k_MinMoteWinkFrequency + winkAmplitude);
         
-        motePulsers[i] =
+        motesPulsers[i] =
             make_shared<SinusoidalMotion>(true, 0.5f, 0.5f, winkFrequency, 0.0f);
 
-        moteWinking[i] = ((dist(gen) > 0.5) ? true : false);
-        moteWinkTimes[i] = (k_MaxMoteWinkTime * dist(gen));
+        motesWinking[i] = ((dist(gen) > 0.5) ? true : false);
+        motesWinkTimes[i] = (k_MaxMoteWinkTime * dist(gen));
     }    
     
-    moteRadii = vector<float>(moteCount, radius);
-    moteSpeeds = vector<float>(moteCount, maxStep);
-    moteMaxStep = maxStep;
-    moteAmplitudes = vector<float>(moteCount, 0.0f);
-    moteColor = color;
+    motesRadii = vector<float>(moteCount, radius);
+    motesSpeeds = vector<float>(moteCount, maxStep);
+    motesMaxStep = maxStep;
+    motesAmplitudes = vector<float>(moteCount, 0.0f);
+    motesColor = color;
 }
 
 void Florb::updateMotes(float timeSeconds) {
     // Update random walk for each dust mote
     for (auto i = 0UL; i < (2 * moteCount); i++) {
         float vecDir(dist(gen));
-        float step(moteMaxStep * vecDir);
-        auto &component(moteCenters[i]);
+        float step(motesMaxStep * vecDir);
+        auto &component(motesCenters[i]);
         
         // Update this component by the computed step
-        component += (step * moteDirections[i]);
+        component += (step * motesDirections[i]);
         
         // Wrap the component to keep it on the sphere
-        moteCenters[i] = fmod(moteCenters[i] + 1.0f, 2.0f) - 1.0f;
+        motesCenters[i] = fmod(motesCenters[i] + 1.0f, 2.0f) - 1.0f;
     }
 
     // Update mote winking state and amplitudes for winking firefly effect
     for (auto i = 0UL; i < moteCount; i++) {
-        if (moteWinking[i] == true) {           
-            moteAmplitudes[i] = motePulsers[i]->evaluate(timeSeconds);
+        if (motesWinking[i] == true) {           
+            motesAmplitudes[i] = motesPulsers[i]->evaluate(timeSeconds);
 
-            if (moteAmplitudes[i] <= k_MoteWinkThreshold) {
-                moteWinkTimes[i] = (timeSeconds + (k_MaxMoteWinkTime * dist(gen)));
-                moteWinking[i] = false;
+            if (motesAmplitudes[i] <= k_MoteWinkThreshold) {
+                motesWinkTimes[i] = (timeSeconds + (k_MaxMoteWinkTime * dist(gen)));
+                motesWinking[i] = false;
             }
-        } else if (timeSeconds >= moteWinkTimes[i]) {
-            moteWinking[i] = true;
+        } else if (timeSeconds >= motesWinkTimes[i]) {
+            motesWinking[i] = true;
         }
     }
 }

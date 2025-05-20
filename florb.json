@@ -111,6 +111,12 @@
             "max_off" : 2.0
         }
     },
+    "flutter" : {
+        "enabled" : true,
+        "amplitude" : 0.005,
+        "frequency" : 16.0,
+        "speed" : 1.0
+    },
     "debug" : {
         "render_mode" : "fill",
         "specular_mode" : "normal"

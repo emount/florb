@@ -150,6 +150,19 @@ public:
     const std::vector<float>& getMotesColor() const;
     void setMotesColor(float r, float g, float b);
 
+
+    bool getFlutterEnabled(void) const;
+    void setFlutterEnabled(bool e);
+
+    float getFlutterAmplitude(void) const;
+    void setFlutterAmplitude(float a);
+
+    float getFlutterFrequency(void) const;
+    void setFlutterFrequency(float f);
+
+    float getFlutterSpeed(void) const;
+    void setFlutterSpeed(float s);
+
   
     RenderMode getRenderMode() const;
     void setRenderMode(RenderMode r);
@@ -220,6 +233,11 @@ private:
     bool motesWinkingEnabled;
     float motesMaxOff;
     std::vector<float> motesColor;
+
+    bool flutterEnabled;
+    float flutterAmplitude;
+    float flutterFrequency;
+    float flutterSpeed;
 
     RenderMode renderMode;
     SpecularMode specularMode;

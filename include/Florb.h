@@ -84,16 +84,18 @@ private:
     float vignetteExponent = 0.0f;
 
     unsigned int moteCount;
-    std::vector<float> moteRadii;
-    std::vector<float> moteSpeeds;
-    float moteMaxStep;
-    std::vector<float> moteCenters;
-    std::vector<std::shared_ptr<MotionAlgorithm>> motePulsers;
-    std::vector<float> moteWinkTimes;
-    std::vector<bool> moteWinking;
-    std::vector<float> moteAmplitudes;
-    std::vector<float> moteDirections;
-    std::vector<float> moteColor;
+    std::vector<float> motesRadii;
+    std::vector<float> motesSpeeds;
+    float motesMaxStep;
+    std::vector<float> motesCenters;
+    std::vector<std::shared_ptr<MotionAlgorithm>> motesPulsers;
+    std::vector<bool> motesWinkingEnabled;
+    std::vector<float> motesWinkTimes;
+    std::vector<bool> motesWinking;
+    std::vector<float> motesAmplitudes;
+    std::vector<float> motesMaxOff;
+    std::vector<float> motesDirections;
+    std::vector<float> motesColor;
 
     std::shared_ptr<FlorbConfigs> configs;
 
