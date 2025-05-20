@@ -343,9 +343,9 @@ void Florb::renderFrame(bool transition) {
     GLuint iridescenceStrengthLoc = glGetUniformLocation(shaderProgram, "iridescenceStrength");
     GLuint iridescenceFrequencyLoc = glGetUniformLocation(shaderProgram, "iridescenceFrequency");
     GLuint iridescenceShiftLoc = glGetUniformLocation(shaderProgram, "iridescenceShift");
-    glUniform1f(iridescenceStrengthLoc, 0.3f);
-    glUniform1f(iridescenceFrequencyLoc, 8.0f);
-    glUniform1f(iridescenceShiftLoc, 0.0f);
+    glUniform1f(iridescenceStrengthLoc, configs->getIridescenceStrength());
+    glUniform1f(iridescenceFrequencyLoc, configs->getIridescenceFrequency());
+    glUniform1f(iridescenceShiftLoc, configs->getIridescenceShift());
 
     
     // Dust mote uniforms

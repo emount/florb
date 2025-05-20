@@ -101,6 +101,10 @@ FlorbConfigs::FlorbConfigs() :
     vignetteRadius(0.0f),
     vignetteExponent(0.0f),
 
+    iridescenceStrength(0.0f),
+    iridescenceFrequency(0.0f),
+    iridescenceShift(0.0f),
+
     moteCount(0ULL),
     motesRadius(0.0f),
     motesMaxStep(0.0f),
@@ -322,8 +326,8 @@ void FlorbConfigs::load() {
                 } // animate configs
             } // rim configs
         } // light configs
-                        
-        
+
+
         // Effects configs
         if (config.contains("effects") and config["effects"].is_object()) {
             const auto &effects(config["effects"]);
@@ -343,7 +347,7 @@ void FlorbConfigs::load() {
                 if (bounce.contains("frequency") and bounce["frequency"].is_number()) {
                     setBounceFrequency(bounce["frequency"]);
                 }
-            }
+            } // bounce configs
 
             if (effects.contains("breathe") and effects["breathe"].is_object()) {
                 const auto &breathe(effects["breathe"]);
@@ -360,7 +364,23 @@ void FlorbConfigs::load() {
                 if (breathe.contains("frequency") and breathe["frequency"].is_number()) {
                     setBreatheFrequency(breathe["frequency"]);
                 }
-            }
+            } // breathe configs
+
+            if (effects.contains("iridescence") and effects["iridescence"].is_object()) {
+                const auto &iridescence(effects["iridescence"]);
+
+                if (iridescence.contains("strength") and iridescence["strength"].is_number()) {
+                    setIridescenceStrength(iridescence["strength"]);
+                }
+
+                if (iridescence.contains("frequency") and iridescence["frequency"].is_number()) {
+                    setIridescenceFrequency(iridescence["frequency"]);
+                }
+
+                if (iridescence.contains("shift") and iridescence["shift"].is_number()) {
+                    setIridescenceShift(iridescence["shift"]);
+                }
+            } // iridescence configs
         }
 
         
@@ -773,6 +793,39 @@ float FlorbConfigs::getRimAnimateFrequency() const {
 void FlorbConfigs::setRimAnimateFrequency(float f) {
     LOCK_CONFIGS;
     rimAnimateFrequency = f;
+}
+
+
+// Iridescence accessors / mutators
+
+float FlorbConfigs::getIridescenceStrength() const {
+    LOCK_CONFIGS;
+    return iridescenceStrength;
+}
+
+void FlorbConfigs::setIridescenceStrength(float s) {
+    LOCK_CONFIGS;
+    iridescenceStrength = s;
+}
+
+float FlorbConfigs::getIridescenceFrequency() const {
+    LOCK_CONFIGS;
+    return iridescenceFrequency;
+}
+
+void FlorbConfigs::setIridescenceFrequency(float f) {
+    LOCK_CONFIGS;
+    iridescenceFrequency = f;
+}
+
+float FlorbConfigs::getIridescenceShift() const {
+    LOCK_CONFIGS;
+    return iridescenceShift;
+}
+
+void FlorbConfigs::setIridescenceShift(float s) {
+    LOCK_CONFIGS;
+    iridescenceShift = s;
 }
 
 

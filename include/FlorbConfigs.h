@@ -124,6 +124,16 @@ public:
     float getRimAnimateFrequency() const;
     void setRimAnimateFrequency(float f);
 
+    
+    float getIridescenceStrength() const;
+    void setIridescenceStrength(float s);
+
+    float getIridescenceFrequency() const;
+    void setIridescenceFrequency(float f);
+
+    float getIridescenceShift() const;
+    void setIridescenceShift(float s);
+
   
     float getVignetteRadius() const;
     void setVignetteRadius(float r);
@@ -226,6 +236,10 @@ private:
 
     float vignetteRadius;
     float vignetteExponent;
+
+    float iridescenceStrength;
+    float iridescenceFrequency;
+    float iridescenceShift;
 
     unsigned int moteCount;
     float motesRadius;
