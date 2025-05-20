@@ -1,25 +1,18 @@
 Florb feature wish list
 -----------------------
 
-Dynamic petal fluttering
-Dust motes
-  Wink in and out like fireflies
-Lighting
-  Spotlights
-    Orbiting spotlights
-    Distance with attenuation
-    Cosine cutoff (all the math)
-  Pulsing rim lighting
-Orb shadow
+Shader effects
+    Shimmering / iridescence
+    Dynamic wind ribbons
+    Procedural Glow Points (Energy Nodes)
+    Anisotropic Specular
+    Subsurface Scattering Approximation
+Interactive effects
+    Touchscreen ripple
+    Reactive touch-based blooming
+    Day-night shader blending
 Hybrid AI flower generation
-Image transition modes:
-  x Quick flip
-  * Slow blend
-    Rotation of orb (new flower on back)
-Screenshot / video and flower image save
 ASMR audio generation
-User audio input
-Volume / balance / EQ control
 Web interface
   REST API for dynamic Florb controls
   JavaScript / React.JS / ??? pages
