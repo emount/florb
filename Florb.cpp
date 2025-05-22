@@ -306,10 +306,25 @@ void Florb::renderFrame(bool transition) {
     
     // Set specular reflection uniforms
     GLuint shininessLoc = glGetUniformLocation(shaderProgram, "shininess");
+    GLuint anisotropyEnabledLoc = glGetUniformLocation(shaderProgram, "anisotropyEnabled");
+    GLuint anisotropyStrengthLoc = glGetUniformLocation(shaderProgram, "anisotropyStrength");
+    GLuint anisotropySharpnessLoc = glGetUniformLocation(shaderProgram, "anisotropySharpness");
     glUniform1f(shininessLoc, configs->getShininess());
+    glUniform1i(anisotropyEnabledLoc, configs->getAnisotropyEnabled());
+    glUniform1f(anisotropyStrengthLoc, configs->getAnisotropyStrength());
+    glUniform1f(anisotropySharpnessLoc, configs->getAnisotropySharpness());
 
-    // Render either normally or in specular debug mode
+    // Set debug uniforms
+    GLuint anisotropicDebugLoc = glGetUniformLocation(shaderProgram, "anisotropicDebug");
     GLuint specularDebugLoc = glGetUniformLocation(shaderProgram, "specularDebug");
+    
+    int anisotropicDebug;
+    if (configs->getAnisotropicMode() == FlorbConfigs::AnisotropicMode::NORMAL) {
+        anisotropicDebug = 0;
+    } else {
+        anisotropicDebug = 1;
+    }
+    glUniform1i(anisotropicDebugLoc, anisotropicDebug);
     
     int specularDebug;
     if (configs->getSpecularMode() == FlorbConfigs::SpecularMode::NORMAL) {
@@ -593,6 +608,10 @@ void Florb::initShaders() {
         uniform float zoom;
         uniform float radius;
 
+        uniform int anisotropyEnabled;
+        uniform float anisotropyStrength;
+        uniform float anisotropySharpness;
+
         #define MAX_MOTES 256
         uniform int moteCount;
         uniform float motesRadii[MAX_MOTES];
@@ -625,7 +644,6 @@ void Florb::initShaders() {
 
         uniform vec3 viewPos;
         uniform float shininess;
-        uniform int specularDebug;
 
         uniform float waveAmplitude;
         uniform float waveFrequency;
@@ -634,6 +652,9 @@ void Florb::initShaders() {
         uniform sampler2D currentTexture;
         uniform sampler2D previousTexture;
         uniform float transitionProgress;
+
+        uniform int anisotropicDebug;
+        uniform int specularDebug;
         
         void main() {
 
@@ -708,6 +729,7 @@ void Florb::initShaders() {
             vec3 totalLighting = vec3(0.0);
             vec3 viewDir = normalize(viewPos - fragPos);
             float totalSpecular = 0.0;
+            vec3 anisotropicColor = vec3(0.0);
             for (int i = 0; i < lightCount; ++i) {
                 vec3 lightDir = normalize(-spotlights[i].direction);
                 vec3 reflectDir = reflect(-lightDir, norm);
@@ -718,9 +740,35 @@ void Florb::initShaders() {
             
                 vec3 lightColor = spotlights[i].color * spotlights[i].intensity;
                 vec3 lighting = (diff + spec) * lightColor;
+
+                anisotropicColor += lightColor;
             
                 totalLighting += lighting;
             }
+
+            // Average the spotlight colors to produce the anisotropic color
+            if (lightCount > 0) anisotropicColor /= lightCount;
+
+
+            // Anisotropic specular reflections
+            vec3 anisotropicLightDir = -spotlights[0].direction;
+            vec3 anisotropicN = normalize(fragNormal);
+            vec3 anisotropicT = normalize(dFdx(fragPos));
+            vec3 anisotropicB = normalize(dFdy(fragPos));
+            vec3 tangent = normalize(anisotropicT - norm * dot(norm, anisotropicT));
+            vec3 bitangent = cross(norm, tangent);
+            
+            // Simulate using a modified Blinn-Phong calculation
+            vec3 anisotropicH = normalize(viewDir + anisotropicLightDir);
+            float dotTH = dot(tangent, anisotropicH);
+            float dotNH = dot(norm, anisotropicH);
+            
+            float th2 = (dotTH * dotTH);
+            float anisotropicFactor = pow(max(th2, 0.0001), anisotropySharpness);
+            float anisotropicSpec = pow(max(dotNH, 0.0), shininess) * anisotropicFactor;
+            
+            vec3 specularColor = (anisotropicColor * pow(max(dotNH, 0.0), shininess) *
+                                  anisotropicFactor * anisotropyStrength * 10.0);
 
 
             // Calculate rim lighting
@@ -741,9 +789,9 @@ void Florb::initShaders() {
 
 
             // Iridescence effect
-            vec3 N = normalize(fragNormal);
-            vec3 V = normalize(viewPos - fragPos);
-            float angle = dot(N, V);
+            vec3 iridescenceN = normalize(fragNormal);
+            vec3 iridescenceV = normalize(viewPos - fragPos);
+            float angle = dot(iridescenceN, iridescenceV);
 
             float facing = clamp(1.0 - angle, 0.0, 1.0);
             float iridescence = sin(facing * iridescenceFrequency + iridescenceShift);
@@ -764,6 +812,9 @@ void Florb::initShaders() {
 
             // Compute final color
             vec3 finalColor = vignette * totalLighting * texColor.rgb;
+
+            if (anisotropyEnabled == 1) finalColor += specularColor;
+
             finalColor += rimLight;
 
             // Clamp and overlay colored dust mote glow
@@ -774,7 +825,9 @@ void Florb::initShaders() {
 
 
             // Assign final color, taking debug modes into account
-            if (specularDebug != 0) {
+            if (anisotropicDebug == 1) {
+               FragColor = vec4(specularColor, 1.0);
+            } else if (specularDebug == 1) {
                FragColor = vec4(vec3(totalSpecular), 1.0);
             } else {
                 FragColor = vec4(finalColor, 1.0);
@@ -785,28 +838,45 @@ void Florb::initShaders() {
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
+    GLint vertexStatus = 0;
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vertexStatus);
+    if (vertexStatus != GL_TRUE) {
+        char infoLog[2048];
+        glGetShaderInfoLog(vertexShader, sizeof(infoLog), nullptr, infoLog);
+        cerr << "[Vertex Shader Compile Error]\n" << infoLog << endl;
+    }
     FlorbUtils::glCheck("glCompileShader(vertexShader)");
 
-    GLint success;
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-      cerr << "Vertex shader compilation error" << endl;    
 
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
     glCompileShader(fragmentShader);
+    GLint fragmentStatus = 0;
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragmentStatus);
+    if (fragmentStatus != GL_TRUE) {
+        char infoLog[2048];
+        glGetShaderInfoLog(fragmentShader, sizeof(infoLog), nullptr, infoLog);
+        cerr << "[Fragment Shader Compile Error]\n" << infoLog << endl;
+    }
     FlorbUtils::glCheck("glCompileShader(fragmentShader)");
-    
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-      cerr << "Fragment shader compilation error" << endl;
 
+    
+    // Create and link the full program from its constituents
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+    GLint linkStatus = 0;
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &linkStatus);
+    if (linkStatus != GL_TRUE) {
+        char log[2048];
+        glGetProgramInfoLog(shaderProgram, sizeof(log), nullptr, log);
+        cerr << "Shader Link Error:\n" << log << endl;
+    }
     FlorbUtils::glCheck("glLinkProgram()");
 
+
+    // Free the memory used by both shader programs
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 }

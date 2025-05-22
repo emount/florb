@@ -28,7 +28,7 @@
             {
                 "name" : "Spotlight",
                 "direction" : [0.000, 0.000],
-                "intensity" : 0.400,
+                "intensity" : 0.250,
                 "color" : [1.000, 1.000, 1.000],
                 "motion" : {
                     "enabled" : false,
@@ -75,7 +75,7 @@
              }
         ],
         "rim" : {
-            "strength" : 0.00,
+            "strength" : 0.250,
             "exponent" : 3.0,
             "color" : [0.000, 0.000, 1.000],
             "frequency" : 0.20,
@@ -86,24 +86,29 @@
         }
     },
     "effects" : {
+        "anisotropy" : {
+            "enabled" : true,
+            "strength" : 2.5,
+            "sharpness" : 10.0
+        },
         "bounce" : {
             "enabled" : false,
             "amplitude" : 0.1,
             "frequency" : 0.2
         },
         "breathe" : {
-            "enabled" : false,
+            "enabled" : true,
             "amplitude" : [0.75, 0.8],
             "frequency" : 0.4
         },
         "flutter" : {
-            "enabled" : false,
+            "enabled" : true,
             "amplitude" : 0.01,
             "frequency" : 8.0,
             "speed" : 2.0
         },
         "motes" : {
-            "count" : 256,
+            "count" : 0,
             "radius" : 3,
             "color" : [0.800, 0.800, 0.800],
             "max_step" : 0.002,
@@ -113,16 +118,17 @@
             }
         },
         "iridescence" : {
-            "strength" : 0.10,
+            "strength" : 0.150,
             "frequency" : 6.0,
             "shift" : 1.0
         },
         "vignette" : {
-            "radius" : 0.70,
+            "radius" : 0.700,
             "exponent" : 3.0
         }
     },
     "debug" : {
+        "anisotropic_mode" : "normal",
         "render_mode" : "fill",
         "specular_mode" : "normal"
     }

@@ -18,18 +18,21 @@ class FlorbConfigs : public std::enable_shared_from_this<FlorbConfigs> {
 
     // Public type definitions
 public:
-  
-    // Enumerated type for image transition mode
-    enum class TransitionMode { FLIP, BLEND };
 
-    // Enumerated type for image transition order
-    enum class TransitionOrder { ALPHABETICAL, RANDOM };
+    // Enumerated type for anisotropic mode
+    enum class AnisotropicMode { NORMAL, DEBUG };
   
     // Enumerated type for render mode
     enum class RenderMode { FILL, LINE };
 
     // Enumerated type for specular mode
     enum class SpecularMode { NORMAL, DEBUG };
+  
+    // Enumerated type for image transition mode
+    enum class TransitionMode { FLIP, BLEND };
+
+    // Enumerated type for image transition order
+    enum class TransitionOrder { ALPHABETICAL, RANDOM };
 
 
     // Constructor
@@ -85,6 +88,16 @@ public:
   
     const std::vector<std::shared_ptr<Spotlight>>& getSpotlights() const;
 
+
+    bool getAnisotropyEnabled() const;
+    void setAnisotropyEnabled(bool e);
+
+    float getAnisotropyStrength() const;
+    void setAnisotropyStrength(float s);
+    
+    float getAnisotropySharpness() const;
+    void setAnisotropySharpness(float s);
+    
   
     bool getBounceEnabled() const;
     void setBounceEnabled(bool e);
@@ -173,6 +186,9 @@ public:
     float getFlutterSpeed(void) const;
     void setFlutterSpeed(float s);
 
+
+    AnisotropicMode getAnisotropicMode() const;
+    void setAnisotropicMode(AnisotropicMode m);  
   
     RenderMode getRenderMode() const;
     void setRenderMode(RenderMode r);
@@ -219,6 +235,10 @@ private:
     float shininess;
     std::vector<std::shared_ptr<Spotlight>> spotlights;
 
+    bool anisotropyEnabled;
+    float anisotropyStrength;
+    float anisotropySharpness;
+
     bool bounceEnabled;
     float bounceAmplitude;
     float bounceFrequency;
@@ -253,6 +273,7 @@ private:
     float flutterFrequency;
     float flutterSpeed;
 
+    AnisotropicMode anisotropicMode;
     RenderMode renderMode;
     SpecularMode specularMode;
       

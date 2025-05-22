@@ -83,6 +83,10 @@ FlorbConfigs::FlorbConfigs() :
     shininess(1.0f),
     spotlights(),
 
+    anisotropyEnabled(false),
+    anisotropyStrength(0.0f),
+    anisotropySharpness(0.0f),
+
     bounceEnabled(false),
     bounceAmplitude(0.0f),
     bounceFrequency(0.0f),
@@ -112,6 +116,7 @@ FlorbConfigs::FlorbConfigs() :
     motesMaxOff(0.0f),
     motesColor(3, 0.0f),
 
+    anisotropicMode(AnisotropicMode::NORMAL),
     renderMode(RenderMode::FILL),
     specularMode(SpecularMode::NORMAL),
 
@@ -334,6 +339,22 @@ void FlorbConfigs::load() {
         if (config.contains("effects") and config["effects"].is_object()) {
             const auto &effects(config["effects"]);
 
+            if (effects.contains("anisotropy") and effects["anisotropy"].is_object()) {
+                const auto &anisotropy(effects["anisotropy"]);
+                
+                if (anisotropy.contains("enabled") and anisotropy["enabled"].is_boolean()) {
+                    setAnisotropyEnabled(anisotropy["enabled"]);
+                }
+
+                if (anisotropy.contains("strength") and anisotropy["strength"].is_number()) {
+                    setAnisotropyStrength(anisotropy["strength"]);
+                }
+
+                if (anisotropy.contains("sharpness") and anisotropy["sharpness"].is_number()) {
+                    setAnisotropySharpness(anisotropy["sharpness"]);
+                }
+            } // Anisotropy configs
+
             if (effects.contains("bounce") and effects["bounce"].is_object()) {
                 const auto &bounce(effects["bounce"]);
 
@@ -479,6 +500,20 @@ void FlorbConfigs::load() {
         // Debug configs
         if (config.contains("debug") and config["debug"].is_object()) {
             const auto &debug(config["debug"]);
+
+            // Anisotropic mode - normal reflections, or debug spot
+            if (debug.contains("anisotropic_mode") and debug["anisotropic_mode"].is_string()) {
+                if(debug["anisotropic_mode"] == "normal") {
+                    setAnisotropicMode(AnisotropicMode::NORMAL);
+                } else if(debug["anisotropic_mode"] == "debug") {
+                    setAnisotropicMode(AnisotropicMode::DEBUG);
+                } else {
+                    cerr << "Invalid anisotropic_mode config value \""
+                         << debug["anisotropic_mode"]
+                         << "\""
+                         << endl;
+                }
+            }
 
             // Rendering mode - normal fill, or wiremesh lines
             if (debug.contains("render_mode") and debug["render_mode"].is_string()) {
@@ -650,6 +685,33 @@ void FlorbConfigs::setSmoothness(unsigned int s) {
 const vector<shared_ptr<Spotlight>>& FlorbConfigs::getSpotlights() const {
     LOCK_CONFIGS;
     return spotlights;
+}
+
+
+// Anisotropy accessors / mutators
+
+bool FlorbConfigs::getAnisotropyEnabled() const {
+    return anisotropyEnabled;
+}
+
+void FlorbConfigs::setAnisotropyEnabled(bool e) {
+    anisotropyEnabled = e;
+}
+
+float FlorbConfigs::getAnisotropyStrength() const {
+    return anisotropyStrength;
+}
+
+void FlorbConfigs::setAnisotropyStrength(float s) {
+    anisotropyStrength = s;
+}
+    
+float FlorbConfigs::getAnisotropySharpness() const {
+    return anisotropySharpness;
+}
+
+void FlorbConfigs::setAnisotropySharpness(float s) {
+    anisotropySharpness = s;
 }
 
 
@@ -964,6 +1026,16 @@ void FlorbConfigs::setFlutterSpeed(float s) {
 
 
 // Debug accessors / mutators
+
+FlorbConfigs::AnisotropicMode FlorbConfigs::getAnisotropicMode() const {
+    LOCK_CONFIGS;
+    return anisotropicMode;
+}
+
+void FlorbConfigs::setAnisotropicMode(FlorbConfigs::AnisotropicMode m) {
+    LOCK_CONFIGS;
+    anisotropicMode = m;
+}
 
 FlorbConfigs::RenderMode FlorbConfigs::getRenderMode() const {
     LOCK_CONFIGS;
