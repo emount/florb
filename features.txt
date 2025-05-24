@@ -1,6 +1,10 @@
 Florb feature wish list
 -----------------------
 
+Viscous bounce drag
+    Impulse train for excitation
+    Nonlinear (exponential) drag function
+    Causes an actual sharp bounce and settle
 Shader effects
     Dynamic wind ribbons
     Procedural glow points (energy nodes)
