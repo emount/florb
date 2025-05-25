@@ -1,6 +1,11 @@
 Florb feature wish list
 -----------------------
 
+Flower data overlay
+    Display flower name on orb mouseover event
+    Display flower metadata if name is clicked
+        Left click - Switch between English and Latin name
+        Right click - Pop up displaying information about the flower
 Viscous bounce drag
     Impulse train for excitation
     Nonlinear (exponential) drag function

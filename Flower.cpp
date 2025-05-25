@@ -94,6 +94,21 @@ GLuint Flower::getTextureID() const {
     return textureID;
 }
 
+GLint Flower::getWidth() const {
+    return width;
+}
+    
+GLint Flower::getHeight() const {
+    return height;
+}
+    
+GLint Flower::getChannels() const {
+    return channels;
+}
+    
+GLenum Flower::getFormat() const {
+    return format;
+}
 
 Flower& Flower::operator=(const Flower& other) {
     if (this != &other) {

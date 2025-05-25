@@ -159,10 +159,9 @@ void initOpenGL() {
     }
 
     // Graphical housekeeping
-    // glEnable(GL_DEPTH_TEST);
     glDisable(GL_DEPTH_TEST);
-    
     glDisable(GL_CULL_FACE);
+    
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
     glEnable(GL_BLEND);

@@ -14,9 +14,10 @@ public:
     float evaluate(float time) const override;
 
 private:
+
     float bias;
     float amplitude;
     float frequency;
     float phase;
-  
+
 };

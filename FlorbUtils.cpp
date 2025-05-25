@@ -44,21 +44,29 @@ GLuint FlorbUtils::createDebugTexture() {
 }
 
 void FlorbUtils::dumpTexture(GLuint textureID,
-			     int width,
-			     int height,
-			     GLenum format,
-			     int channels) {
+                 int width,
+                 int height,
+                 GLenum format,
+                 int channels) {
     int bytesPerPixel = (channels == 4) ? 4 : 3;
     vector<unsigned char> pixels(width * height * bytesPerPixel);
 
     glBindTexture(GL_TEXTURE_2D, textureID);
     glGetTexImage(GL_TEXTURE_2D, 0, format, GL_UNSIGNED_BYTE, pixels.data());
 
-    cerr << "[TEXTURE DUMP] Texture ID: " << textureID
-              << " (" << width << "x" << height << ", " << channels << " channels)\n";
+    cerr << "[TEXTURE DUMP] Texture ID: "
+         << textureID
+         << " ("
+         << width
+         << "x"
+         << height
+         << ", "
+         << channels
+         << " channels)"
+         << endl;
 
     for (int i = 0; i < min(16, (int)pixels.size()); ++i) {
-        cerr << (int)pixels[i] << " ";
+        cerr << static_cast<int>(pixels[i]) << " ";
     }
     cerr << endl;
 }
@@ -80,26 +88,29 @@ void FlorbUtils::glCheck(const string &str) {
   
     while ((err = glGetError()) != GL_NO_ERROR) {
       const GLubyte* errStr = gluErrorString(err);
+      
       cerr << "[" << str << " : GL ERROR (";
-        switch(err) {
-        case GL_INVALID_ENUM:
-           cerr << "Invalid Enum";
-	   break;
+      
+      switch(err) {
+      case GL_INVALID_ENUM:
+          cerr << "Invalid Enum";
+          break;
+          
+      case GL_INVALID_OPERATION:
+          cerr << "Invalid Operation";
+          break;
+          
+      case GL_INVALID_VALUE:
+          cerr << "Invalid Value";
+          break;
+          
+      default:
+          cerr << err;
+      }
         
-        case GL_INVALID_OPERATION:
-           cerr << "Invalid Operation";
-	   break;
-        
-        case GL_INVALID_VALUE:
-           cerr << "Invalid Value";
-	   break;
-        
-        default:
-	    cerr << err;
-	}
-	cerr << ")] : \""
-	     << errStr
-	     << "\""
-	     << endl;
+      cerr << ")] : \""
+           << errStr
+           << "\""
+           << endl;
     }
 }

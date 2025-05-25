@@ -12,6 +12,10 @@ public:
 
     bool getEnabled() const;
 
+    void setEnabled(bool e);
+
 private:
+
     bool enabled;
+
 };

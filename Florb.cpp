@@ -145,12 +145,26 @@ shared_ptr<FlorbConfigs> Florb::getConfigs() const {
 void Florb::nextFlower() {
     previousFlower = currentFlower;
     if(++currentFlower >= flowers.size()) {
+        // Cache a reference to the last flower displayed
+        const auto lastFlower(flowers.back());
+        
         // Reset the current flower to the head of the collection
         currentFlower = 0;
 
         // If the transition order is random, re-shuffle the collection
         if (configs->getTransitionOrder() == FlorbConfigs::TransitionOrder::RANDOM) {
-            shuffle(flowers.begin(), flowers.end(), *flowersRandom);
+            bool shuffled(false);
+
+            while(shuffled == false) {
+                // Perform the shuffle for this iteration
+                shuffle(flowers.begin(), flowers.end(), *flowersRandom);
+
+                // Ensure that the last flower is not the same as the next one
+                if (flowers.front() == lastFlower) {
+                    // Reshuffle to avoid redisplaying the same flower
+                    shuffle(flowers.begin(), flowers.end(), *flowersRandom);
+                } else shuffled = true;
+            }
         }
     }
 }
@@ -505,8 +519,8 @@ void Florb::generateSphere(float radius, int sectorCount, int stackCount) {
             float zPos = radius * sin(xSegment * 2.0f * M_PI) * sin(ySegment * M_PI);
 
             Vertex v;
-            v.position = glm::vec3(xPos, yPos, zPos); // Position
-            v.normal = glm::normalize(v.position); // For light
+            v.position = glm::vec3(xPos, yPos, zPos);
+            v.normal = glm::normalize(v.position);
             vertices.push_back(v);
         }
     }

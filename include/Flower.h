@@ -14,11 +14,13 @@ public:
   
     GLuint getTextureID() const;
 
-    // TODO - Move implementations into C++ file
-    GLint getWidth() const { return width; }
-    GLint getHeight() const { return height; }
-    GLint getChannels() const { return channels; }
-    GLenum getFormat() const { return format; }
+    GLint getWidth() const;
+    
+    GLint getHeight() const;
+    
+    GLint getChannels() const;
+    
+    GLenum getFormat() const;
 
     Flower& operator=(const Flower& other);
 

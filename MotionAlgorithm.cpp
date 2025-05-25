@@ -14,3 +14,8 @@ MotionAlgorithm::MotionAlgorithm(bool enabled) :
 bool MotionAlgorithm::getEnabled() const {
     return enabled;
 }
+
+void MotionAlgorithm::setEnabled(bool e) {
+    enabled = e;
+}
+
