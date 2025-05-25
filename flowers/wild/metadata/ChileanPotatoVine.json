@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Chilean Potato Vine",
+        "binomial": "Solanum crispum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Asterids"
+        },
+        "order": "Solanales",
+        "family": "Solanaceae",
+        "genus": "Solanum",
+        "species": "S. crispum"
+    }
+}

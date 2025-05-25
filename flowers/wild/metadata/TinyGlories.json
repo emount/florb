@@ -1,0 +1,22 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Cape Leadwort",
+        "binomial": "Plumbago auriculata"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+        },
+        "order": "Caryophyllales",
+        "family": "Plubaginaceae",
+        "genus": "Plumbago",
+        "species": "P. auriculata"
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Strict Blue-eyed Grass",
+        "binomial": "Sisyrinchium montanum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Monocots",
+        },
+        "order": "Asparagales",
+        "family": "Iridaceae",
+        "genus": "Sisyrinchium",
+        "species": "S. montanum"
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Desert Rose",
+        "binomial": "Adenium obesum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Asterids"
+        },
+        "order": "Gentianales",
+        "family": "Apocynaceae",
+        "subfamily": "Apocynoideae",
+        "tribe": "Nerieae",
+        "genus": "Adenium",
+        "species": "A. obesum"
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Wild Strawberry",
+        "binomial": "Fragaria virginiana"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Rosids"
+        },
+        "order": "Rosales",
+        "family": "Rosaceae",
+        "genus": "Fragaria",
+        "species": "F. virginiana"
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Celandine Poppy",
+        "binomial": "Stylophorum diphyllum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Asterids"
+        },
+        "order": "Ranunculales",
+        "family": "Papaveraceae",
+        "tribe": "Celidonieaea",
+        "genus": "Stylophorum diphyllum",
+        "species": "S. diphyllum"
+    }
+}

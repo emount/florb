@@ -1,0 +1,26 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Dandelion",
+        "binomial": "Taraxacum officinale"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Asterids"
+        },
+        "order": "Asterales",
+        "family": "Asteraceae",
+        "subfamily": "Cichorioideae",
+        "Tribe": "Cichorieae",
+        "Subtribe": "Crepidinae",
+        "genus": "Taraxacum",
+        "species": "T. officinale"
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Great Willowherb",
+        "binomial": "Epilobium hirsutum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Rosids"
+        },
+        "order": "Myrtales",
+        "family": "Onagraceae",
+        "genus": "Epilobium",
+        "species": "E. hirsutum"
+    }
+}

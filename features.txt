@@ -1,6 +1,7 @@
 Florb feature wish list
 -----------------------
 
+Permit specification of an array of image directories
 Flower data overlay
     Display flower name on orb mouseover event
     Display flower metadata if name is clicked

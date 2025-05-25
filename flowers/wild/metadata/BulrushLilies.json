@@ -1,0 +1,22 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Bulrush lily",
+        "binomial": "Butomus umbellatus"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Monocots",
+        },
+        "order": "Alismatales",
+        "family": "Butomaceae",
+        "genus": "Butomus",
+        "species": "B. umbellatus"
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "White Honeysuckle",
+        "binomial": "Lonicera japonica"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Asterids"
+        },
+        "order": "Dipsacales",
+        "family": "Caprifoliaceae",
+        "genus": "Lonicera",
+        "species": "L. japonica"
+    }
+}

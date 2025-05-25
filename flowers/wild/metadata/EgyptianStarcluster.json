@@ -1,0 +1,25 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Egyptian Starcluster",
+        "binomial": "Pentas lanceolate"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Asterids"
+        },
+        "order": "Gentianales",
+        "family": "Rubiaceae",
+        "subfamily": "Rubioideae",
+        "tribe": "Knoxieae",
+        "genus": "Pentas",
+        "species": "P. lanceolate"
+    }
+}

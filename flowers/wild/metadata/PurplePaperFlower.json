@@ -1,0 +1,22 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Paper Flower",
+        "binomial": "Bougainvillea spectabilis"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+        },
+        "order": "Caryophyllales",
+        "family": "Nyctaginaceae",
+        "genus": "Bougainvillea",
+        "species": "B. spectabilis"
+    }
+}

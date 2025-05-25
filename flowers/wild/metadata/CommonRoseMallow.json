@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Common Rose Mallow",
+        "binomial": "Hibiscus moscheutos"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Rosids"
+        },
+        "order": "Malvales",
+        "family": "Malvaceae",
+        "genus": "Hibiscus",
+        "species": "H. moscheutos"
+    }
+}
