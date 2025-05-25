@@ -57,6 +57,12 @@ MAKEFLAGS += -r
 TARGET = florb
 
 TARBALL = $(TARGET).tgz
+
+BATCH_METADATA_SCRIPT = scripts/write_image_metadata.sh
+METADATA_SCRIPT = scripts/pngmeta.py
+FLOWERS_PATH = flowers
+DOMESTIC_PATH = $(FLOWERS_PATH)/domestic
+WILD_PATH = $(FLOWERS_PATH)/wild
 IMAGES_TARBALL = images.tgz
 
 VPATH = $(IMGUI_DIR) $(IMGUI_DIR)/backends $(INC_DIRS)
@@ -67,7 +73,7 @@ all: $(TARGET)
 	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -c -o $@ $<
 
 %.d: %.cpp
-	$(CXX) -MM $(CXXAFLAGS) $(INC_DIRS:%=-I%) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
+	$(CXX) -MM $(CXXFLAGS) $(INC_DIRS:%=-I%) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
 $(TARGET): $(OBJS) $(MAKEFILE)
 	$(CXX) $(CXXFLAGS) $(INC_DIRS:%=-I%) -o $(TARGET) $(OBJS) $(LIBS:%=-l%)
@@ -75,6 +81,10 @@ $(TARGET): $(OBJS) $(MAKEFILE)
 .PHONY: $(TARBALL)
 $(TARBALL): $(SOURCES) $(HEADERS) $(MAKEFILE) $(CONFIG)
 	tar czf $@ $^
+
+.PHONY: images_metadata
+images_metadata:
+	$(METADATA_SCRIPT) $(WILD_PATH)/metadata $(WILD_PATH) $(BATCH_METADATA_SCRIPT)
 
 .PHONY: $(IMAGES_TARBALL)
 $(IMAGES_TARBALL): images/*
