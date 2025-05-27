@@ -4,8 +4,8 @@
         "email": "eldridge.mount@gmail.com"
     },
     "names": {
-        "common": "Bird's-eye Speedwell",
-        "binomial": "Veronica chamaedrys"
+        "common": "Rodgersia",
+        "binomial": "Rodgersia podophylla"
     },
     "taxonomy": {
         "kingdom": "Plantae",
@@ -13,11 +13,10 @@
             "first": "Tracheophytes",
             "second": "Angiosperms",
             "third": "Eudicots",
-            "fourth": "Asterids"
         },
-        "order": "Lamiales",
-        "family": "Plantaginaceae",
-        "genus": "Veronica",
-        "species": "V. chamaedrys"
+        "order": "Saxafragales",
+        "family": "Saxafragaceae",
+        "genus": "Rodgersia podophylla",
+        "species": "R. podophylla"
     }
 }
