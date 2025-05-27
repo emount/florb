@@ -54,4 +54,13 @@ Calculate and display average frame rate
 Outstanding bugs
 ----------------
 
-Correct for aspect ratio
+Avoid vertical (or any other) artifacts after resume from suspend
+    Detect resume
+        Use a signal handler
+          or
+        Poll /proc/uptime
+    Delete and regenerate flower tetxures:
+        // Upon resume detection:
+        glDeleteTextures(...);
+        glGenTextures(...);
+        // Reload your floral texture data
