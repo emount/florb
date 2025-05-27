@@ -50,8 +50,8 @@ public:
     void setTitle(const std::string& t);
 
   
-    const std::string& getImagePath() const;
-    void setImagePath(const std::string& p);
+    const std::vector<std::string>& getImagePaths() const;
+    void setImagePaths(const std::vector<std::string>& p);
 
 
     TransitionMode getTransitionMode() const;
@@ -214,7 +214,7 @@ private:
     // Private attributes
 private:
   
-    std::string imagePath;
+    std::vector<std::string> imagePaths;
   
     std::string title;
   

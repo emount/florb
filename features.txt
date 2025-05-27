@@ -54,6 +54,7 @@ Calculate and display average frame rate
 Outstanding bugs
 ----------------
 
+Separate image loading time from the first image display period
 Avoid vertical (or any other) artifacts after resume from suspend
     Detect resume
         Use a signal handler

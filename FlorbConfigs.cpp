@@ -35,7 +35,7 @@ using json = nlohmann::json_abi_v3_12_0::json;
 
 // Static member initialization
 
-const string FlorbConfigs::k_DefaultImagePath("images");
+const string FlorbConfigs::k_DefaultImagePath("flowers");
 
 
 const string FlorbConfigs::k_DefaultTitle("Florb v0.3");
@@ -64,7 +64,7 @@ const int FlorbConfigs::k_MaxMotes(256);
 // Constructor
 
 FlorbConfigs::FlorbConfigs() :
-    imagePath(k_DefaultImagePath),
+    imagePaths(),
 
     videoFrameRate(k_DefaultVideoFrameRate),
     imageSwitch(k_DefaultImageSwitch),
@@ -148,10 +148,19 @@ void FlorbConfigs::load() {
 
         
         // Image path config
-        if (config.contains("image_path") and config["image_path"].is_string()) {
-            setImagePath(config["image_path"]);
+        if (config.contains("image_paths") and config["image_paths"].is_array()) {
+            const auto &imagePaths(config["image_paths"]);
+
+            vector<string> pathsVector;
+            for (const auto &imagePath : imagePaths) {
+                const auto &path(imagePath);
+
+                if (path.is_string()) pathsVector.push_back(path);
+            }
+
+            setImagePaths(pathsVector);
         } else {
-            setImagePath(k_DefaultImagePath);
+            setImagePaths(vector<string>(1, k_DefaultImagePath));
         }
 
 
@@ -311,7 +320,11 @@ void FlorbConfigs::load() {
             
                 if (rim.contains("color") and rim["color"].is_array()) {
                     const auto &color(rim["color"]);
-                    setRimColor(color[0], color[1], color[2]);
+                    bool allNumbers(true);
+
+                    for (const auto &pelValue : color) allNumbers &= pelValue.is_number();
+
+                    if (allNumbers) setRimColor(color[0], color[1], color[2]);
                 }
                 
                 if (rim.contains("frequency") and rim["frequency"].is_number()) {
@@ -454,8 +467,11 @@ void FlorbConfigs::load() {
                 if (motes.contains("color") and motes["color"].is_array()) {
                     if (motes.contains("color") and motes["color"].is_array()) {
                         const auto &color(motes["color"]);
+                        bool allNumbers(true);
 
-                        setMotesColor(color[0], color[1], color[2]);
+                        for (const auto &pelValue : color) allNumbers &= pelValue.is_number();
+
+                        if (allNumbers) setMotesColor(color[0], color[1], color[2]);
                     }
                 }            
 
@@ -473,11 +489,6 @@ void FlorbConfigs::load() {
                     if (winking.contains("max_off") and winking["max_off"].is_number()) {
                         setMotesWinkingMaxOff(winking["max_off"]);
                     }                
-                }
-
-                if (motes.contains("color") and motes["color"].is_array()) {
-                    const auto &color(motes["color"]);
-                    setMotesColor(color[0], color[1], color[2]);
                 }
             } // Motes configs
 
@@ -566,14 +577,14 @@ void FlorbConfigs::setTitle(const string &t) {
 
 // Image path accessor / mutator
 
-const string& FlorbConfigs::getImagePath() const {
+const vector<string>& FlorbConfigs::getImagePaths() const {
     LOCK_CONFIGS;
-    return imagePath;
+    return imagePaths;
 }
   
-void FlorbConfigs::setImagePath(const string &p) {
+void FlorbConfigs::setImagePaths(const vector<string> &p) {
     LOCK_CONFIGS;
-    imagePath = p;
+    imagePaths = p;
 }
 
 
@@ -1122,7 +1133,11 @@ void FlorbConfigs::parseSpotlights(const json &light) {
 
             if (spotlight.contains("color") and spotlight["color"].is_array()) {
                 const auto &colorRef(spotlight["color"]);
-                color = {colorRef[0], colorRef[1], colorRef[2]};
+                bool allNumbers(true);
+
+                for (const auto &pelValue : colorRef) allNumbers &= pelValue.is_number();
+
+                if (allNumbers) color = {colorRef[0], colorRef[1], colorRef[2]};
             }
 
             // Parse any optional movement object

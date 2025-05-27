@@ -1,6 +1,9 @@
 {
     "title" : "Eldridge's Wildflowers",
-    "image_path" : "flowers/wild",
+    "image_paths" : [
+        "flowers/domesticated",
+        "flowers/wild"
+    ],
     "video" : {
         "frame_rate" : 60.0,
         "image_switch" : 8.0
@@ -28,7 +31,7 @@
             {
                 "name" : "Spotlight",
                 "direction" : [0.000, 0.000],
-                "intensity" : 0.250,
+                "intensity" : 0.100,
                 "color" : [1.000, 1.000, 1.000],
                 "motion" : {
                     "enabled" : false,
@@ -40,7 +43,7 @@
              {
                  "name" : "UFO 0",
                  "direction" : [-1.0, 0.0],
-                 "intensity" : 0.250,
+                 "intensity" : 0.350,
                  "color" : [1.000, 1.000, 1.000],
                  "motion" : {
                      "enabled" : true,
@@ -52,7 +55,7 @@
              {
                  "name" : "UFO 1",
                  "direction" : [0.0, -0.5],
-                 "intensity" : 0.250,
+                 "intensity" : 0.350,
                  "color" : [1.000, 1.000, 1.000],
                  "motion" : {
                      "enabled" : true,
@@ -64,7 +67,7 @@
              {
                  "name" : "UFO 2",
                  "direction" : [1.0, 0.0],
-                 "intensity" : 0.250,
+                 "intensity" : 0.350,
                  "color" : [1.000, 1.000, 1.000],
                  "motion" : {
                      "enabled" : true,

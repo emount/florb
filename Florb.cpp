@@ -143,6 +143,8 @@ shared_ptr<FlorbConfigs> Florb::getConfigs() const {
 }
 
 void Florb::nextFlower() {
+    if (flowers.empty()) return;
+    
     previousFlower = currentFlower;
     if(++currentFlower >= flowers.size()) {
         // Cache a reference to the last flower displayed
@@ -434,31 +436,34 @@ void Florb::renderFrame(bool transition) {
 // Load flowers method
 
 void Florb::loadFlowers() {
-    const auto &imagePath(configs->getImagePath());
-    fs::path filepath(imagePath);
+    const auto &imagePaths(configs->getImagePaths());
     
-    if(fs::is_directory(filepath)) {
-        // Iterate over the filenames, constructing Flowers
-        for (const auto& entry : fs::directory_iterator(imagePath)) {
-            if (entry.is_regular_file()) {
-                flowers.push_back(make_shared<Flower>(entry.path().string()));
+    for (const auto &imagePath : imagePaths) {
+        fs::path filepath(imagePath);
+        
+        if(fs::is_directory(filepath)) {
+            // Iterate over the filenames, constructing Flowers
+            for (const auto& entry : fs::directory_iterator(imagePath)) {
+                if (entry.is_regular_file()) {
+                    flowers.push_back(make_shared<Flower>(entry.path().string()));
+                }
             }
-        }
-
-        // Determine the ordering mode to use for the Flowers
-        if (configs->getTransitionOrder() == FlorbConfigs::TransitionOrder::ALPHABETICAL) {
-            // Sort the collection of Flowers by filename
-            sort(flowers.begin(),
-                 flowers.end(),
-                 [](const shared_ptr<Flower>& a, const shared_ptr<Flower>& b) {
-                     return a->getFilename() < b->getFilename();
-                 });
+        
+            // Determine the ordering mode to use for the Flowers
+            if (configs->getTransitionOrder() == FlorbConfigs::TransitionOrder::ALPHABETICAL) {
+                // Sort the collection of Flowers by filename
+                sort(flowers.begin(),
+                     flowers.end(),
+                     [](const shared_ptr<Flower>& a, const shared_ptr<Flower>& b) {
+                         return a->getFilename() < b->getFilename();
+                     });
+            } else {
+                // Randomly shuffle the collection of Flowers
+                shuffle(flowers.begin(), flowers.end(), *flowersRandom);
+            }
         } else {
-            // Randomly shuffle the collection of Flowers
-            shuffle(flowers.begin(), flowers.end(), *flowersRandom);
+            cerr << "Image path \"" << imagePath << "\" does not exist" << endl;
         }
-    } else {
-        cerr << "Image path \"" << imagePath << "\" does not exist" << endl;
     }
 }
 
