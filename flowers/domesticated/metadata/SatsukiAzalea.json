@@ -1,0 +1,20 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Satsuki Azalea",
+        "binomial": "Rhododendron indicum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "phylum": "Magnoliaphyta",
+        "class": "Magnoliopsida",
+        "subclass": "Dilleniidae",
+        "order": "Ericales",
+        "family": "Ericaceae",
+        "genus": "Rhododendron",
+        "species": "R. indicum"
+    }
+}

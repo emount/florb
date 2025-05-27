@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Black Swallow-wort",
+        "binomial": "Vincetoxicum nigrum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Asterids"
+        },
+        "order": "Gentinales",
+        "family": "Apocynaceae",
+        "genus": "Vincetoxicum",
+        "species": "V. nigrum"
+    }
+}

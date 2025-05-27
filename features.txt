@@ -34,6 +34,12 @@ Desert wildflowers
 Starry skies / Milky Way Galaxy
 
 
+Metadata
+--------
+
+Add phyla and class to flowers' metadata
+
+
 Refactoring
 -----------
 
