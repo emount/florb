@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Bird's-eye Speedwell",
+        "binomial": "Veronica chamaedrys"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Asterids"
+        },
+        "order": "Lamiales",
+        "family": "Plantaginaceae",
+        "genus": "Veronica",
+        "species": "V. chamaedrys"
+    }
+}
