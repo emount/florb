@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Horse Chestnut",
+        "binomial": "Aesculus hippocastanum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Rosids"
+        },
+        "order": "Sapindales",
+        "family": "Sapindaceae",
+        "genus": "Aesculus",
+        "species": "A. hippocastanum"
+    }
+}
