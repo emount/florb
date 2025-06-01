@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Chives",
+        "binomial": "Allium schoenoprasum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Monocots"
+        },
+        "order": "Asparagales",
+        "family": "Amaryllidaceae",
+        "subfamily": "Alliodeae",
+        "genus": "Allium",
+        "species": "A. schoenoprasum"
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Striped Flag Iris",
+        "binomial": "Iris tectorum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Monocots"
+        },
+        "order": "Asparagales",
+        "family": "Iridaceae",
+        "genus": "Iris",
+        "species": "I. tectorum"
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Gerbera Daisy",
+        "binomial": "Gerbera hybrida"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Monocots",
+            "fourth": "Asterids"
+        },
+        "order": "Asterales",
+        "family": "Asteraceae",
+        "subfamily": "Mutisoideae",
+        "tribe": "Mutisieae",
+        "genus": "Gerbera",
+        "species": "G. hybrida"
+    }
+}

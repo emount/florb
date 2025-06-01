@@ -1,0 +1,24 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Bleeding Heart",
+        "binomial": "Lamprocapnos spectabilis"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+        },
+        "order": "Ranunculales",
+        "family": "Papaveraceae",
+        "tribe": "Fumarieae",
+        "subtribe": "Corydalinae",
+        "genus": "Lamprocapnos",
+        "species": "L. spectabilis"
+    }
+}

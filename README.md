@@ -1,12 +1,12 @@
 # Florb v1.3
 Welcome to Florb, the Flower Orb!
 
-## What is Florb?
+# What is Florb?
 Florb is an OpenGL application written by Eldridge M. Mount IV,
-for the purpose of showing off his collection of wildflower photography.
+for the purpose of showcasing his wildflower photography.
 
 Florb is fundamentally an orb which displays a collection of images,
-generally flowers, in the center of a dark screen. Multiple effects can
+generally flowers, in the center of a dark screen. Multiple effects may
 be enabled and configured with parameters, all of which may be changed
 via a JSON configuration file (florb.json).
 
@@ -51,3 +51,10 @@ Specular reflections may be either rendered normally, or in debug mode.
 In debug mode, image textures are not rendered, allowing only the specular
 reflections to shine through. This is extremely useful in setting the
 position, direction, and speed of spotlights.
+
+# Conclusion
+Not only does Florb involve the sedentary and geeky process of coding and
+collating taxonomical metadata, ita also encourages active fieldwork in
+the pursuit of ever-more beautiful species of flowers!
+
+Happy Florbing!

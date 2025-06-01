@@ -1,9 +1,15 @@
 Florb feature wish list
 -----------------------
 
-Permit specification of an array of image directories
+Explicit flower files to display with filepaths
+    (Accelerates viewing newly-added images)
+Screen options
+    Title bar with existing configurable title
+    Fullscreen mode (why doesn't this already always work?)
 Flower data overlay
-    Display flower name on orb mouseover event
+    Display flower name
+        At the bottom of the screen if enabled
+        On orb mouseover event
     Display flower metadata if name is clicked
         Left click - Switch between English and Latin name
         Right click - Pop up displaying information about the flower

@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Marigold",
+        "binomial": "Calendula officinalis"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Asterids"
+        },
+        "order": "Asterales",
+        "family": "Asteraceae",
+        "genus": "Calendula",
+        "species": "C. officinalis"
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Dahlia",
+        "binomial": "Dahlia pinnata"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudiocots",
+            "fourth": "Asterids"
+        },
+        "order": "Asterales",
+        "family": "Asteraceae",
+        "subfamily": "Asteroideae",
+        "tribe": "Coreopsideae",
+        "genus": "Dahlia",
+        "species": "D. pinnata"
+    }
+}

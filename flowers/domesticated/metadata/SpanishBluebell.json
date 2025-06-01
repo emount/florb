@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Spanish Bluebell",
+        "binomial": "Hyacinthoides hispanica"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Monocots"
+        },
+        "order": "Asparagales",
+        "family": "Asparagaceae",
+        "subfamily": "Scilloideae",
+        "genus": "Hyacinthoides",
+        "species": "H. hispanica"
+    }
+}

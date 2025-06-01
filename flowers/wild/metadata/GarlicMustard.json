@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Garlic mustard",
+        "binomial": "Alliaria petiolata"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Rosids"
+        },
+        "order": "Brassicales",
+        "family": "Brassicaceae",
+        "genus": "Alliaria",
+        "species": "A. petiolata"
+    }
+}

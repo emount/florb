@@ -4,8 +4,8 @@
         "email": "eldridge.mount@gmail.com"
     },
     "names": {
-        "common": "Giant Onion",
-        "binomial": "Allium giganteum"
+        "common": "Star of Bethlehem",
+        "binomial": "Orthogonalis umbellatum"
     },
     "taxonomy": {
         "kingdom": "Plantae",
@@ -15,8 +15,10 @@
             "third": "Monocots"
         },
         "order": "Asparagales",
-        "family": "Amaryllidaceae",
-        "genus": "Allium",
-        "species": "A. giganteum"
+        "family": "Asparagaceae",
+        "subfamily": "Scilloideae",
+        "tribe": "Ornithogoaleae",
+        "genus": "Orthogonalis",
+        "species": "O. umbellatum"
     }
 }

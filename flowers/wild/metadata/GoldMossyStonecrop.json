@@ -1,0 +1,22 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Mossy Stonecrop",
+        "binomial": "Crasulla tillaea"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots"
+        },
+        "order": "Saxifragales",
+        "family": "Crassulaaceae",
+        "genus": "Crasulla",
+        "species": "C. tillaea"
+    }
+}

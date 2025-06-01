@@ -1,0 +1,24 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Black Locust",
+        "binomial": "Robinia pseudoacacia"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Eudicots",
+            "fourth": "Rosids"
+        },
+        "order": "Fabales",
+        "family": "Fabaceae",
+        "subfamily": "Faboideae",
+        "genus": "Robinia",
+        "species": "R. pseudoacacia"
+    }
+}

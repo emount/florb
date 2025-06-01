@@ -1,0 +1,24 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Asiatic Lily",
+        "binomial": "Lilium canadense"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Monocots"
+        },
+        "order": "Lilales",
+        "family": "Liliaceae",
+        "subfamily": "Lilioideae",
+        "tribe": "Lilieae",
+        "genus": "Lilium",
+        "species": "L. canadense"
+    }
+}

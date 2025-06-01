@@ -1,0 +1,23 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Pansy",
+        "binomial": "Viola wittrockiana"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Monocots",
+            "fourth": "Rosids"
+        },
+        "order": "Malphighiales",
+        "family": "Violaceae",
+        "genus": "Viola",
+        "species": "V. wittrockiana"
+    }
+}
