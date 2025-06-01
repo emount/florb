@@ -618,6 +618,8 @@ void Florb::initShaders() {
 
         out vec4 FragColor;
 
+        #define PI 3.141592654
+
         uniform float time;
 
         uniform vec2 resolution;
@@ -687,12 +689,12 @@ void Florb::initShaders() {
             // Sine-based displacement along a direction (e.g. vertical in UV space)
             vec2 waveOffset = vec2(0.0, sin(wavePhase) * waveAmplitude);
 
-            // Fragment location
+            // Convert fragment direction to spherical UV coordinates
             vec2 uv;
-            uv.x = atan(dir.z, dir.x) / (2.0 * 3.14159265) + 0.5;
-            uv.y = asin(dir.y) / 3.14159265 + 0.5;
+            uv.x = atan(dir.z, dir.x) / (2.0 * PI) + 0.5;
+            uv.y = asin(dir.y) / PI + 0.5;
 
-            // Flip Y axis, apply zoom and offset
+            // Apply zoom and offset after spherical conersion, flipping vertically
             uv = (uv - 0.5) * zoom + 0.5 + offset;
             uv.y = 1.0 - uv.y;
 

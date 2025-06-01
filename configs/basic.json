@@ -15,12 +15,12 @@
     "cameras" : [
         {
             "name" : "Camera 0",
-            "view" : [-1.100, -0.4],
+            "view" : [-1.100, -0.400],
             "zoom" : 0.90
         }
     ],
     "geometry" : {
-        "center" : [0.25, 0.00],
+        "center" : [0.265, 0.000],
         "radius" : 0.80,
         "smoothness" : 288
     },

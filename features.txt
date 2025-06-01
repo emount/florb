@@ -3,7 +3,8 @@ Florb feature wish list
 
 Explicit flower files to display with filepaths
     (Accelerates viewing newly-added images)
-Screen options
+Screen data display
+    "Loading images" progress bar at startup
     Title bar with existing configurable title
     Fullscreen mode (why doesn't this already always work?)
 Flower data overlay
