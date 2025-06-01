@@ -1,0 +1,22 @@
+{
+    "author": {
+        "name": "Eldridge M. Mount IV",
+        "email": "eldridge.mount@gmail.com"
+    },
+    "names": {
+        "common": "Giant Onion",
+        "binomial": "Allium giganteum"
+    },
+    "taxonomy": {
+        "kingdom": "Plantae",
+        "clades": {
+            "first": "Tracheophytes",
+            "second": "Angiosperms",
+            "third": "Monocots"
+        },
+        "order": "Asparagales",
+        "family": "Amaryllidaceae",
+        "genus": "Allium",
+        "species": "A. giganteum"
+    }
+}
