@@ -1,9 +1,7 @@
 Florb feature wish list
 -----------------------
 
-Explicit flower files to display with filepaths
-    (Accelerates viewing newly-added images)
-Screen data display
+    Screen data display
     "Loading images" progress bar at startup
     Title bar with existing configurable title
     Fullscreen mode (why doesn't this already always work?)
@@ -67,8 +65,6 @@ Calculate and display average frame rate
 Outstanding bugs
 ----------------
 
-Well-centered images are always biased to the right of the orb
-Separate image loading time from the first image display period
 Avoid vertical (or any other) artifacts after resume from suspend
     Detect resume
         Use a signal handler

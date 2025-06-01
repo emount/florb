@@ -196,13 +196,15 @@ int main(int numArgs, const char *args[]) {
             while (XPending(display)) {
                 XEvent event;
                 XNextEvent(display, &event);
-        
+
                 if (event.type == KeyPress) {
                     KeySym sym = XLookupKeysym(&event.xkey, 0);
+                    
                     if (sym == XK_space) {
-                        cerr << "Showing the dashboard" << endl;
+                        cout << "Showing the dashboard" << endl;
                     } else if (sym == XK_Escape) {
                         // Exit the application
+                        cout << "Exiting Florb" << endl;
                         running = false;
                     }
                 }

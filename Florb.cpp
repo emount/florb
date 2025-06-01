@@ -143,6 +143,7 @@ shared_ptr<FlorbConfigs> Florb::getConfigs() const {
 }
 
 void Florb::nextFlower() {
+    
     if (flowers.empty()) return;
     
     previousFlower = currentFlower;
@@ -161,14 +162,15 @@ void Florb::nextFlower() {
                 // Perform the shuffle for this iteration
                 shuffle(flowers.begin(), flowers.end(), *flowersRandom);
 
-                // Ensure that the last flower is not the same as the next one
-                if (flowers.front() == lastFlower) {
+                // If there is more than one flower, ensure that the last
+                // flower is not the same as the next one
+                if ((flowers.size() > 1) and (flowers.front() == lastFlower)) {
                     // Reshuffle to avoid redisplaying the same flower
                     shuffle(flowers.begin(), flowers.end(), *flowersRandom);
                 } else shuffled = true;
             }
         }
-    }
+    } // if (random transition order)
 }
 
 
