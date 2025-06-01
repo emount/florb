@@ -1,7 +1,8 @@
 {
     "title" : "Eldridge's Wildflowers",
     "image_paths" : [
-        "flowers/new"
+        "flowers/domesticated",
+        "flowers/wild"
     ],
     "video" : {
         "frame_rate" : 60.0,

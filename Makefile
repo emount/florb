@@ -61,7 +61,7 @@ TARBALL = $(TARGET).tgz
 BATCH_METADATA_SCRIPT = scripts/write_image_metadata.sh
 METADATA_SCRIPT = scripts/pngmeta.py
 FLOWERS_PATH = flowers
-DOMESTIC_PATH = $(FLOWERS_PATH)/domestic
+DOMESTICATED_PATH = $(FLOWERS_PATH)/domesticated
 WILD_PATH = $(FLOWERS_PATH)/wild
 
 VPATH = $(IMGUI_DIR) $(IMGUI_DIR)/backends $(INC_DIRS)
@@ -83,6 +83,7 @@ $(TARBALL): $(SOURCES) $(HEADERS) $(MAKEFILE) $(CONFIG)
 
 .PHONY: images_metadata
 images_metadata:
+	$(BATCH_METADATA_SCRIPT) $(DOMESTICATED_PATH)/metadata $(DOMESTICATED_PATH) $(METADATA_SCRIPT)
 	$(BATCH_METADATA_SCRIPT) $(WILD_PATH)/metadata $(WILD_PATH) $(METADATA_SCRIPT)
 
 clean:
