@@ -6,6 +6,7 @@
 #include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <stdint.h>
 
 #include "Camera.h"
 #include "Florb.h"
@@ -39,6 +40,7 @@ using std::sort;
 using std::string;
 using std::to_string;
 using std::uniform_real_distribution;
+using std::uint32_t;
 using std::vector;
 
 
@@ -439,7 +441,19 @@ void Florb::renderFrame(bool transition) {
 
 void Florb::loadFlowers() {
     const auto &imagePaths(configs->getImagePaths());
-    
+
+    // Iterate through the image paths, precomputing the total number of flower images
+    uint32_t numFlowers(0UL);
+    for (const auto &imagePath : imagePaths) {
+        fs::path filepath(imagePath);
+        
+        if(fs::is_directory(filepath))
+            for (const auto& entry : fs::directory_iterator(imagePath))
+                if (entry.is_regular_file()) numFlowers++;
+    }                
+
+    // Re-iterate through the image paths to actually load flower images
+    float percentLoaded(0.0f);
     for (const auto &imagePath : imagePaths) {
         fs::path filepath(imagePath);
         
@@ -447,7 +461,14 @@ void Florb::loadFlowers() {
             // Iterate over the filenames, constructing Flowers
             for (const auto& entry : fs::directory_iterator(imagePath)) {
                 if (entry.is_regular_file()) {
+                    // Push the flower image onto the back of the collection
                     flowers.push_back(make_shared<Flower>(entry.path().string()));
+
+                    // Update progress bar uniforms
+                    percentLoaded = (static_cast<float>(flowers.size()) / numFlowers);
+                    // bool showBar(percentLoaded >= 1.0f);
+                    // glUniform1f(glGetUniformLocation(shaderProgram, "loadProgress"), percentLoaded);
+                    // glUniform1i(glGetUniformLocation(shaderProgram, "showProgressBar"), showBar ? 1 : 0);
                 }
             }
         
@@ -678,6 +699,42 @@ void Florb::initShaders() {
 
         uniform int anisotropicDebug;
         uniform int specularDebug;
+
+        // uniform float loadProgress;
+        // uniform int showProgressBar;
+        #define loadProgress 0.5
+        #define showProgressBar 1
+        
+        void drawStatusBar(inout vec4 FragColor, vec2 screenUV, vec2 resolution) {
+            if ((showProgressBar == 0) || loadProgress >= 1.0) return;
+            
+            // Bar dimensions (relative)
+            float barWidth = 0.90;
+            float barHeight = 0.03;
+            float radius = 0.015;
+            
+            // Vertically centered
+            vec2 center = vec2(0.5, 0.5);
+            vec2 halfSize = vec2(barWidth * 0.5, barHeight * 0.5);
+            vec2 uv = screenUV;
+            
+            // Relative to bar center
+            vec2 d = abs(uv - center) - halfSize;
+            
+            // Rounded rectangle mask
+            float dist = length(max(d, 0.0)) - radius;
+            float alpha = smoothstep(0.005, 0.0, dist);
+            
+            // Progress mask
+            float progressRight = center.x - halfSize.x + barWidth * loadProgress;
+            float inProgress = step(uv.x, progressRight);
+            
+            vec3 barColor = vec3(0.0, 0.8, 0.0); // Solid green
+            
+            // Composite blend
+            FragColor.rgb = mix(FragColor.rgb, barColor, alpha * inProgress);
+        }
+
         
         void main() {
 
@@ -855,10 +912,16 @@ void Florb::initShaders() {
             } else {
                 FragColor = vec4(finalColor, 1.0);
             }
+
+            // Update the status bar
+            drawStatusBar(FragColor, screenUV, resolution);
         }
     )glsl";
-    
+
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    if (vertexShader == 0) {
+        cerr << "glCreateShader(GL_VERTEX_SHADER) failed — returned 0 (invalid handle)" << endl;
+    }
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
     GLint vertexStatus = 0;
@@ -872,6 +935,9 @@ void Florb::initShaders() {
 
 
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    if (fragmentShader == 0) {
+        cerr << "glCreateShader(GL_FRAGMENT_SHADER) failed — returned 0 (invalid handle)" << endl;
+    }
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
     glCompileShader(fragmentShader);
     GLint fragmentStatus = 0;

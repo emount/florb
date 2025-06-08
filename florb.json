@@ -1,7 +1,8 @@
 {
     "title" : "Eldridge's Wildflowers",
     "image_paths" : [
-        "flowers/new"
+        "flowers/wild",
+        "flowers/domesticated"
     ],
     "video" : {
         "frame_rate" : 60.0,
@@ -16,7 +17,7 @@
         {
             "name" : "Camera 0",
             "view" : [-1.100, -0.400],
-            "zoom" : 0.900
+            "zoom" : 0.90
         }
     ],
     "geometry" : {
@@ -30,7 +31,7 @@
             {
                 "name" : "Spotlight",
                 "direction" : [0.000, 0.000],
-                "intensity" : 0.800,
+                "intensity" : 0.100,
                 "color" : [1.000, 1.000, 1.000],
                 "motion" : {
                     "enabled" : false,
@@ -38,10 +39,46 @@
                     "offsets" : [0.0, 0.0, 0.0],
                     "speeds" : [0.0, 0.0, 0.0]
                 }
-            }
+            },
+             {
+                 "name" : "UFO 0",
+                 "direction" : [-1.0, 0.0],
+                 "intensity" : 0.350,
+                 "color" : [1.000, 1.000, 1.000],
+                 "motion" : {
+                     "enabled" : true,
+                     "type" : "linear",
+                     "offsets" : [0.0, 0.0, 0.0],
+                     "speeds" : [0.5, 0.1, 0.3]
+                 }
+             },
+             {
+                 "name" : "UFO 1",
+                 "direction" : [0.0, -0.5],
+                 "intensity" : 0.350,
+                 "color" : [1.000, 1.000, 1.000],
+                 "motion" : {
+                     "enabled" : true,
+                     "type" : "linear",
+                     "offsets" : [0.0, 0.0, 0.0],
+                     "speeds" : [0.05, 0.4, -0.05]
+                 }
+             },
+             {
+                 "name" : "UFO 2",
+                 "direction" : [1.0, 0.0],
+                 "intensity" : 0.350,
+                 "color" : [1.000, 1.000, 1.000],
+                 "motion" : {
+                     "enabled" : true,
+                     "type" : "linear",
+                     "offsets" : [0.0, 0.0, 0.0],
+                     "speeds" : [-0.5, -0.1, -0.3]
+                 }
+             }
         ],
         "rim" : {
-            "strength" : 0.000,
+            "strength" : 0.250,
             "exponent" : 3.0,
             "color" : [0.000, 0.000, 1.000],
             "frequency" : 0.20,
@@ -53,7 +90,7 @@
     },
     "effects" : {
         "anisotropy" : {
-            "enabled" : false,
+            "enabled" : true,
             "strength" : 2.5,
             "sharpness" : 10.0
         },
@@ -63,18 +100,18 @@
             "frequency" : 0.2
         },
         "breathe" : {
-            "enabled" : false,
+            "enabled" : true,
             "amplitude" : [0.75, 0.8],
             "frequency" : 0.4
         },
         "flutter" : {
-            "enabled" : false,
+            "enabled" : true,
             "amplitude" : 0.01,
             "frequency" : 8.0,
             "speed" : 2.0
         },
         "motes" : {
-            "count" : 0,
+            "count" : 256,
             "radius" : 3,
             "color" : [0.800, 0.800, 0.800],
             "max_step" : 0.002,
@@ -84,7 +121,7 @@
             }
         },
         "iridescence" : {
-            "strength" : 0.000,
+            "strength" : 0.150,
             "frequency" : 6.0,
             "shift" : 1.0
         },
