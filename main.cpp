@@ -40,6 +40,31 @@ int screenWidth = 800;
 int screenHeight = 600;
 
 
+// Declare function pointers (global or static)
+PFNGLATTACHSHADERPROC       glAttachShader       = nullptr;
+PFNGLBINDBUFFERPROC         glBindBuffer         = nullptr;
+PFNGLBINDFRAMEBUFFERPROC    glBindFramebuffer    = nullptr;
+PFNGLBINDRENDERBUFFERPROC   glBindRenderbuffer   = nullptr;
+PFNGLBINDVERTEXARRAYPROC    glBindVertexArray    = nullptr;
+
+void initGLFunctions() {
+    glAttachShader = (PFNGLATTACHSHADERPROC)glXGetProcAddress((const GLubyte*)"glAttachShader");
+    if (!glAttachShader) { std::cerr << "Failed to load glAttachShader" << std::endl; exit(1); }
+
+    glBindBuffer = (PFNGLBINDBUFFERPROC)glXGetProcAddress((const GLubyte*)"glBindBuffer");
+    if (!glBindBuffer) { std::cerr << "Failed to load glBindBuffer" << std::endl; exit(1); }
+
+    glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)glXGetProcAddress((const GLubyte*)"glBindFramebuffer");
+    if (!glBindFramebuffer) { std::cerr << "Failed to load glBindFramebuffer" << std::endl; exit(1); }
+
+    glBindRenderbuffer = (PFNGLBINDRENDERBUFFERPROC)glXGetProcAddress((const GLubyte*)"glBindRenderbuffer");
+    if (!glBindRenderbuffer) { std::cerr << "Failed to load glBindRenderbuffer" << std::endl; exit(1); }
+
+    glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)glXGetProcAddress((const GLubyte*)"glBindVertexArray");
+    if (!glBindVertexArray) { std::cerr << "Failed to load glBindVertexArray" << std::endl; exit(1); }
+}
+
+
 void generateFramebuffer() {
     GLuint fbo1, tex1;
     glGenFramebuffers(1, &fbo1);
@@ -64,12 +89,15 @@ void generateFramebuffer() {
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cerr << "Framebuffer is not complete" << endl;
     
-     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
 // Initialize OpenGL and X11 Window
 void initOpenGL() {
+
+    initGLFunctions();
+    
     display = XOpenDisplay(nullptr);
     if (!display) throw runtime_error("Cannot open X11 display");
 
@@ -177,10 +205,6 @@ void initOpenGL() {
         glXSwapIntervalEXT(display, glXGetCurrentDrawable(), 0);
     }
 
-
-    // Generate an intermediate framebuffer for fragment shader pipelining
-    //generateFramebuffer();
-
     // Generate a test texture for use in debugging
     GLint testTex = 0;
     glGenTextures(1, (GLuint*)&testTex);
@@ -199,7 +223,9 @@ void initOpenGL() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // Wireframe view
+    
+    // Generate an intermediate framebuffer for fragment shader pipelining
+    generateFramebuffer();
 
     
     const GLubyte* version = glGetString(GL_VERSION);
