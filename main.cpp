@@ -40,6 +40,34 @@ int screenWidth = 800;
 int screenHeight = 600;
 
 
+void generateFramebuffer() {
+    GLuint fbo1, tex1;
+    glGenFramebuffers(1, &fbo1);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo1);
+    
+    // Create color texture to attach
+    glGenTextures(1, &tex1);
+    glBindTexture(GL_TEXTURE_2D, tex1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenWidth, screenHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex1, 0);
+    
+    // Create an optional depth buffer
+    GLuint rbo;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenWidth, screenHeight);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+    
+    // Check FBO status
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cerr << "Framebuffer is not complete" << endl;
+    
+     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
 // Initialize OpenGL and X11 Window
 void initOpenGL() {
     display = XOpenDisplay(nullptr);
@@ -150,6 +178,10 @@ void initOpenGL() {
     }
 
 
+    // Generate an intermediate framebuffer for fragment shader pipelining
+    //generateFramebuffer();
+
+    // Generate a test texture for use in debugging
     GLint testTex = 0;
     glGenTextures(1, (GLuint*)&testTex);
 

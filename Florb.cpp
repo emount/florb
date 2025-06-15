@@ -62,6 +62,7 @@ const float Florb::k_MoteWinkThreshold(0.001f);
 Florb::Florb() :
     flowers(),
     flowerPaths(),
+    loadFlower(0UL),
     currentFlower(0UL),
     previousFlower(0UL),
     flowersRandom(),
@@ -96,8 +97,9 @@ Florb::Florb() :
     bounceOffset(0.0f),
     breather(make_shared<SinusoidalMotion>()),
     rimPulser(make_shared<SinusoidalMotion>()),
-    
-    fallbackTexture(FlorbUtils::createDebugTexture()),
+
+    loadingTexture(FlorbUtils::createTexture(0, 0, 0, 255)),
+    fallbackTexture(FlorbUtils::createTexture(255, 0, 0, 255)),
     
     dist(0.0f, 1.0f) {
 
@@ -194,11 +196,16 @@ void Florb::renderFrame(bool transition) {
         // Initialize the sphere
         auto smoothness(configs->getSmoothness());
         initSphere(smoothness, (smoothness / 2));
-      
-        // Load all flower images
-        for (auto &flower : flowers) {
-            flower->loadImage();
+
+        // Begin loading flower images
+        loadFlower = 0UL;
+        if (flowers.empty() == false) {
+            flowers[loadFlower++]->loadImage();
         }
+    } else {
+        // Load flower images one at a time
+        if (loadFlower < flowers.size())
+            flowers[loadFlower++]->loadImage();
     }
 
     // Update physical effects
@@ -221,7 +228,11 @@ void Florb::renderFrame(bool transition) {
     GLuint previousTexture;
     GLuint currentTexture;
     if(flowers.empty()) {
+        // Display the fallback texture if there are no images
         previousTexture = currentTexture = fallbackTexture;
+    } else if (loadFlower < flowers.size()) {
+        // Suppress flower rendering until all images are loaded
+        previousTexture = currentTexture = loadingTexture;
     } else {
         previousTexture = flowers[previousFlower]->getTextureID();
         currentTexture = flowers[currentFlower]->getTextureID();

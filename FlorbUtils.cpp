@@ -26,14 +26,14 @@ using std::time_t;
 using std::tm;
 using std::vector;
 
-GLuint FlorbUtils::createDebugTexture() {
+GLuint FlorbUtils::createTexture(uint32_t r, uint32_t g, uint32_t b, uint32_t a) {
     GLuint textureID;
-    unsigned char redPixel[] = { 255, 0, 0, 255 };
+    unsigned char color[] = { r, g, b, a };
 
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, redPixel);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, color);
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

@@ -64,6 +64,7 @@ private:
   
     std::vector<std::shared_ptr<Flower>> flowers;
     std::vector<std::string> flowerPaths;
+    unsigned int loadFlower;
     unsigned int currentFlower;
     unsigned int previousFlower;
     std::shared_ptr<std::default_random_engine> flowersRandom;
@@ -108,6 +109,7 @@ private:
     GLuint vbo = 0;
     GLuint ebo = 0;
     GLuint shaderProgram = 0;
+    GLuint loadingTexture = 0;
     GLuint fallbackTexture = 0;
   
     int indexCount = 0;

@@ -3,11 +3,15 @@
 #include <X11/Xlib.h>
 #include <iostream>
 #include <chrono>
+#include <stdint.h>
 #include <string>
 
 namespace FlorbUtils {
 
-    GLuint createDebugTexture();
+    GLuint createTexture(std::uint32_t r,
+                         std::uint32_t g,
+                         std::uint32_t b,
+                         std::uint32_t a);
 
     void dumpTexture(GLuint textureID,
 		     int width,
